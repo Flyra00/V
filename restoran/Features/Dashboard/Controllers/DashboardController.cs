@@ -27,7 +27,7 @@ namespace Restoran.Controllers
             return View(await _dashboardService.GetDashboardAsync());
         }
 
-        [RoleAuthorization(UserRole.Owner, UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
         public async Task<IActionResult> ManageProducts()
         {
             return View(new ProductManagementViewModel
@@ -37,13 +37,13 @@ namespace Restoran.Controllers
             });
         }
 
-        [RoleAuthorization(UserRole.Owner, UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
         public async Task<IActionResult> CreateProduct()
         {
             return View(await BuildProductFormAsync());
         }
 
-        [RoleAuthorization(UserRole.Owner, UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateProduct(ProductFormViewModel model)
@@ -67,7 +67,7 @@ namespace Restoran.Controllers
             return View(model);
         }
 
-        [RoleAuthorization(UserRole.Owner, UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
         public async Task<IActionResult> EditProduct(int? id)
         {
             if (id == null)
@@ -84,7 +84,7 @@ namespace Restoran.Controllers
             return View(await BuildProductFormAsync(product));
         }
 
-        [RoleAuthorization(UserRole.Owner, UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProduct(int id, ProductFormViewModel model)
@@ -118,7 +118,7 @@ namespace Restoran.Controllers
             return View(model);
         }
 
-        [RoleAuthorization(UserRole.Owner, UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteProduct(int id)

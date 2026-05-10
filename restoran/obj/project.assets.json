@@ -6798,11 +6798,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran (1)\\restoran\\restoran\\restoran.csproj",
+      "projectUniqueName": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\restoran.csproj",
       "projectName": "restoran",
-      "projectPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran (1)\\restoran\\restoran\\restoran.csproj",
+      "projectPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\restoran.csproj",
       "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran (1)\\restoran\\restoran\\obj\\",
+      "outputPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

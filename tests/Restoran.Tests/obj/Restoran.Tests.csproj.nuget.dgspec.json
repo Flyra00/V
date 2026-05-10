@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran (1)\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj": {}
+    "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran (1)\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj": {
+    "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran (1)\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj",
+        "projectUniqueName": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj",
         "projectName": "Restoran.Tests",
-        "projectPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran (1)\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj",
+        "projectPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj",
         "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran (1)\\restoran\\tests\\Restoran.Tests\\obj\\",
+        "outputPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\tests\\Restoran.Tests\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

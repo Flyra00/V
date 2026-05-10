@@ -52,7 +52,13 @@ namespace Restoran.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePOSOrder([FromBody] CreatePosOrderRequest request)
         {
-            var userId = _authCookieService.GetAuthenticatedSession(Request)?.UserId ?? 4;
+            var session = _authCookieService.GetAuthenticatedSession(Request);
+            if (session == null || session.UserId <= 0)
+            {
+                return Unauthorized(new { success = false, message = "Sesi pengguna tidak valid. Silakan login kembali." });
+            }
+
+            var userId = session.UserId;
             var result = await _cashierService.CreatePosOrderAsync(request, userId);
             if (result.Succeeded && result.Data != null)
             {

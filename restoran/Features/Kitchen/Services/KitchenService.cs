@@ -64,6 +64,19 @@ namespace Restoran.Features.Kitchen.Services
                 return OperationResult.NotFound("Pesanan tidak ditemukan");
             }
 
+            var isValidTransition = transaction.OrderStatus switch
+            {
+                OrderStatus.New => status == OrderStatus.Processing,
+                OrderStatus.Processing => status == OrderStatus.Ready,
+                OrderStatus.Ready => status == OrderStatus.Served,
+                _ => false
+            };
+
+            if (!isValidTransition)
+            {
+                return OperationResult.Failure("Transisi status pesanan tidak valid");
+            }
+
             transaction.OrderStatus = status;
 
             foreach (var detail in transaction.TransactionDetails)

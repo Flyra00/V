@@ -70,7 +70,7 @@ namespace Restoran.Features.Orders.Services
 
         public async Task<OperationResult<CreateOrderResponse>> CreateOrderAsync(CreateOrderRequest request, CancellationToken cancellationToken = default)
         {
-            if (request.Items.Count == 0)
+            if (request.Items == null || request.Items.Count == 0)
             {
                 return OperationResult<CreateOrderResponse>.Failure("Pesanan tidak boleh kosong");
             }
@@ -147,9 +147,20 @@ namespace Restoran.Features.Orders.Services
                 transaction.Tax = chargeConfiguration.CalculateTax(subtotal);
                 transaction.ServiceCharge = chargeConfiguration.CalculateServiceCharge(subtotal);
 
-                if (request.IsMember && request.MemberId.HasValue)
+                if (request.IsMember)
                 {
-                    var member = await _context.Members.FindAsync([request.MemberId.Value], cancellationToken);
+                    Member? member = null;
+
+                    if (request.MemberId.HasValue)
+                    {
+                        member = await _context.Members.FindAsync([request.MemberId.Value], cancellationToken);
+                    }
+
+                    if (member == null && request.MemberId.HasValue)
+                    {
+                        member = await _context.Members.FirstOrDefaultAsync(m => m.UserId == request.MemberId.Value, cancellationToken);
+                    }
+
                     if (member != null)
                     {
                         transaction.Discount = subtotal * (member.DiscountPercentage / 100);

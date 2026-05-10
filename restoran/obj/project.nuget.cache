@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "23iGf1lduUg=",
+  "dgSpecHash": "XatPSh+WnEU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran (1)\\restoran\\restoran\\restoran.csproj",
+  "projectFilePath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\Restoran.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ASUS\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\ASUS\\.nuget\\packages\\humanizer\\2.14.1\\humanizer.2.14.1.nupkg.sha512",

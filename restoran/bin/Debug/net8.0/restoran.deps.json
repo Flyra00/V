@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v8.0": {
-      "restoran/1.0.0": {
+      "Restoran/1.0.0": {
         "dependencies": {
           "BCrypt.Net-Next": "4.0.3",
           "Microsoft.EntityFrameworkCore.InMemory": "8.0.0",
@@ -17,7 +17,7 @@
           "System.Drawing.Common": "8.0.0"
         },
         "runtime": {
-          "restoran.dll": {}
+          "Restoran.dll": {}
         }
       },
       "BCrypt.Net-Next/4.0.3": {
@@ -1773,7 +1773,7 @@
     }
   },
   "libraries": {
-    "restoran/1.0.0": {
+    "Restoran/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

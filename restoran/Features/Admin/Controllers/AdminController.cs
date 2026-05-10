@@ -6,7 +6,7 @@ using Restoran.ViewModels;
 
 namespace Restoran.Controllers
 {
-    [RoleAuthorization(UserRole.Admin, UserRole.Owner)]
+    [RoleAuthorization(UserRole.Admin)]
     public class AdminController : Controller
     {
         private readonly IAdminService _adminService;
