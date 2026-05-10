@@ -1,0 +1,53 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Rafly\\Documents\\adz\\restoran\\restoran\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{3B280B86-AF5F-4922-A857-4895CCD78727}|restoran\\restoran.csproj|c:\\users\\rafly\\documents\\adz\\restoran\\restoran\\restoran\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{3B280B86-AF5F-4922-A857-4895CCD78727}|restoran\\restoran.csproj|solutionrelative:restoran\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3B280B86-AF5F-4922-A857-4895CCD78727}|restoran\\restoran.csproj|c:\\users\\rafly\\documents\\adz\\restoran\\restoran\\restoran\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{3B280B86-AF5F-4922-A857-4895CCD78727}|restoran\\restoran.csproj|solutionrelative:restoran\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "C:\\Users\\Rafly\\Documents\\adz\\restoran\\restoran\\restoran\\Views\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "restoran\\Views\\Shared\\_Layout.cshtml",
+              "ToolTip": "C:\\Users\\Rafly\\Documents\\adz\\restoran\\restoran\\restoran\\Views\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "restoran\\Views\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAABMBAAAAAAAAAAAIwCUBAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-01-29T13:06:11.004Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "C:\\Users\\Rafly\\Documents\\adz\\restoran\\restoran\\restoran\\Views\\Home\\Index.cshtml",
+              "RelativeDocumentMoniker": "restoran\\Views\\Home\\Index.cshtml",
+              "ToolTip": "C:\\Users\\Rafly\\Documents\\adz\\restoran\\restoran\\restoran\\Views\\Home\\Index.cshtml",
+              "RelativeToolTip": "restoran\\Views\\Home\\Index.cshtml",
+              "ViewState": "AgIAAM8BAAAAAAAAAAAgwNYBAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-01-29T13:02:16.842Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+@model IEnumerable<Restoran.ViewModels.AssetLogListViewModel>
+
+@{
+    ViewData["Title"] = "Daftar Laporan Kerusakan";
+}
+
+<div class="container-fluid py-4">
+    @Html.AntiForgeryToken()
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Daftar Laporan Kerusakan</h2>
+            <a asp-action="Create" class="btn btn-warning">
+                <i class="fas fa-plus"></i> Buat Laporan Baru
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Aset</th>
+                            <th>Jenis</th>
+                            <th>Jumlah</th>
+                            <th>Pelapor</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.ReportedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@item.AssetName</td>
+                                <td>@item.DamageType</td>
+                                <td>@item.Quantity @item.Unit</td>
+                                <td>@item.ReporterName</td>
+                                <td>
+                                    <span class="badge bg-@(item.Status == LogStatus.Approved ? "success" : item.Status == LogStatus.Rejected ? "danger" : "warning")">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (item.Status == LogStatus.Reported)
+                                    {
+                                        <button class="btn btn-sm btn-success" onclick="approve(@item.Id)">
+                                            <i class="fas fa-check"></i> Setujui
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getRequestVerificationToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]').value;
+        }
+
+        function approve(id) {
+            if (confirm('Setujui laporan ini?')) {
+                fetch(`/AssetLog/Approve/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': getRequestVerificationToken()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    }
+                });
+            }
+        }
+    </script>
+}

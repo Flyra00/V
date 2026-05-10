@@ -1,0 +1,941 @@
+@{
+    ViewData["Title"] = "Restoran Ceria";
+    Layout = "_CustomerLayout";
+    var tables = ViewBag.Tables as IReadOnlyList<Restoran.ViewModels.CustomerTableOptionViewModel>
+        ?? Array.Empty<Restoran.ViewModels.CustomerTableOptionViewModel>();
+}
+
+@Html.AntiForgeryToken()
+
+<style>
+    /* Menu Card Hover Effects */
+    .menu-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    }
+    
+    /* Fade In Animation */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Nav Pills Styling */
+    .nav-pills .nav-link {
+        color: #666;
+        background: white;
+        border: 2px solid #e9ecef;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-pills .nav-link:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+    
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        color: white;
+    }
+</style>
+
+<section id="hero" class="hero section light-background" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 80px 0;">
+    <div class="container">
+        <div class="row gy-4 justify-content-center justify-content-lg-between align-items-center">
+            <div class="col-lg-5 order-2 order-lg-1 d-flex flex-column justify-content-center">
+                <div class="badge bg-success mb-3" style="width: fit-content;">
+                    <i class="fas fa-star me-1"></i>Restoran Terbaik di Kota
+                </div>
+                <h1 data-aos="fade-up" class="display-4 fw-bold" style="color: #2d3436;">Nikmati Hidangan<br><span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Lezat & Sehat</span></h1>
+                <p data-aos="fade-up" data-aos-delay="100" class="lead text-muted">Temukan pengalaman bersantap terbaik dengan menu berkualitas, bahan segar, dan pelayanan prima untuk keluarga Anda.</p>
+                <div class="d-flex gap-3 flex-wrap" data-aos="fade-up" data-aos-delay="200">
+                    <button type="button" class="btn btn-lg px-4 rounded-pill" onclick="showOrderTableModal()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; color: white; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">
+                        <i class="fas fa-utensils me-2"></i>Pesan Sekarang
+                    </button>
+                    <a href="#menu" class="btn btn-outline-dark btn-lg px-4 rounded-pill">
+                        <i class="fas fa-book-open me-2"></i>Lihat Menu
+                    </a>
+                </div>
+                <div class="mt-4 d-flex gap-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="text-center">
+                        <h4 class="fw-bold text-primary mb-0">500+</h4>
+                        <small class="text-muted">Menu</small>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="fw-bold text-primary mb-0">10K+</h4>
+                        <small class="text-muted">Pelanggan</small>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="fw-bold text-primary mb-0">4.9</h4>
+                        <small class="text-muted">Rating</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 order-1 order-lg-2 hero-img" data-aos="zoom-out">
+                <img src="~/assets/img/hero-img.png" class="img-fluid animated" alt="Delicious Food" style="max-height: 400px; width: auto; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.15));">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="about" class="about section" style="padding: 80px 0;">
+    <div class="container section-title" data-aos="fade-up">
+        <h2 class="fw-bold">Tentang Kami</h2>
+        <p class="lead"><span class="text-primary">Kenali</span> <span class="fw-bold">Restoran Ceria</span></p>
+    </div>
+    <div class="container">
+        <div class="row gy-4 align-items-center">
+            <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+                <div class="position-relative">
+                    <img src="~/assets/img/about.jpg" class="img-fluid rounded-4 shadow-lg" alt="Tentang Restoran Ceria" style="max-height: 350px; width: 100%; object-fit: cover;">
+                    <div class="position-absolute bottom-0 start-0 m-3 bg-white rounded-3 p-3 shadow">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="fas fa-award text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Bersertifikat</h6>
+                                <small class="text-muted">Halal & Hygiene</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6" data-aos="fade-up" data-aos-delay="250">
+                <div class="content">
+                    <h3 class="fw-bold mb-3">Menyajikan Kelezatan Sejak 2015</h3>
+                    <p class="text-muted mb-4">Restoran Ceria hadir dengan komitmen menyajikan hidangan berkualitas tinggi menggunakan bahan-bahan segar dan pilihan. Setiap hidangan kami buat dengan penuh cinta dan perhatian terhadap detail.</p>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-check-circle text-success fs-4"></i>
+                                <span>Bahan Segar</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-check-circle text-success fs-4"></i>
+                                <span>Chef Profesional</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-check-circle text-success fs-4"></i>
+                                <span>Higienis</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-check-circle text-success fs-4"></i>
+                                <span>Pelayanan Prima</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#menu" class="btn btn-primary rounded-pill px-4">
+                        <i class="fas fa-utensils me-2"></i>Jelajahi Menu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="why-us" class="why-us section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 80px 0;">
+    <div class="container">
+        <div class="row gy-4">
+            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card h-100 border-0 shadow-lg" style="background: rgba(255,255,255,0.95);">
+                    <div class="card-body p-4">
+                        <h3 class="fw-bold mb-3">Mengapa Memilih Kami?</h3>
+                        <p class="text-muted">Restoran Ceria berkomitmen memberikan pengalaman bersantap terbaik dengan kualitas makanan premium dan pelayanan yang ramah.</p>
+                        <div class="mt-4">
+                            <a href="#menu" class="btn btn-primary rounded-pill">
+                                <i class="fas fa-arrow-right me-2"></i>Lihat Menu
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8 d-flex align-items-stretch">
+                <div class="row gy-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="col-xl-4">
+                        <div class="card h-100 border-0 shadow text-center p-4" style="background: rgba(255,255,255,0.95);">
+                            <div class="mb-3">
+                                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10" style="width: 70px; height: 70px;">
+                                    <i class="fas fa-leaf text-primary fs-2"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold">Bahan Segar</h5>
+                            <p class="text-muted small">Kami hanya menggunakan bahan-bahan segar dan berkualitas tinggi setiap hari.</p>
+                        </div>
+                    </div>
+                    <div class="col-xl-4" data-aos="fade-up" data-aos-delay="300">
+                        <div class="card h-100 border-0 shadow text-center p-4" style="background: rgba(255,255,255,0.95);">
+                            <div class="mb-3">
+                                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" style="width: 70px; height: 70px;">
+                                    <i class="fas fa-medal text-success fs-2"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold">Chef Berpengalaman</h5>
+                            <p class="text-muted small">Tim chef profesional kami siap menyajikan hidangan terbaik untuk Anda.</p>
+                        </div>
+                    </div>
+                    <div class="col-xl-4" data-aos="fade-up" data-aos-delay="400">
+                        <div class="card h-100 border-0 shadow text-center p-4" style="background: rgba(255,255,255,0.95);">
+                            <div class="mb-3">
+                                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10" style="width: 70px; height: 70px;">
+                                    <i class="fas fa-clock text-warning fs-2"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold">Pelayanan Cepat</h5>
+                            <p class="text-muted small">Pesanan Anda akan disajikan dengan cepat tanpa mengurangi kualitas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="stats" class="stats section dark-background">
+    <img src="~/assets/img/stats-bg.jpg" alt="" data-aos="fade-in">
+    <div class="container position-relative" data-aos="fade-up" data-aos-delay="100">
+        <div class="row gy-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-item text-center w-100 h-100">
+                    <span data-purecounter-start="0" data-purecounter-end="232" data-purecounter-duration="1" class="purecounter"></span>
+                    <p>Clients</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-item text-center w-100 h-100">
+                    <span data-purecounter-start="0" data-purecounter-end="521" data-purecounter-duration="1" class="purecounter"></span>
+                    <p>Projects</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-item text-center w-100 h-100">
+                    <span data-purecounter-start="0" data-purecounter-end="1453" data-purecounter-duration="1" class="purecounter"></span>
+                    <p>Hours Of Support</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-item text-center w-100 h-100">
+                    <span data-purecounter-start="0" data-purecounter-end="32" data-purecounter-duration="1" class="purecounter"></span>
+                    <p>Workers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="menu" class="menu section" style="padding: 80px 0; background: #f8f9fa;">
+    <div class="container section-title" data-aos="fade-up">
+        <h2 class="fw-bold">Menu Kami</h2>
+        <p class="lead"><span class="text-primary">Jelajahi</span> <span class="fw-bold">Berbagai Hidangan Lezat</span></p>
+    </div>
+    <div class="container">
+        <!-- Filter Tabs -->
+        <ul class="nav nav-pills d-flex justify-content-center gap-2 mb-5" data-aos="fade-up" data-aos-delay="100">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill px-4" onclick="filterMenu('all')">Semua</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-4" onclick="filterMenu('Makanan')">Makanan</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-4" onclick="filterMenu('Minuman')">Minuman</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-4" onclick="filterMenu('Snack')">Snack</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill px-4" onclick="filterMenu('Dessert')">Dessert</button>
+            </li>
+        </ul>
+
+        <!-- Menu Grid -->
+        <div class="row g-4" data-aos="fade-up" data-aos-delay="200" id="menuContainer">
+            @if (ViewBag.Products != null)
+            {
+                foreach (var product in (List<Restoran.Models.Product>)ViewBag.Products)
+                {
+                    var isMember = Context.Request.Cookies["IsMember"] == "true";
+                    var discountedPrice = product.Price - (product.Price * product.MemberDiscountPercentage / 100);
+                    
+                    <div class="col-lg-4 col-md-6 menu-item" data-category="@product.Category.Name">
+                        <div class="card h-100 border-0 shadow-sm menu-card" style="border-radius: 15px; overflow: hidden; transition: all 0.3s ease;">
+                            <div class="position-relative">
+                                @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" 
+                                         style="height: 200px; object-fit: cover; width: 100%;">
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+                                        <i class="fas fa-utensils fa-3x text-muted"></i>
+                                    </div>
+                                }
+                                
+                                @if (product.MemberDiscountPercentage > 0)
+                                {
+                                    <span class="position-absolute top-0 end-0 m-2 badge bg-success">
+                                        <i class="fas fa-tag me-1"></i>-@product.MemberDiscountPercentage.ToString("F0")%
+                                    </span>
+                                }
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title fw-bold mb-0">@product.Name</h5>
+                                    <span class="badge bg-light text-dark">@product.Category.Name</span>
+                                </div>
+                                <p class="card-text text-muted small mb-3" style="min-height: 40px;">
+                                    @(string.IsNullOrEmpty(product.Description) ? "Tidak ada deskripsi" : (product.Description.Length > 60 ? product.Description.Substring(0, 60) + "..." : product.Description))
+                                </p>
+                                
+                                <div class="mb-3">
+                                    @if (isMember && product.MemberDiscountPercentage > 0)
+                                    {
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="text-decoration-line-through text-muted">Rp @product.Price.ToString("N0")</span>
+                                            <h5 class="text-success fw-bold mb-0">Rp @discountedPrice.ToString("N0")</h5>
+                                        </div>
+                                        <small class="text-success"><i class="fas fa-crown me-1"></i>Harga Member</small>
+                                    }
+                                    else
+                                    {
+                                        <h5 class="text-primary fw-bold mb-0">Rp @product.Price.ToString("N0")</h5>
+                                    }
+                                </div>
+                                
+                                <button class="btn btn-primary w-100 rounded-pill" onclick="addToCart(@product.Id, '@product.Name', @product.Price)">
+                                    <i class="fas fa-plus me-2"></i>Tambah ke Keranjang
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center">
+                    <p class="text-muted">Tidak ada menu tersedia</p>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (Context.Request.Cookies["IsMember"] == "true")
+{
+    <section id="member-menu" class="menu section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="container">
+            <div class="section-title" data-aos="fade-up">
+                <h2 class="text-white">Member Exclusive</h2>
+                <p><span class="text-white">Menu Populer dengan</span> <span class="description-title text-warning">Diskon Member</span></p>
+            </div>
+            <div class="row gy-4" data-aos="fade-up" data-aos-delay="100">
+                @if (ViewBag.Products != null)
+                {
+                    var discountedProducts = ((List<Restoran.Models.Product>)ViewBag.Products)
+                        .Where(p => p.MemberDiscountPercentage > 0)
+                        .Take(6);
+                    
+                    foreach (var product in discountedProducts)
+                    {
+                        var discountedPrice = product.Price - (product.Price * product.MemberDiscountPercentage / 100);
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card h-100 border-0 shadow-lg" style="background: rgba(255,255,255,0.95);">
+                                <div class="card-body p-4 text-center">
+                                    <span class="badge bg-success mb-2">
+                                        <i class="fas fa-percent me-1"></i>@product.MemberDiscountPercentage.ToString("F0")% OFF
+                                    </span>
+                                    <h5 class="card-title fw-bold mb-2">@product.Name</h5>
+                                    <p class="text-muted small mb-3">@product.Description</p>
+                                    <div class="mb-3">
+                                        <span class="text-decoration-line-through text-muted">Rp @product.Price.ToString("N0")</span>
+                                        <h4 class="text-success fw-bold mb-0">Rp @discountedPrice.ToString("N0")</h4>
+                                    </div>
+                                    <button class="btn btn-primary w-100" onclick="addToCart(@product.Id)">
+                                        <i class="fas fa-plus me-2"></i>Tambah ke Keranjang
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<section id="testimonials" class="testimonials section light-background">
+    <div class="container section-title" data-aos="fade-up">
+        <h2>TESTIMONIALS</h2>
+        <p>What Are They <span class="description-title">Saying About Us</span></p>
+    </div>
+    <div class="container" data-aos="fade-up" data-aos-delay="100">
+        <div class="swiper init-swiper">
+            <script type="application/json" class="swiper-config">
+                { "loop": true, "speed": 600, "autoplay": { "delay": 5000 }, "slidesPerView": "auto", "pagination": { "el": ".swiper-pagination", "type": "bullets", "clickable": true } }
+            </script>
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <div class="testimonial-item">
+                        <div class="row gy-4 justify-content-center">
+                            <div class="col-lg-6">
+                                <div class="testimonial-content">
+                                    <p><i class="bi bi-quote quote-icon-left"></i><span>Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper.</span><i class="bi bi-quote quote-icon-right"></i></p>
+                                    <h3>Saul Goodman</h3><h4>Ceo & Founder</h4><div class="stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 text-center"><img src="~/assets/img/testimonials/testimonials-1.jpg" class="img-fluid testimonial-img" alt=""></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <div class="testimonial-item">
+                        <div class="row gy-4 justify-content-center">
+                            <div class="col-lg-6">
+                                <div class="testimonial-content">
+                                    <p><i class="bi bi-quote quote-icon-left"></i><span>Export tempor illum tamen malis malis eram quae irure esse labore quem cillum quid cillum eram malis quorum velit fore eram velit sunt aliqua noster fugiat irure amet legam anim culpa.</span><i class="bi bi-quote quote-icon-right"></i></p>
+                                    <h3>Sara Wilsson</h3><h4>Designer</h4><div class="stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 text-center"><img src="~/assets/img/testimonials/testimonials-2.jpg" class="img-fluid testimonial-img" alt=""></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <div class="testimonial-item">
+                        <div class="row gy-4 justify-content-center">
+                            <div class="col-lg-6">
+                                <div class="testimonial-content">
+                                    <p><i class="bi bi-quote quote-icon-left"></i><span>Enim nisi quem export duis labore cillum quae magna enim sint quorum nulla quem veniam duis minim tempor labore quem eram duis noster aute amet eram fore quis sint minim.</span><i class="bi bi-quote quote-icon-right"></i></p>
+                                    <h3>Jena Karlis</h3><h4>Store Owner</h4><div class="stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 text-center"><img src="~/assets/img/testimonials/testimonials-3.jpg" class="img-fluid testimonial-img" alt=""></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <div class="testimonial-item">
+                        <div class="row gy-4 justify-content-center">
+                            <div class="col-lg-6">
+                                <div class="testimonial-content">
+                                    <p><i class="bi bi-quote quote-icon-left"></i><span>Fugiat enim eram quae cillum dolore dolor amet nulla culpa multos export minim fugiat minim velit minim dolor enim duis veniam ipsum anim magna sunt elit fore quem dolore labore illum veniam.</span><i class="bi bi-quote quote-icon-right"></i></p>
+                                    <h3>John Larson</h3><h4>Entrepreneur</h4><div class="stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 text-center"><img src="~/assets/img/testimonials/testimonials-4.jpg" class="img-fluid testimonial-img" alt=""></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </div>
+</section>
+
+<section id="events" class="events section">
+    <div class="container-fluid" data-aos="fade-up" data-aos-delay="100">
+        <div class="swiper init-swiper">
+            <script type="application/json" class="swiper-config">
+                { "loop": true, "speed": 600, "autoplay": { "delay": 5000 }, "slidesPerView": "auto", "pagination": { "el": ".swiper-pagination", "type": "bullets", "clickable": true }, "breakpoints": { "320": { "slidesPerView": 1, "spaceBetween": 40 }, "1200": { "slidesPerView": 3, "spaceBetween": 1 } } }
+            </script>
+            <div class="swiper-wrapper">
+                <div class="swiper-slide event-item d-flex flex-column justify-content-end" style="background-image: url('/assets/img/events-1.jpg')">
+                    <h3>Custom Parties</h3><div class="price align-self-start">$99</div><p class="description">Quo corporis voluptas ea ad. Consectetur inventore sapiente ipsum voluptas eos omnis facere. Enim facilis veritatis id est rem repudiandae nulla expedita quas.</p>
+                </div>
+                <div class="swiper-slide event-item d-flex flex-column justify-content-end" style="background-image: url('/assets/img/events-2.jpg')">
+                    <h3>Private Parties</h3><div class="price align-self-start">$289</div><p class="description">In delectus sint qui et enim. Et ab repudiandae inventore quaerat doloribus. Facere nemo vero est ut dolores ea assumenda et. Delectus saepe accusamus aspernatur.</p>
+                </div>
+                <div class="swiper-slide event-item d-flex flex-column justify-content-end" style="background-image: url('/assets/img/events-3.jpg')">
+                    <h3>Birthday Parties</h3><div class="price align-self-start">$499</div><p class="description">Laborum aperiam atque omnis minus omnis est qui assumenda quos. Quis id sit quibusdam. Esse quisquam ducimus officia ipsum ut quibusdam maxime. Non enim perspiciatis.</p>
+                </div>
+                <div class="swiper-slide event-item d-flex flex-column justify-content-end" style="background-image: url('/assets/img/events-4.jpg')">
+                    <h3>Wedding Parties</h3><div class="price align-self-start">$899</div><p class="description">Laborum aperiam atque omnis minus omnis est qui assumenda quos. Quis id sit quibusdam. Esse quisquam ducimus officia ipsum ut quibusdam maxime. Non enim perspiciatis.</p>
+                </div>
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </div>
+</section>
+
+<section id="chefs" class="chefs section">
+    <div class="container section-title" data-aos="fade-up">
+        <h2>chefs</h2><p><span>Our</span> <span class="description-title">Proffesional Chefs<br></span></p>
+    </div>
+    <div class="container">
+        <div class="row gy-4">
+            <div class="col-lg-4 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
+                <div class="team-member">
+                    <div class="member-img"><img src="~/assets/img/chefs/chefs-1.jpg" class="img-fluid" alt=""><div class="social"><a href=""><i class="bi bi-twitter-x"></i></a><a href=""><i class="bi bi-facebook"></i></a><a href=""><i class="bi bi-instagram"></i></a><a href=""><i class="bi bi-linkedin"></i></a></div></div>
+                    <div class="member-info"><h4>Walter White</h4><span>Master Chef</span><p>Velit aut quia fugit et et. Dolorum ea voluptate vel tempore tenetur ipsa quae aut. Ipsum exercitationem iure minima enim corporis et voluptate.</p></div>
+                </div>
+            </div>
+            <div class="col-lg-4 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
+                <div class="team-member">
+                    <div class="member-img"><img src="~/assets/img/chefs/chefs-2.jpg" class="img-fluid" alt=""><div class="social"><a href=""><i class="bi bi-twitter-x"></i></a><a href=""><i class="bi bi-facebook"></i></a><a href=""><i class="bi bi-instagram"></i></a><a href=""><i class="bi bi-linkedin"></i></a></div></div>
+                    <div class="member-info"><h4>Sarah Jhonson</h4><span>Patissier</span><p>Quo esse repellendus quia id. Est eum et accusantium pariatur fugit nihil minima suscipit corporis. Voluptate sed quas reiciendis animi neque sapiente.</p></div>
+                </div>
+            </div>
+            <div class="col-lg-4 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="300">
+                <div class="team-member">
+                    <div class="member-img"><img src="~/assets/img/chefs/chefs-3.jpg" class="img-fluid" alt=""><div class="social"><a href=""><i class="bi bi-twitter-x"></i></a><a href=""><i class="bi bi-facebook"></i></a><a href=""><i class="bi bi-instagram"></i></a><a href=""><i class="bi bi-linkedin"></i></a></div></div>
+                    <div class="member-info"><h4>William Anderson</h4><span>Cook</span><p>Vero omnis enim consequatur. Voluptas consectetur unde qui molestiae deserunt. Voluptates enim aut architecto porro aspernatur molestiae modi.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="book-a-table" class="book-a-table section">
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Book A Table</h2>
+        <p><span>Book Your</span> <span class="description-title">Stay With Us<br></span></p>
+    </div>
+    <div class="container">
+        <div class="row g-0" data-aos="fade-up" data-aos-delay="100">
+            <div class="col-lg-4 reservation-img" style="background-image: url('/assets/img/reservation.jpg');"></div>
+            <div class="col-lg-8 d-flex align-items-center reservation-form-bg" data-aos="fade-up" data-aos-delay="200">
+                <form action="forms/book-a-table.php" method="post" role="form" class="php-email-form">
+                    <div class="row gy-4">
+                        <div class="col-lg-4 col-md-6"><input type="text" name="name" class="form-control" id="name" placeholder="Your Name" required></div>
+                        <div class="col-lg-4 col-md-6"><input type="email" class="form-control" name="email" id="email" placeholder="Your Email" required></div>
+                        <div class="col-lg-4 col-md-6"><input type="text" class="form-control" name="phone" id="phone" placeholder="Your Phone" required></div>
+                        <div class="col-lg-4 col-md-6"><input type="date" name="date" class="form-control" id="date" placeholder="Date" required></div>
+                        <div class="col-lg-4 col-md-6"><input type="time" class="form-control" name="time" id="time" placeholder="Time" required></div>
+                        <div class="col-lg-4 col-md-6"><input type="number" class="form-control" name="people" id="people" placeholder="# of people" required></div>
+                    </div>
+                    <div class="form-group mt-3"><textarea class="form-control" name="message" rows="5" placeholder="Message"></textarea></div>
+                    <div class="text-center mt-3">
+                        <div class="loading">Loading</div><div class="error-message"></div><div class="sent-message">Your booking request was sent. We will call back or send an Email to confirm your reservation. Thank you!</div>
+                        <button type="submit">Book a Table</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="gallery" class="gallery section light-background">
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Gallery</h2><p><span>Check</span> <span class="description-title">Our Gallery</span></p>
+    </div>
+    <div class="container" data-aos="fade-up" data-aos-delay="100">
+        <div class="swiper init-swiper">
+            <script type="application/json" class="swiper-config">
+                { "loop": true, "speed": 600, "autoplay": { "delay": 5000 }, "slidesPerView": "auto", "centeredSlides": true, "pagination": { "el": ".swiper-pagination", "type": "bullets", "clickable": true }, "breakpoints": { "320": { "slidesPerView": 1, "spaceBetween": 0 }, "768": { "slidesPerView": 3, "spaceBetween": 20 }, "1200": { "slidesPerView": 5, "spaceBetween": 20 } } }
+            </script>
+            <div class="swiper-wrapper align-items-center">
+                <div class="swiper-slide"><a class="glightbox" data-gallery="images-gallery" href="~/assets/img/gallery/gallery-1.jpg"><img src="~/assets/img/gallery/gallery-1.jpg" class="img-fluid" alt=""></a></div>
+                <div class="swiper-slide"><a class="glightbox" data-gallery="images-gallery" href="~/assets/img/gallery/gallery-2.jpg"><img src="~/assets/img/gallery/gallery-2.jpg" class="img-fluid" alt=""></a></div>
+                <div class="swiper-slide"><a class="glightbox" data-gallery="images-gallery" href="~/assets/img/gallery/gallery-3.jpg"><img src="~/assets/img/gallery/gallery-3.jpg" class="img-fluid" alt=""></a></div>
+                <div class="swiper-slide"><a class="glightbox" data-gallery="images-gallery" href="~/assets/img/gallery/gallery-4.jpg"><img src="~/assets/img/gallery/gallery-4.jpg" class="img-fluid" alt=""></a></div>
+                <div class="swiper-slide"><a class="glightbox" data-gallery="images-gallery" href="~/assets/img/gallery/gallery-5.jpg"><img src="~/assets/img/gallery/gallery-5.jpg" class="img-fluid" alt=""></a></div>
+                <div class="swiper-slide"><a class="glightbox" data-gallery="images-gallery" href="~/assets/img/gallery/gallery-6.jpg"><img src="~/assets/img/gallery/gallery-6.jpg" class="img-fluid" alt=""></a></div>
+                <div class="swiper-slide"><a class="glightbox" data-gallery="images-gallery" href="~/assets/img/gallery/gallery-7.jpg"><img src="~/assets/img/gallery/gallery-7.jpg" class="img-fluid" alt=""></a></div>
+                <div class="swiper-slide"><a class="glightbox" data-gallery="images-gallery" href="~/assets/img/gallery/gallery-8.jpg"><img src="~/assets/img/gallery/gallery-8.jpg" class="img-fluid" alt=""></a></div>
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </div>
+</section>
+
+<section id="contact" class="contact section">
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Contact</h2><p><span>Need Help?</span> <span class="description-title">Contact Us</span></p>
+    </div>
+    <div class="container" data-aos="fade-up" data-aos-delay="100">
+        <div class="mb-5">
+            <iframe style="width: 100%; height: 400px;" src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d12097.433213460943!2d-74.0062269!3d40.7101282!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0xb89d1fe6bc499443!2sDowntown+Conference+Center!5e0!3m2!1smk!2sbg!4v1539943755621" frameborder="0" allowfullscreen=""></iframe>
+        </div>
+        <div class="row gy-4">
+            <div class="col-md-6">
+                <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="200"><i class="icon bi bi-geo-alt flex-shrink-0"></i><div><h3>Address</h3><p>A108 Adam Street, New York, NY 535022</p></div></div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="300"><i class="icon bi bi-telephone flex-shrink-0"></i><div><h3>Call Us</h3><p>+1 5589 55488 55</p></div></div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="400"><i class="icon bi bi-envelope flex-shrink-0"></i><div><h3>Email Us</h3><p>info@example.com</p></div></div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-item d-flex align-items-center" data-aos="fade-up" data-aos-delay="500"><i class="icon bi bi-clock flex-shrink-0"></i><div><h3>Opening Hours<br></h3><p><strong>Mon-Sat:</strong> 11AM - 23PM; <strong>Sunday:</strong> Closed</p></div></div>
+            </div>
+        </div>
+        <form action="forms/contact.php" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="600">
+            <div class="row gy-4">
+                <div class="col-md-6"><input type="text" name="name" class="form-control" placeholder="Your Name" required></div>
+                <div class="col-md-6 "><input type="email" class="form-control" name="email" placeholder="Your Email" required></div>
+                <div class="col-md-12"><input type="text" class="form-control" name="subject" placeholder="Subject" required></div>
+                <div class="col-md-12"><textarea class="form-control" name="message" rows="6" placeholder="Message" required></textarea></div>
+                <div class="col-md-12 text-center">
+                    <div class="loading">Loading</div><div class="error-message"></div><div class="sent-message">Your message has been sent. Thank you!</div>
+                    <button type="submit">Send Message</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Order Table Modal -->
+<div class="modal fade" id="orderTableModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-utensils text-primary me-2"></i>Pesan di Meja
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                         style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-chair fa-2x text-white"></i>
+                    </div>
+                    <h5 class="fw-bold">Pilih Meja Anda</h5>
+                    <p class="text-muted">Silakan pilih nomor meja untuk memulai pemesanan</p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Pilih Meja</label>
+                    <select class="form-select form-select-lg" id="tableSelect">
+                        <option value="">Pilih meja...</option>
+                        @foreach (var table in tables)
+                        {
+                            <option value="@table.Id" disabled="@(!table.CanStartOrder)">
+                                Meja @table.TableNumber - @table.Capacity orang (@table.StatusLabel)
+                            </option>
+                        }
+                    </select>
+                    <small class="text-muted">Hanya meja yang tersedia yang bisa dipilih untuk memulai order.</small>
+                </div>
+
+                <div class="d-grid gap-3">
+                    <button type="button" class="btn btn-outline-primary btn-lg py-3 rounded-pill" onclick="selectUserType('guest')">
+                        <i class="fas fa-user me-2"></i>Lanjut sebagai Tamu
+                    </button>
+                    <button type="button" class="btn btn-primary btn-lg py-3 rounded-pill" onclick="selectUserType('login')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </button>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted">Login untuk Member & Staff</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Member Auth Modal -->
+<div class="modal fade" id="memberAuthModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="memberAuthTitle">
+                    <i class="fas fa-sign-in-alt text-primary me-2"></i>Login
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Login Form -->
+                <div id="loginFormSection">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email atau Username</label>
+                        <input type="text" class="form-control" id="memberEmail" placeholder="Masukkan email atau username">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Password</label>
+                        <input type="password" class="form-control" id="memberPassword" placeholder="********">
+                    </div>
+                    <button type="button" class="btn btn-gradient-primary w-100 py-3" onclick="memberLogin()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
+                        <i class="fas fa-sign-in-alt me-2"></i>LOGIN
+                    </button>
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Belum punya akun? </span>
+                        <a href="#" class="text-decoration-none" onclick="showRegisterForm()">Daftar</a>
+                    </div>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerFormSection" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Username</label>
+                                <input type="text" class="form-control" id="regUsername" placeholder="username">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <input type="email" class="form-control" id="regEmail" placeholder="email@example.com">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nama Lengkap</label>
+                        <input type="text" class="form-control" id="regFullName" placeholder="Nama lengkap">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">No. Telepon</label>
+                        <input type="tel" class="form-control" id="regPhone" placeholder="08123456789">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Password</label>
+                        <input type="password" class="form-control" id="regPassword" placeholder="********">
+                    </div>
+                    <button type="button" class="btn btn-gradient-success w-100 py-3" onclick="memberRegister()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: white;">
+                        <i class="fas fa-user-plus me-2"></i>DAFTAR
+                    </button>
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Sudah punya akun? </span>
+                        <a href="#" class="text-decoration-none" onclick="showLoginForm()">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedTableId = null;
+
+        function getRequestVerificationToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]').value;
+        }
+
+        function showOrderTableModal() {
+            const modal = new bootstrap.Modal(document.getElementById('orderTableModal'));
+            modal.show();
+        }
+
+        function selectUserType(type) {
+            const tableSelect = document.getElementById('tableSelect');
+            const tableValue = tableSelect.value;
+
+            if (!tableValue) {
+                alert('Silakan pilih meja yang tersedia terlebih dahulu');
+                return;
+            }
+
+            selectedTableId = tableValue;
+            
+            if (type === 'guest') {
+                fetch('/Home/GuestLogin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': getRequestVerificationToken()
+                    },
+                    body: `tableId=${selectedTableId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
+                    }
+                });
+            } else if (type === 'login') {
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('memberAuthModal'));
+                    modal.show();
+                }, 300);
+            }
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginFormSection').style.display = 'none';
+            document.getElementById('registerFormSection').style.display = 'block';
+            document.getElementById('memberAuthTitle').innerHTML = '<i class="fas fa-user-plus text-success me-2"></i>Daftar Member';
+        }
+
+        function showLoginForm() {
+            document.getElementById('registerFormSection').style.display = 'none';
+            document.getElementById('loginFormSection').style.display = 'block';
+            document.getElementById('memberAuthTitle').innerHTML = '<i class="fas fa-sign-in-alt text-primary me-2"></i>Login';
+        }
+
+        function memberLogin() {
+            const email = document.getElementById('memberEmail').value;
+            const password = document.getElementById('memberPassword').value;
+
+            if (!email || !password) {
+                alert('Email/Username dan password wajib diisi');
+                return;
+            }
+
+            fetch('/Home/MemberLogin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': getRequestVerificationToken()
+                },
+                body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&tableId=${selectedTableId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (selectedTableId && data.role === 'Member') {
+                        window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
+                        return;
+                    }
+
+                    window.location.href = data.redirectUrl;
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat login');
+            });
+        }
+
+        function memberRegister() {
+            const data = {
+                username: document.getElementById('regUsername').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                fullName: document.getElementById('regFullName').value,
+                phone: document.getElementById('regPhone').value,
+                tableId: selectedTableId
+            };
+
+            if (!data.username || !data.email || !data.password || !data.fullName) {
+                alert('Semua field wajib diisi');
+                return;
+            }
+
+            fetch('/Home/MemberRegister', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getRequestVerificationToken()
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
+                } else {
+                    alert(result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat registrasi');
+            });
+        }
+
+        // Menu Filter Function
+        function filterMenu(category) {
+            // Update active tab
+            document.querySelectorAll('#menu .nav-link').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Filter menu items
+            const items = document.querySelectorAll('.menu-item');
+            items.forEach(item => {
+                if (category === 'all' || item.getAttribute('data-category') === category) {
+                    item.style.display = '';
+                    item.style.animation = 'fadeIn 0.5s ease';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Add to Cart Function
+        function addToCart(productId, productName, price) {
+            // Get existing cart from localStorage or create new
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            
+            // Check if product already in cart
+            const existingItem = cart.find(item => item.productId === productId);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    productId: productId,
+                    productName: productName,
+                    price: price,
+                    quantity: 1
+                });
+            }
+            
+            // Save cart
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+            // Show toast notification
+            showToast(`${productName} ditambahkan ke keranjang`, 'success');
+            
+            // Update cart count in navbar if exists
+            updateCartCount();
+        }
+
+        // Update Cart Count in Navbar
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            // You can add a cart badge element in navbar and update it here
+            console.log(`Cart count: ${count}`);
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'info') {
+            // Create toast container if not exists
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.style.cssText = 'position: fixed; top: 100px; right: 20px; z-index: 9999;';
+                document.body.appendChild(toastContainer);
+            }
+
+            // Create toast
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible fade show`;
+            toast.style.cssText = 'min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Initialize cart count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartCount();
+        });
+    </script>
+}

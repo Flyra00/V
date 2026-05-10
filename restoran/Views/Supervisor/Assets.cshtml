@@ -1,0 +1,56 @@
+@model IEnumerable<Restoran.Models.Asset>
+
+@{
+    ViewData["Title"] = "Manajemen Aset";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Manajemen Aset/Fasilitas</h2>
+            <a asp-action="CreateAsset" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Tambah Aset
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nama Aset</th>
+                            <th>Tipe</th>
+                            <th>Jumlah</th>
+                            <th>Unit</th>
+                            <th>Kondisi</th>
+                            <th>Tanggal Beli</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Name</td>
+                                <td>@item.AssetType</td>
+                                <td>@item.Quantity</td>
+                                <td>@item.Unit</td>
+                                <td>
+                                    <span class="badge bg-@(item.Condition == AssetCondition.Baik ? "success" : item.Condition == AssetCondition.RusakRingan ? "warning" : "danger")">
+                                        @item.Condition
+                                    </span>
+                                </td>
+                                <td>@(item.PurchaseDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td>
+                                    <a asp-action="EditAsset" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

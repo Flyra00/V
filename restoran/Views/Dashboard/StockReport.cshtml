@@ -1,0 +1,138 @@
+@model StockReportViewModel
+
+@{
+    ViewData["Title"] = "Laporan Stok";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Laporan Stok</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Stok Bahan Baku</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Stok</th>
+                                    <th>Unit</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Ingredients)
+                                {
+                                    <tr class="@(item.IsLowStock ? "table-warning" : "")">
+                                        <td>@item.Name</td>
+                                        <td>@item.StockQuantity</td>
+                                        <td>@item.Unit</td>
+                                        <td>
+                                            @if (item.IsLowStock)
+                                            {
+                                                <span class="badge bg-danger">Menipis</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Aman</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Stok Aset</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Tipe</th>
+                                    <th>Jumlah</th>
+                                    <th>Kondisi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Assets)
+                                {
+                                    <tr>
+                                        <td>@item.Name</td>
+                                        <td>@item.AssetType</td>
+                                        <td>@item.Quantity @item.Unit</td>
+                                        <td>
+                                            <span class="badge bg-@(item.Condition == "Baik" ? "success" : item.Condition == "RusakRingan" ? "warning" : "danger")">
+                                                @item.Condition
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Ketersediaan Menu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Nama Menu</th>
+                                    <th>Kategori</th>
+                                    <th>Harga</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ProductsAvailability)
+                                {
+                                    <tr>
+                                        <td>@item.Name</td>
+                                        <td>@item.Category</td>
+                                        <td>Rp @item.Price.ToString("N0")</td>
+                                        <td>
+                                            @if (item.IsAvailable)
+                                            {
+                                                <span class="badge bg-success">Tersedia</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Habis</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

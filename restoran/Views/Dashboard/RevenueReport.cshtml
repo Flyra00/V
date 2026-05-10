@@ -1,0 +1,135 @@
+@model RevenueReportViewModel
+
+@{
+    ViewData["Title"] = "Laporan Pendapatan";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Laporan Pendapatan</h2>
+            
+            <form method="get" class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">Dari Tanggal</label>
+                    <input type="date" name="fromDate" class="form-control" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Sampai Tanggal</label>
+                    <input type="date" name="toDate" class="form-control" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Total Pendapatan</h5>
+                    <h3>Rp @Model.TotalRevenue.ToString("N0")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Total Transaksi</h5>
+                    <h3>@Model.TotalTransactions</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5>Rata-rata per Transaksi</h5>
+                    <h3>Rp @Model.AverageTransactionValue.ToString("N0")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Ringkasan Pajak dan Service</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <div class="text-muted small">@Model.TaxName (@Model.TaxRate.ToString("N2")%)</div>
+                            <strong>Rp @Model.TotalTax.ToString("N0")</strong>
+                        </div>
+                        <span class="badge bg-primary">Pajak</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">@Model.ServiceChargeName (@Model.ServiceChargeRate.ToString("N2")%)</div>
+                            <strong>Rp @Model.TotalServiceCharge.ToString("N0")</strong>
+                        </div>
+                        <span class="badge bg-warning text-dark">Service</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Metode Pembayaran</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.PaymentMethods.Any())
+                    {
+                        foreach (var item in Model.PaymentMethods)
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <strong>@item.Method</strong>
+                                    <div class="small text-muted">@item.TransactionCount transaksi</div>
+                                </div>
+                                <strong>Rp @item.TotalAmount.ToString("N0")</strong>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Belum ada pembayaran lunas pada periode ini.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5>Detail Harian</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Jumlah Transaksi</th>
+                            <th>Total Pendapatan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.DailyRevenues)
+                        {
+                            <tr>
+                                <td>@item.Date.ToString("dd/MM/yyyy")</td>
+                                <td>@item.TransactionCount</td>
+                                <td>Rp @item.Revenue.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

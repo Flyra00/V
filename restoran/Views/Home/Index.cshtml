@@ -1,0 +1,489 @@
+@{
+    ViewData["Title"] = "Beranda";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 overflow-hidden" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body p-5 position-relative">
+                    <div class="position-absolute top-0 end-0 p-4 opacity-25">
+                        <i class="fas fa-utensils fa-8x"></i>
+                    </div>
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <h1 class="display-4 fw-bold text-white mb-3">Selamat Datang di Restoran Ceria</h1>
+                            <p class="lead text-white-50 mb-4">Sistem Manajemen Restoran Terintegrasi dengan fitur lengkap untuk mengelola operasional bisnis Anda.</p>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <a href="/Dashboard" class="btn btn-light btn-lg px-4">
+                                    <i class="fas fa-chart-line me-2"></i>Dashboard Owner
+                                </a>
+                                <a href="/Home/Login" class="btn btn-outline-light btn-lg px-4">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                </a>
+                                <button type="button" class="btn btn-warning btn-lg px-4" onclick="showOrderTableModal()">
+                                    <i class="fas fa-utensils me-2"></i>Order Table
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-5">
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle" 
+                             style="width: 70px; height: 70px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-chart-line fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold">Dashboard Owner</h5>
+                    <p class="text-muted small">Monitoring pendapatan real-time dan analitik bisnis lengkap</p>
+                    <a href="/Dashboard" class="btn btn-gradient-primary btn-sm">Buka Dashboard</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle" 
+                             style="width: 70px; height: 70px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-fire fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold">Kitchen Display</h5>
+                    <p class="text-muted small">Kelola pesanan masuk secara efisien dengan antarmuka yang intuitif</p>
+                    <a href="/Kitchen/Display" class="btn btn-gradient-primary btn-sm">Buka Kitchen</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle" 
+                             style="width: 70px; height: 70px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-boxes fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold">Inventory</h5>
+                    <p class="text-muted small">Manajemen stok bahan baku dan aset dengan notifikasi otomatis</p>
+                    <a href="/Supervisor/Assets" class="btn btn-gradient-primary btn-sm">Kelola Inventaris</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle" 
+                             style="width: 70px; height: 70px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <i class="fas fa-qrcode fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold">Pesan via QR</h5>
+                    <p class="text-muted small">Pelanggan dapat memesan langsung dari meja menggunakan QR code</p>
+                    <a href="/QR" class="btn btn-gradient-primary btn-sm">Lihat Menu</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">Fitur Unggulan</h3>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="d-flex align-items-center justify-content-center rounded" 
+                                 style="width: 50px; height: 50px; background: rgba(102, 126, 234, 0.1);">
+                                <i class="fas fa-bolt text-primary fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="fw-bold mb-2">Real-time Updates</h5>
+                            <p class="text-muted mb-0">Data transaksi dan stok diperbarui secara real-time untuk monitoring akurat.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="d-flex align-items-center justify-content-center rounded" 
+                                 style="width: 50px; height: 50px; background: rgba(79, 172, 254, 0.1);">
+                                <i class="fas fa-shield-alt text-info fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="fw-bold mb-2">Role-based Access</h5>
+                            <p class="text-muted mb-0">Sistem akses berbasis peran untuk keamanan dan kontrol yang lebih baik.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>  
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="d-flex align-items-center justify-content-center rounded" 
+                                 style="width: 50px; height: 50px; background: rgba(240, 147, 251, 0.1);">
+                                <i class="fas fa-mobile-alt text-danger fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="fw-bold mb-2">Mobile Friendly</h5>
+                            <p class="text-muted mb-0">Akses dari perangkat mobile dengan antarmuka yang responsif dan intuitif.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Akses Cepat</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-sm-6">
+                            <a href="/Admin" class="btn btn-outline-primary w-100 py-3">
+                                <i class="fas fa-users-cog fa-2x mb-2 d-block"></i>
+                                <span>Manajemen User</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="/AssetLog/Create" class="btn btn-outline-warning w-100 py-3">
+                                <i class="fas fa-tools fa-2x mb-2 d-block"></i>
+                                <span>Lapor Kerusakan</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="/Dashboard/RevenueReport" class="btn btn-outline-success w-100 py-3">
+                                <i class="fas fa-file-invoice-dollar fa-2x mb-2 d-block"></i>
+                                <span>Laporan Pendapatan</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="/Dashboard/StockReport" class="btn btn-outline-info w-100 py-3">
+                                <i class="fas fa-box fa-2x mb-2 d-block"></i>
+                                <span>Laporan Stok</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Table Modal -->
+<div class="modal fade" id="orderTableModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-utensils text-primary me-2"></i>Pesan di Meja
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                         style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-chair fa-2x text-white"></i>
+                    </div>
+                    <h5 class="fw-bold">Pilih Meja Anda</h5>
+                    <p class="text-muted">Silakan pilih nomor meja untuk memulai pemesanan</p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Nomor Meja</label>
+                    <select class="form-select form-select-lg" id="tableSelect">
+                        <option value="">Pilih Meja...</option>
+                        <option value="1">Meja 1</option>
+                        <option value="2">Meja 2</option>
+                        <option value="3">Meja 3</option>
+                        <option value="4">Meja 4</option>
+                        <option value="5">Meja 5</option>
+                        <option value="6">Meja 6</option>
+                        <option value="7">Meja 7</option>
+                        <option value="8">Meja 8</option>
+                    </select>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary py-3" onclick="selectUserType('guest')">
+                        <i class="fas fa-user me-2"></i>LANJUT SEBAGAI TAMU
+                    </button>
+                    <button type="button" class="btn btn-gradient-primary py-3" onclick="selectUserType('member')">
+                        <i class="fas fa-crown me-2"></i>LANJUT SEBAGAI MEMBER
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Member Auth Modal -->
+<div class="modal fade" id="memberAuthModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="memberAuthTitle">
+                    <i class="fas fa-crown text-warning me-2"></i>Login Member
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Login Form -->
+                <div id="loginFormSection">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control" id="memberEmail" placeholder="email@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Password</label>
+                        <input type="password" class="form-control" id="memberPassword" placeholder="********">
+                    </div>
+                    <button type="button" class="btn btn-gradient-primary w-100 py-3" onclick="memberLogin()">
+                        <i class="fas fa-sign-in-alt me-2"></i>LOGIN
+                    </button>
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Belum punya akun? </span>
+                        <a href="#" class="text-decoration-none" onclick="showRegisterForm()">Daftar</a>
+                    </div>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerFormSection" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Username</label>
+                                <input type="text" class="form-control" id="regUsername" placeholder="username">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <input type="email" class="form-control" id="regEmail" placeholder="email@example.com">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nama Lengkap</label>
+                        <input type="text" class="form-control" id="regFullName" placeholder="Nama lengkap">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">No. Telepon</label>
+                        <input type="tel" class="form-control" id="regPhone" placeholder="08123456789">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Password</label>
+                        <input type="password" class="form-control" id="regPassword" placeholder="********">
+                    </div>
+                    <button type="button" class="btn btn-gradient-success w-100 py-3" onclick="memberRegister()">
+                        <i class="fas fa-user-plus me-2"></i>DAFTAR
+                    </button>
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Sudah punya akun? </span>
+                        <a href="#" class="text-decoration-none" onclick="showLoginForm()">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    }
+    
+    [data-bs-theme="dark"] .hover-lift:hover {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        let selectedTableId = null;
+
+        function getRequestVerificationToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]').value;
+        }
+
+        function showOrderTableModal() {
+            const modal = new bootstrap.Modal(document.getElementById('orderTableModal'));
+            modal.show();
+        }
+
+        function selectUserType(type) {
+            const tableSelect = document.getElementById('tableSelect');
+            if (!tableSelect.value) {
+                alert('Silakan pilih nomor meja terlebih dahulu');
+                return;
+            }
+
+            selectedTableId = tableSelect.value;
+
+            // Close order table modal
+            bootstrap.Modal.getInstance(document.getElementById('orderTableModal')).hide();
+
+            if (type === 'guest') {
+                // Proceed as guest
+                fetch('/Home/GuestLogin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': getRequestVerificationToken()
+                    },
+                    body: `tableId=${selectedTableId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
+                    }
+                });
+            } else {
+                // Show member auth modal
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('memberAuthModal'));
+                    modal.show();
+                }, 300);
+            }
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginFormSection').style.display = 'none';
+            document.getElementById('registerFormSection').style.display = 'block';
+            document.getElementById('memberAuthTitle').innerHTML = '<i class="fas fa-user-plus text-success me-2"></i>Daftar Member';
+        }
+
+        function showLoginForm() {
+            document.getElementById('registerFormSection').style.display = 'none';
+            document.getElementById('loginFormSection').style.display = 'block';
+            document.getElementById('memberAuthTitle').innerHTML = '<i class="fas fa-crown text-warning me-2"></i>Login Member';
+        }
+
+        function memberLogin() {
+            const email = document.getElementById('memberEmail').value;
+            const password = document.getElementById('memberPassword').value;
+
+            if (!email || !password) {
+                alert('Email dan password wajib diisi');
+                return;
+            }
+
+            fetch('/Home/MemberLogin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': getRequestVerificationToken()
+                },
+                body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&tableId=${selectedTableId}`
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && !data.success) {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function memberRegister() {
+            const data = {
+                username: document.getElementById('regUsername').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                fullName: document.getElementById('regFullName').value,
+                phone: document.getElementById('regPhone').value,
+                tableId: selectedTableId
+            };
+
+            if (!data.username || !data.email || !data.password || !data.fullName) {
+                alert('Semua field wajib diisi');
+                return;
+            }
+
+            fetch('/Home/MemberRegister', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getRequestVerificationToken()
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
+                } else {
+                    alert(result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat registrasi');
+            });
+        }
+
+        // Animate cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = `opacity 0.5s ease ${index * 0.1}s, transform 0.5s ease ${index * 0.1}s`;
+            observer.observe(card);
+        });
+    </script>
+}

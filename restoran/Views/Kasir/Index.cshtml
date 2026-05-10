@@ -1,0 +1,98 @@
+@model IEnumerable<Restoran.Models.Transaction>
+
+@{
+    ViewData["Title"] = "Daftar Transaksi";
+}
+
+<div class="container-fluid py-4">
+    @Html.AntiForgeryToken()
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Daftar Transaksi</h2>
+            <a asp-action="POS" class="btn btn-success">
+                <i class="fas fa-cash-register"></i> Buka POS
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>No Transaksi</th>
+                            <th>Meja</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status Bayar</th>
+                            <th>Status Order</th>
+                            <th>Tanggal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.TransactionNumber</td>
+                                <td>@item.Table?.TableNumber</td>
+                                <td>@item.CustomerName</td>
+                                <td>Rp @item.Total.ToString("N0")</td>
+                                <td>
+                                    <span class="badge bg-@(item.PaymentStatus == PaymentStatus.Paid ? "success" : "warning")">
+                                        @item.PaymentStatus
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@(item.OrderStatus == OrderStatus.Completed ? "success" : item.OrderStatus == OrderStatus.New ? "danger" : "info")">
+                                        @item.OrderStatus
+                                    </span>
+                                </td>
+                                <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    @if (item.PaymentStatus != PaymentStatus.Paid)
+                                    {
+                                        <button class="btn btn-sm btn-success" onclick="confirmPayment(@item.Id)">
+                                            <i class="fas fa-check"></i> Konfirmasi
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getRequestVerificationToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]').value;
+        }
+
+        function confirmPayment(transactionId) {
+            if (confirm('Konfirmasi pembayaran untuk transaksi ini?')) {
+                fetch('/Kasir/ConfirmPayment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': getRequestVerificationToken()
+                    },
+                    body: `transactionId=${transactionId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+            }
+        }
+    </script>
+}

@@ -1,0 +1,53 @@
+@model Restoran.Models.Category
+
+@{
+    ViewData["Title"] = "Tambah Kategori";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <div class="d-flex align-items-center">
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm me-3">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                        <h5 class="fw-bold mb-0">Tambah Kategori Baru</h5>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold">Nama Kategori <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control form-control-lg" placeholder="Masukkan nama kategori" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label fw-bold">Deskripsi</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" 
+                                      placeholder="Masukkan deskripsi kategori (opsional)"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-gradient-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Simpan Kategori
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Batal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

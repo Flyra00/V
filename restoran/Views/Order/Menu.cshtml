@@ -1,0 +1,550 @@
+@model OrderMenuViewModel
+
+@{
+    ViewData["Title"] = "Menu Restoran";
+    Layout = "_OrderLayout";
+}
+
+<div class="menu-container">
+    @Html.AntiForgeryToken()
+    <!-- Header -->
+    <div class="menu-header">
+        <div class="container">
+            <div class="row align-items-center py-3">
+                <div class="col">
+                    <h4 class="fw-bold mb-0">Menu Restoran</h4>
+                    <p class="mb-0 text-white-75">Meja <strong>#@Model.TableNumber</strong></p>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-light position-relative" onclick="showCart()">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-count">
+                            0
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="container py-3">
+        <div class="row">
+            <div class="col-12">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" id="searchMenu" 
+                           placeholder="Cari menu..." onkeyup="searchMenu()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="container pb-3">
+        <div class="category-scroll d-flex gap-2 overflow-auto pb-2">
+            <button class="btn btn-gradient-primary rounded-pill px-4 active" onclick="filterCategory('all')">
+                Semua
+            </button>
+            @foreach (var category in Model.ProductsByCategory)
+            {
+                <button class="btn btn-outline-primary rounded-pill px-4" onclick="filterCategory('@category.Key')">
+                    @category.Key
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Menu Grid -->
+    <div class="container pb-5">
+        @foreach (var category in Model.ProductsByCategory)
+        {
+            <div class="category-section mb-4" data-category="@category.Key">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">@category.Key</h5>
+                <div class="row g-3">
+                    @foreach (var product in category.Value)
+                    {
+                        <div class="col-6 col-md-4 col-lg-3 menu-item" data-name="@product.Name.ToLower()" data-category="@category.Key">
+                            <div class="card menu-card border-0 shadow-sm h-100" onclick="addToCart(@product.Id, '@product.Name', @product.Price, '@product.ImageUrl')">
+                                <div class="position-relative">
+                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                    {
+                                        <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 160px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 160px;">
+                                            <i class="fas fa-utensils fa-3x text-muted"></i>
+                                        </div>
+                                    }
+                                    <div class="position-absolute top-0 end-0 m-2">
+                                        <button class="btn btn-light btn-sm rounded-circle" style="width: 36px; height: 36px;"
+                                                onclick="event.stopPropagation(); quickAdd(@product.Id, '@product.Name', @product.Price)">
+                                            <i class="fas fa-plus text-primary"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body p-3">
+                                    <h6 class="card-title fw-bold mb-1">@product.Name</h6>
+                                    <p class="card-text text-muted small mb-2" style="height: 40px; overflow: hidden;">
+                                        @(string.IsNullOrEmpty(product.Description) ? "Tidak ada deskripsi" : product.Description)
+                                    </p>
+                                    <h6 class="text-primary fw-bold mb-0">Rp @product.Price.ToString("N0")</h6>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Cart Modal -->
+<div class="modal fade" id="cartModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-shopping-cart text-primary me-2"></i>Keranjang Pesanan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="cart-items" class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                    <p class="text-muted text-center py-5">
+                        <i class="fas fa-shopping-basket fa-3x mb-3 d-block"></i>
+                        Keranjang masih kosong
+                    </p>
+                </div>
+                
+                <div class="card border-0 bg-light">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Catatan Pesanan</label>
+                            <textarea id="order-notes" class="form-control" rows="2" 
+                                      placeholder="Tambahkan catatan khusus untuk pesanan ini..."></textarea>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">Metode Pembayaran</label>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <div class="form-check card border p-3 text-center cursor-pointer payment-option" 
+                                         onclick="selectPayment(0)">
+                                        <input class="form-check-input d-none" type="radio" name="payment" value="0" checked>
+                                        <i class="fas fa-money-bill-wave fa-2x mb-2 text-success"></i>
+                                        <div class="small">Bayar di Kasir</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check card border p-3 text-center cursor-pointer payment-option" 
+                                         onclick="selectPayment(1)">
+                                        <input class="form-check-input d-none" type="radio" name="payment" value="1">
+                                        <i class="fas fa-qrcode fa-2x mb-2 text-primary"></i>
+                                        <div class="small">QRIS</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check card border p-3 text-center cursor-pointer payment-option" 
+                                         onclick="selectPayment(2)">
+                                        <input class="form-check-input d-none" type="radio" name="payment" value="2">
+                                        <i class="fas fa-university fa-2x mb-2 text-info"></i>
+                                        <div class="small">Transfer</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <div class="w-100">
+                    <div class="border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span>Subtotal</span>
+                            <span id="cart-subtotal">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span>@Model.TaxName (@Model.TaxRate.ToString("N2")%)</span>
+                            <span id="cart-tax">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span>@Model.ServiceChargeName (@Model.ServiceChargeRate.ToString("N2")%)</span>
+                            <span id="cart-service-charge">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <span class="fw-bold">Total Pembayaran</span>
+                            <h4 class="fw-bold text-primary mb-0" id="cart-total">Rp 0</h4>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-gradient-primary w-100 py-3" onclick="checkout()">
+                        <i class="fas fa-check me-2"></i>Pesan Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="product-image" class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded" 
+                         style="width: 150px; height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-utensils fa-4x text-white"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold" id="product-name">Nama Produk</h4>
+                <h5 class="text-primary fw-bold" id="product-price">Rp 0</h5>
+                <p class="text-muted" id="product-desc">Deskripsi produk</p>
+                
+                <div class="d-flex justify-content-center align-items-center gap-3 my-4">
+                    <button class="btn btn-outline-secondary rounded-circle" style="width: 45px; height: 45px;" 
+                            onclick="updateModalQty(-1)">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <span class="fw-bold fs-4" id="modal-qty">1</span>
+                    <button class="btn btn-outline-secondary rounded-circle" style="width: 45px; height: 45px;" 
+                            onclick="updateModalQty(1)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                
+                <button class="btn btn-gradient-primary w-100 py-3" onclick="addFromModal()">
+                    <i class="fas fa-plus me-2"></i>Tambah ke Keranjang
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let cart = [];
+        let tableId = @Model.TableId;
+        const taxRate = @Model.TaxRate.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        const serviceChargeRate = @Model.ServiceChargeRate.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        let modalProduct = null;
+        let modalQty = 1;
+
+        function getRequestVerificationToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]').value;
+        }
+
+        function addToCart(productId, productName, price, imageUrl) {
+            modalProduct = { productId, productName, price, imageUrl };
+            modalQty = 1;
+            
+            document.getElementById('product-name').textContent = productName;
+            document.getElementById('product-price').textContent = 'Rp ' + price.toLocaleString();
+            document.getElementById('modal-qty').textContent = modalQty;
+            
+            const productImage = document.getElementById('product-image');
+            if (imageUrl) {
+                productImage.innerHTML = `<img src="${imageUrl}" class="rounded" style="width: 150px; height: 150px; object-fit: cover;">`;
+            } else {
+                productImage.innerHTML = `
+                    <div class="d-inline-flex align-items-center justify-content-center rounded" 
+                         style="width: 150px; height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-utensils fa-4x text-white"></i>
+                    </div>`;
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('productModal'));
+            modal.show();
+        }
+
+        function updateModalQty(change) {
+            modalQty += change;
+            if (modalQty < 1) modalQty = 1;
+            document.getElementById('modal-qty').textContent = modalQty;
+        }
+
+        function addFromModal() {
+            if (modalProduct) {
+                const existingItem = cart.find(item => item.productId === modalProduct.productId);
+                if (existingItem) {
+                    existingItem.quantity += modalQty;
+                } else {
+                    cart.push({ 
+                        productId: modalProduct.productId, 
+                        productName: modalProduct.productName, 
+                        price: modalProduct.price, 
+                        quantity: modalQty 
+                    });
+                }
+                updateCartUI();
+                
+                // Close modal and show toast
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+                showToast(`${modalProduct.productName} ditambahkan ke keranjang`, 'success');
+            }
+        }
+
+        function quickAdd(productId, productName, price) {
+            const existingItem = cart.find(item => item.productId === productId);
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ productId, productName, price, quantity: 1 });
+            }
+            updateCartUI();
+            showToast(`${productName} ditambahkan ke keranjang`, 'success');
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cart-count').textContent = count;
+            
+            let html = '';
+            let subtotal = 0;
+            
+            if (cart.length === 0) {
+                html = `
+                    <p class="text-muted text-center py-5">
+                        <i class="fas fa-shopping-basket fa-3x mb-3 d-block"></i>
+                        Keranjang masih kosong
+                    </p>`;
+            } else {
+                cart.forEach((item, index) => {
+                    const itemSubtotal = item.price * item.quantity;
+                    subtotal += itemSubtotal;
+                    html += `
+                        <div class="d-flex align-items-center p-3 mb-2 rounded" style="background: var(--bs-body-bg);">
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-1">${item.productName}</h6>
+                                <small class="text-muted">Rp ${item.price.toLocaleString()}</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle" 
+                                        style="width: 32px; height: 32px; padding: 0;"
+                                        onclick="updateQuantity(${index}, -1)">
+                                    <i class="fas fa-minus small"></i>
+                                </button>
+                                <span class="fw-bold" style="min-width: 30px; text-align: center;">${item.quantity}</span>
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle" 
+                                        style="width: 32px; height: 32px; padding: 0;"
+                                        onclick="updateQuantity(${index}, 1)">
+                                    <i class="fas fa-plus small"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger rounded-circle ms-2" 
+                                        style="width: 32px; height: 32px; padding: 0;"
+                                        onclick="removeItem(${index})">
+                                    <i class="fas fa-trash small"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            document.getElementById('cart-items').innerHTML = html;
+            const taxAmount = subtotal * (taxRate / 100);
+            const serviceChargeAmount = subtotal * (serviceChargeRate / 100);
+            const total = subtotal + taxAmount + serviceChargeAmount;
+            document.getElementById('cart-subtotal').textContent = 'Rp ' + subtotal.toLocaleString();
+            document.getElementById('cart-tax').textContent = 'Rp ' + taxAmount.toLocaleString();
+            document.getElementById('cart-service-charge').textContent = 'Rp ' + serviceChargeAmount.toLocaleString();
+            document.getElementById('cart-total').textContent = 'Rp ' + total.toLocaleString();
+        }
+
+        function updateQuantity(index, change) {
+            cart[index].quantity += change;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartUI();
+        }
+
+        function removeItem(index) {
+            const itemName = cart[index].productName;
+            cart.splice(index, 1);
+            updateCartUI();
+            showToast(`${itemName} dihapus dari keranjang`, 'warning');
+        }
+
+        function showCart() {
+            if (cart.length === 0) {
+                showToast('Keranjang masih kosong!', 'warning');
+                return;
+            }
+            const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+            modal.show();
+        }
+
+        function selectPayment(method) {
+            document.querySelectorAll('.payment-option').forEach(el => {
+                el.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+                el.querySelector('input').checked = false;
+            });
+            
+            const selected = document.querySelector(`.payment-option:nth-child(${method + 1})`);
+            if (selected) {
+                selected.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+                selected.querySelector('input').checked = true;
+            }
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                showToast('Keranjang masih kosong!', 'warning');
+                return;
+            }
+
+            const orderData = {
+                tableId: tableId,
+                customerName: 'Guest',
+                isMember: false,
+                paymentMethod: parseInt(document.querySelector('input[name="payment"]:checked').value),
+                items: cart.map(item => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    notes: document.getElementById('order-notes').value
+                }))
+            };
+
+            // Show loading
+            const btn = document.querySelector('#cartModal .btn-gradient-primary');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+            btn.disabled = true;
+
+            fetch('/Order/Create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getRequestVerificationToken()
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`Pesanan berhasil dibuat! Nomor: ${data.transactionNumber}`, 'success');
+                    cart = [];
+                    updateCartUI();
+                    bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
+                    
+                    if (orderData.paymentMethod === 1 || orderData.paymentMethod === 2) {
+                        window.location.href = '/Order/Confirmation/' + data.transactionId;
+                    }
+                } else {
+                    showToast('Error: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('Terjadi kesalahan: ' + error.message, 'error');
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        function searchMenu() {
+            const searchTerm = document.getElementById('searchMenu').value.toLowerCase();
+            document.querySelectorAll('.menu-item').forEach(item => {
+                const name = item.getAttribute('data-name');
+                if (name.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function filterCategory(category) {
+            document.querySelectorAll('.category-scroll button').forEach(btn => {
+                btn.classList.remove('btn-gradient-primary', 'active');
+                btn.classList.add('btn-outline-primary');
+            });
+            event.target.classList.remove('btn-outline-primary');
+            event.target.classList.add('btn-gradient-primary', 'active');
+
+            if (category === 'all') {
+                document.querySelectorAll('.category-section').forEach(section => {
+                    section.style.display = '';
+                });
+            } else {
+                document.querySelectorAll('.category-section').forEach(section => {
+                    if (section.getAttribute('data-category') === category) {
+                        section.style.display = '';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // Initialize payment option
+        selectPayment(0);
+    </script>
+}
+
+<style>
+    .menu-container {
+        min-height: 100vh;
+        background: var(--bs-body-bg);
+    }
+
+    .menu-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .menu-card {
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .menu-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    }
+
+    .menu-card:active {
+        transform: scale(0.98);
+    }
+
+    .category-scroll {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .category-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .category-scroll button {
+        white-space: nowrap;
+        transition: all 0.3s ease;
+    }
+
+    .payment-option {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .payment-option:hover {
+        border-color: var(--bs-primary) !important;
+    }
+
+    .payment-option.border-primary {
+        border-width: 2px !important;
+    }
+
+    .text-white-75 {
+        color: rgba(255, 255, 255, 0.75) !important;
+    }
+</style>

@@ -1,0 +1,457 @@
+@model DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard Owner";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-1">Dashboard Owner</h2>
+                    <p class="text-muted mb-0">Ringkasan performa bisnis hari ini</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" onclick="refreshDashboard()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-gradient-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/Dashboard/RevenueReport"><i class="fas fa-file-invoice-dollar me-2"></i>Laporan Pendapatan</a></li>
+                            <li><a class="dropdown-item" href="/Dashboard/StockReport"><i class="fas fa-box me-2"></i>Laporan Stok</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card border-0 h-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-white-50 mb-1">Pendapatan Hari Ini</p>
+                            <h3 class="fw-bold mb-2">Rp @Model.TodayRevenue.ToString("N0")</h3>
+                            <small class="text-white-75">
+                                <i class="fas fa-receipt me-1"></i>@Model.TodayTransactionCount transaksi
+                            </small>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded p-2">
+                            <i class="fas fa-money-bill-wave fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                        <small class="text-white-75">+12% dari kemarin</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card border-0 h-100" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-white-50 mb-1">Pendapatan Bulan Ini</p>
+                            <h3 class="fw-bold mb-2">Rp @Model.MonthlyRevenue.ToString("N0")</h3>
+                            <small class="text-white-75">
+                                <i class="fas fa-receipt me-1"></i>@Model.MonthlyTransactionCount transaksi
+                            </small>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded p-2">
+                            <i class="fas fa-chart-line fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                        <small class="text-white-75">+8% dari bulan lalu</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card border-0 h-100" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-white-50 mb-1">Menu Tersedia</p>
+                            <h3 class="fw-bold mb-2">@Model.AvailableProductsCount</h3>
+                            <small class="text-white-75">
+                                <i class="fas fa-times-circle me-1"></i>@Model.UnavailableProductsCount menu habis
+                            </small>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded p-2">
+                            <i class="fas fa-utensils fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                        <small class="text-white-75">@((Model.AvailableProductsCount + Model.UnavailableProductsCount) > 0 ? (Model.AvailableProductsCount * 100 / (Model.AvailableProductsCount + Model.UnavailableProductsCount)) : 0)% tersedia</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card border-0 h-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-white-50 mb-1">Transaksi Aktif</p>
+                            <h3 class="fw-bold mb-2">@Model.ActiveTransactions.Count</h3>
+                            <small class="text-white-75">
+                                <i class="fas fa-clock me-1"></i>Sedang diproses
+                            </small>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded p-2">
+                            <i class="fas fa-fire fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                        <small class="text-white-75">Rata-rata 15 menit</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Chart Section -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">Grafik Pendapatan 7 Hari Terakhir</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                7 Hari
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">7 Hari</a></li>
+                                <li><a class="dropdown-item" href="#">30 Hari</a></li>
+                                <li><a class="dropdown-item" href="#">3 Bulan</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="revenueChart" height="280"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-0">Menu Terlaris Hari Ini</h5>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.TopProductsToday.Any())
+                    {
+                        @foreach (var product in Model.TopProductsToday.Take(5))
+                        {
+                            <div class="d-flex align-items-center mb-3 p-3 rounded" style="background: var(--bs-body-bg);">
+                                <div class="flex-shrink-0">
+                                    <div class="d-flex align-items-center justify-content-center rounded" 
+                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        <i class="fas fa-utensils text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold mb-1">@product.ProductName</h6>
+                                    <small class="text-muted">@product.QuantitySold terjual</small>
+                                </div>
+                                <div class="text-end">
+                                    <h6 class="fw-bold text-primary mb-0">Rp @product.Revenue.ToString("N0")</h6>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Belum ada data penjualan hari ini</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Inventory Alert -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>Inventaris Perlu Perhatian
+                        </h5>
+                        @if (Model.LowStockIngredients.Any())
+                        {
+                            <span class="badge bg-danger">@Model.LowStockIngredients.Count</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.LowStockIngredients.Any())
+                    {
+                        @foreach (var ingredient in Model.LowStockIngredients.Take(5))
+                        {
+                            <div class="alert alert-warning border-0 mb-2" style="background: rgba(245, 158, 11, 0.1);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>@ingredient.Name</strong>
+                                        <div class="small text-muted">
+                                            Jumlah: @ingredient.CurrentStock @ingredient.Unit (Patokan minimum: @ingredient.MinStock)
+                                        </div>
+                                    </div>
+                                    <a href="/Supervisor/Assets" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                </div>
+                                <div class="progress mt-2" style="height: 4px;">
+                                    <div class="progress-bar bg-warning" 
+                                         style="width: @(Math.Min((ingredient.CurrentStock * 100) / ingredient.MinStock, 100))%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                                 style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                <i class="fas fa-check fa-2x text-white"></i>
+                            </div>
+                            <h6 class="fw-bold">Inventaris Dalam Kondisi Baik</h6>
+                            <p class="text-muted small">Tidak ada aset yang perlu ditinjau saat ini</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Asset Damage Reports -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-tools text-danger me-2"></i>Laporan Kerusakan
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.RecentAssetDamages.Any())
+                    {
+                        @foreach (var damage in Model.RecentAssetDamages.Take(5))
+                        {
+                            <div class="d-flex align-items-center p-3 rounded mb-2" style="background: rgba(239, 68, 68, 0.1);">
+                                <div class="flex-shrink-0">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle" 
+                                         style="width: 40px; height: 40px; background: #ef4444;">
+                                        <i class="fas fa-exclamation text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold mb-0">@damage.AssetName</h6>
+                                    <small class="text-muted">@damage.DamageType • @damage.ReportedAt.ToString("dd/MM/yyyy")</small>
+                                </div>
+                                <span class="badge bg-danger">@damage.Quantity pcs</span>
+                            </div>
+                        }
+                        <a href="/AssetLog/Report" class="btn btn-outline-danger w-100 mt-3">
+                            <i class="fas fa-eye me-2"></i>Lihat Semua
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                                 style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                <i class="fas fa-check fa-2x text-white"></i>
+                            </div>
+                            <h6 class="fw-bold">Tidak Ada Kerusakan</h6>
+                            <p class="text-muted small">Semua aset dalam kondisi baik</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Transactions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-list text-info me-2"></i>Transaksi Aktif
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.ActiveTransactions.Any())
+                    {
+                        @foreach (var transaction in Model.ActiveTransactions.Take(5))
+                        {
+                            var statusClass = transaction.OrderStatus switch
+                            {
+                                "New" => "bg-danger",
+                                "Processing" => "bg-warning",
+                                "Ready" => "bg-success",
+                                _ => "bg-secondary"
+                            };
+                            
+                            var statusIcon = transaction.OrderStatus switch
+                            {
+                                "New" => "fa-clock",
+                                "Processing" => "fa-fire",
+                                "Ready" => "fa-check",
+                                _ => "fa-question"
+                            };
+
+                            <div class="d-flex align-items-center p-3 rounded mb-2" style="background: var(--bs-body-bg);">
+                                <div class="flex-shrink-0">
+                                    <div class="d-flex align-items-center justify-content-center rounded" 
+                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                                        <i class="fas @statusIcon text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold mb-0">@transaction.TransactionNumber</h6>
+                                    <small class="text-muted">Meja @transaction.TableNumber</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge @statusClass mb-1">@transaction.OrderStatus</span>
+                                    <div class="small fw-bold">Rp @transaction.Total.ToString("N0")</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
+                                 style="width: 80px; height: 80px; background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
+                                <i class="fas fa-inbox fa-2x text-white"></i>
+                            </div>
+                            <h6 class="fw-bold">Tidak Ada Transaksi Aktif</h6>
+                            <p class="text-muted small">Semua pesanan telah selesai</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Revenue Chart
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        
+        const revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.RevenueChartData.Select(x => x.Label))),
+                datasets: [{
+                    label: 'Pendapatan (Rp)',
+                    data: @Html.Raw(Json.Serialize(Model.RevenueChartData.Select(x => x.Value))),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: isDarkMode ? '#1e293b' : '#fff',
+                        titleColor: isDarkMode ? '#e2e8f0' : '#1e293b',
+                        bodyColor: isDarkMode ? '#e2e8f0' : '#1e293b',
+                        borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Rp ' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: isDarkMode ? '#94a3b8' : '#64748b'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+                        },
+                        ticks: {
+                            color: isDarkMode ? '#94a3b8' : '#64748b',
+                            callback: function(value) {
+                                return 'Rp ' + (value / 1000000).toFixed(1) + 'M';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update chart on theme change
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            setTimeout(() => {
+                const newIsDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                revenueChart.options.plugins.tooltip.backgroundColor = newIsDarkMode ? '#1e293b' : '#fff';
+                revenueChart.options.plugins.tooltip.titleColor = newIsDarkMode ? '#e2e8f0' : '#1e293b';
+                revenueChart.options.plugins.tooltip.bodyColor = newIsDarkMode ? '#e2e8f0' : '#1e293b';
+                revenueChart.options.plugins.tooltip.borderColor = newIsDarkMode ? '#334155' : '#e2e8f0';
+                revenueChart.options.scales.x.ticks.color = newIsDarkMode ? '#94a3b8' : '#64748b';
+                revenueChart.options.scales.y.ticks.color = newIsDarkMode ? '#94a3b8' : '#64748b';
+                revenueChart.options.scales.y.grid.color = newIsDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+                revenueChart.update();
+            }, 100);
+        });
+
+        // Refresh Dashboard Function
+        function refreshDashboard() {
+            const btn = document.querySelector('.fa-sync-alt');
+            btn.classList.add('fa-spin');
+            
+            // Show toast
+            showToast('Memperbarui data dashboard...', 'info');
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
+        // Real-time update simulation
+        setInterval(() => {
+            // This would typically fetch new data from the server
+            // For now, just a placeholder for real-time functionality
+        }, 30000); // Check every 30 seconds
+    </script>
+}

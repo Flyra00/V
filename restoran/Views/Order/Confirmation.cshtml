@@ -1,0 +1,170 @@
+@model Transaction
+
+@{
+    ViewData["Title"] = "Konfirmasi Pembayaran";
+    Layout = "_OrderLayout";
+}
+
+<div class="container py-5">
+    @Html.AntiForgeryToken()
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Konfirmasi Pembayaran</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h5>Nomor Pesanan: <strong>@Model.TransactionNumber</strong></h5>
+                        <p class="text-muted">Meja: @Model.Table?.TableNumber</p>
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Menu</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Harga</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.TransactionDetails)
+                                {
+                                    <tr>
+                                        <td>
+                                            @item.Product.Name
+                                            @if (!string.IsNullOrEmpty(item.Notes))
+                                            {
+                                                <br><small class="text-muted">@item.Notes</small>
+                                            }
+                                        </td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">Rp @item.UnitPrice.ToString("N0")</td>
+                                        <td class="text-end">Rp @item.Subtotal.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td class="text-end">Rp @Model.Subtotal.ToString("N0")</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>PPN (10%):</strong></td>
+                                    <td class="text-end">Rp @Model.Tax.ToString("N0")</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Service Charge:</strong></td>
+                                    <td class="text-end">Rp @Model.ServiceCharge.ToString("N0")</td>
+                                </tr>
+                                @if (Model.Discount > 0)
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Diskon:</strong></td>
+                                        <td class="text-end">-Rp @Model.Discount.ToString("N0")</td>
+                                    </tr>
+                                }
+                                <tr class="table-primary">
+                                    <td colspan="3" class="text-end"><h5 class="mb-0"><strong>TOTAL:</strong></h5></td>
+                                    <td class="text-end"><h5 class="mb-0"><strong>Rp @Model.Total.ToString("N0")</strong></h5></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    @if (Model.PaymentMethod == PaymentMethod.QRIS || Model.PaymentMethod == PaymentMethod.Transfer)
+                    {
+                        <div class="text-center mb-4">
+                            <h5>Silakan Lakukan Pembayaran</h5>
+                            
+                            @if (Model.PaymentMethod == PaymentMethod.QRIS)
+                            {
+                                <div class="p-4 bg-light rounded mb-3">
+                                    <p class="mb-2">Scan QRIS berikut:</p>
+                                    <div style="width: 200px; height: 200px; background: #ddd; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                                        <span class="text-muted">[QRIS Placeholder]</span>
+                                    </div>
+                                    <p class="mt-2 mb-0"><strong>Restoran Ceria</strong></p>
+                                    <p class="mb-0">Total: Rp @Model.Total.ToString("N0")</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="p-4 bg-light rounded mb-3 text-start">
+                                    <p><strong>Transfer ke:</strong></p>
+                                    <p class="mb-1">Bank BCA</p>
+                                    <p class="mb-1">No. Rekening: 123-456-7890</p>
+                                    <p class="mb-1">Atas Nama: PT Restoran Ceria</p>
+                                    <hr>
+                                    <p class="mb-0"><strong>Total Transfer: Rp @Model.Total.ToString("N0")</strong></p>
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label class="form-label">Upload Bukti Pembayaran</label>
+                                <input type="file" id="payment-proof" class="form-control" accept="image/*">
+                            </div>
+                            <button class="btn btn-primary" onclick="uploadProof(@Model.Id)">
+                                <i class="fas fa-upload"></i> Upload Bukti Bayar
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Silakan lakukan pembayaran di kasir.</strong>
+                            <p class="mb-0">Tunjukkan nomor pesanan ini ke kasir.</p>
+                        </div>
+                    }
+
+                    <div class="text-center mt-4">
+                        <a href="/" class="btn btn-outline-secondary">Kembali ke Beranda</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getRequestVerificationToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]').value;
+        }
+
+        function uploadProof(transactionId) {
+            const fileInput = document.getElementById('payment-proof');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Pilih file bukti pembayaran terlebih dahulu');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('transactionId', transactionId);
+            formData.append('paymentProof', fileInput.files[0]);
+
+            fetch('/Order/UploadPaymentProof', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': getRequestVerificationToken()
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Terjadi kesalahan: ' + error.message);
+            });
+        }
+    </script>
+}

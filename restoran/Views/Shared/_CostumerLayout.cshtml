@@ -1,0 +1,294 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>@ViewData["Title"] - Yummy Bootstrap Template</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+
+    <!-- Favicons -->
+    <link href="assets/img/favicon.png" rel="icon">
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+    <!-- Main CSS File -->
+    <link href="assets/css/main.css" rel="stylesheet">
+</head>
+
+<body class="index-page">
+
+    <header id="header" class="header d-flex align-items-center sticky-top">
+        <div class="container position-relative d-flex align-items-center justify-content-between">
+
+            <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+                <!-- Uncomment the line below if you also wish to use an image logo -->
+                <!-- <img src="assets/img/logo.png" alt=""> -->
+                <h1 class="sitename">Yummy</h1>
+                <span>.</span>
+            </a>
+
+            <nav id="navmenu" class="navmenu">
+                <ul>
+                    <li><a href="#hero" class="active">Home<br></a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#menu">Menu</a></li>
+                    <li><a href="#events">Events</a></li>
+                    <li><a href="#chefs">Chefs</a></li>
+                    <li><a href="#gallery">Gallery</a></li>
+                    <li class="dropdown">
+                        <a href="#"><span>Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                        <ul>
+                            <li><a href="#">Dropdown 1</a></li>
+                            <li class="dropdown">
+                                <a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                                <ul>
+                                    <li><a href="#">Deep Dropdown 1</a></li>
+                                    <li><a href="#">Deep Dropdown 2</a></li>
+                                    <li><a href="#">Deep Dropdown 3</a></li>
+                                    <li><a href="#">Deep Dropdown 4</a></li>
+                                    <li><a href="#">Deep Dropdown 5</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#">Dropdown 2</a></li>
+                            <li><a href="#">Dropdown 3</a></li>
+                            <li><a href="#">Dropdown 4</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+            </nav>
+
+            <!-- Tombol di navbar sekarang membuka Table Number Modal -->
+            <button type="button" class="btn-getstarted" data-bs-toggle="modal" data-bs-target="#tableModal">
+                Book a Table
+            </button>
+
+        </div>
+    </header>
+
+    <main class="main">
+        @RenderBody()
+    </main>
+
+    <!-- ==================== MODAL TABLE NUMBER ==================== -->
+    <div class="modal fade table-modal" id="tableModal" tabindex="-1" aria-labelledby="tableModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content table-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="table-modal-icon">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="tableModalLabel">Table Number</h5>
+                            <small class="text-muted table-modal-subtitle">Save once for a faster checkout.</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body pt-3">
+                    <label for="tableNumberInput" class="form-label table-modal-label">Table Number</label>
+                    <input type="text" inputmode="numeric" min="1" class="form-control table-modal-input" id="tableNumberInput" name="nr_table_number" autocomplete="off" placeholder="e.g. 5">
+                    <div class="invalid-feedback">Please enter a valid table number.</div>
+                    <div class="table-modal-hint">Stored in cookies. Can be reset at any time.</div>
+
+                    <div class="mt-4">
+                        <div class="table-modal-label mb-2">Membership Status</div>
+                        <div class="btn-group w-100 table-modal-toggle" role="group" aria-label="Membership Status">
+                            <input type="radio" class="btn-check" name="membershipStatus" id="membershipGuest" autocomplete="off" value="Guest" checked>
+                            <label class="btn btn-outline-light" for="membershipGuest">Guest</label>
+
+                            <input type="radio" class="btn-check" name="membershipStatus" id="membershipMember" autocomplete="off" value="Member">
+                            <label class="btn btn-outline-light" for="membershipMember">Member</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
+                    <button type="button" class="btn table-modal-reset" id="tableResetBtn">Reset</button>
+                    <button type="button" class="btn table-modal-save" id="tableSaveBtn">Save &amp; Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL AUTH (Login/Register) ==================== -->
+    <div class="modal fade auth-modal" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content auth-modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="auth-modal-icon">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="authModalLabel">Member Access</h5>
+                            <small class="text-muted auth-modal-subtitle">Login or register to continue as a member.</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body pt-3">
+                    <ul class="nav nav-pills auth-tabs mb-3" id="authTab" role="tablist">
+                        <li class="nav-item w-50" role="presentation">
+                            <button class="nav-link active w-100" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-pane" type="button" role="tab" aria-controls="login-pane" aria-selected="true">Login</button>
+                        </li>
+                        <li class="nav-item w-50" role="presentation">
+                            <button class="nav-link w-100" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-pane" type="button" role="tab" aria-controls="register-pane" aria-selected="false">Register</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="authTabContent">
+                        <!-- Login -->
+                        <div class="tab-pane fade show active" id="login-pane" role="tabpanel" aria-labelledby="login-tab" tabindex="0">
+                            <div class="mb-3">
+                                <label for="loginUsername" class="form-label auth-modal-label">Username</label>
+                                <input type="text" class="form-control auth-modal-input" id="loginUsername" name="nr_login_username"
+                                       placeholder="username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+                                <div class="invalid-feedback">Username is required.</div>
+                            </div>
+                            <div class="mb-2">
+                                <label for="loginPassword" class="form-label auth-modal-label">Password</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control auth-modal-input" id="loginPassword" name="nr_login_password"
+                                           placeholder="••••••••" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+                                    <button class="btn btn-outline-light" type="button" data-toggle-password="#loginPassword" aria-label="Show or hide password">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">Password is required.</div>
+                            </div>
+                        </div>
+
+                        <!-- Register -->
+                        <div class="tab-pane fade" id="register-pane" role="tabpanel" aria-labelledby="register-tab" tabindex="0">
+                            <div class="mb-3">
+                                <label for="regName" class="form-label auth-modal-label">Full Name</label>
+                                <input type="text" class="form-control auth-modal-input" id="regName" placeholder="Your name">
+                                <div class="invalid-feedback">Name is required.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="regUsername" class="form-label auth-modal-label">Username</label>
+                                <input type="text" class="form-control auth-modal-input" id="regUsername" name="nr_register_username"
+                                       placeholder="username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+                                <div class="invalid-feedback">Username is required.</div>
+                            </div>
+                            <div class="mb-2">
+                                <label for="regPassword" class="form-label auth-modal-label">Password</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control auth-modal-input" id="regPassword" name="nr_register_password"
+                                           placeholder="Create password" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+                                    <button class="btn btn-outline-light" type="button" data-toggle-password="#regPassword" aria-label="Show or hide password">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">Password is required.</div>
+                            </div>
+                            <div class="auth-modal-hint">Akun baru otomatis masuk role <b>Customer</b>.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0 d-flex justify-content-end gap-2">
+                    <button type="button" class="btn auth-modal-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn auth-modal-primary" id="authContinueBtn">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer id="footer" class="footer dark-background">
+
+        <div class="container">
+            <div class="row gy-3">
+                <div class="col-lg-3 col-md-6 d-flex">
+                    <i class="bi bi-geo-alt icon"></i>
+                    <div class="address">
+                        <h4>Address</h4>
+                        <p>A108 Adam Street</p>
+                        <p>New York, NY 535022</p>
+                        <p></p>
+                    </div>
+
+                </div>
+
+                <div class="col-lg-3 col-md-6 d-flex">
+                    <i class="bi bi-telephone icon"></i>
+                    <div>
+                        <h4>Contact</h4>
+                        <p>
+                            <strong>Phone:</strong> <span>+1 5589 55488 55</span><br>
+                            <strong>Email:</strong> <span>info@example.com</span><br>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 d-flex">
+                    <i class="bi bi-clock icon"></i>
+                    <div>
+                        <h4>Opening Hours</h4>
+                        <p>
+                            <strong>Mon-Sat:</strong> <span>11AM - 23PM</span><br>
+                            <strong>Sunday</strong>: <span>Closed</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h4>Follow Us</h4>
+                    <div class="social-links d-flex">
+                        <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="container copyright text-center mt-4">
+            <p>© <span>Copyright</span> <strong class="px-1 sitename">Yummy</strong> <span>All Rights Reserved</span></p>
+            <div class="credits">
+                Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a> Distributed by <a href="https://themewagon.com">ThemeWagon</a>
+            </div>
+        </div>
+
+    </footer>
+
+    <!-- Scroll Top -->
+    <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Preloader -->
+    <div id="preloader"></div>
+
+    <!-- Vendor JS Files -->
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/php-email-form/validate.js"></script>
+    <script src="assets/vendor/aos/aos.js"></script>
+    <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+    <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+    <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+    <!-- Main JS File -->
+    <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>

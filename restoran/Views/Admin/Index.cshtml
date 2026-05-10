@@ -1,0 +1,146 @@
+@model IEnumerable<Restoran.Models.User>
+
+@{
+    ViewData["Title"] = "Manajemen User";
+}
+
+<div class="container-fluid py-4">
+    @Html.AntiForgeryToken()
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Manajemen User</h2>
+            <div class="d-flex gap-2">
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Tambah User Baru
+                </a>
+                <a asp-action="ChargeSettings" class="btn btn-outline-warning">
+                    <i class="fas fa-percent"></i> PPN & Service
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                            <th>Last Login</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>@user.Id</td>
+                                <td>@user.Username</td>
+                                <td>@user.Email</td>
+                                <td>
+                                    <span class="badge bg-@(user.Role switch {
+                                        UserRole.Admin => "danger",
+                                        UserRole.Owner => "warning",
+                                        UserRole.Supervisor => "info",
+                                        UserRole.Kasir => "success",
+                                        UserRole.BagianMasak => "secondary",
+                                        _ => "primary"
+                                    })">
+                                        @user.Role
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="badge bg-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Nonaktif</span>
+                                    }
+                                </td>
+                                <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td>@(user.LastLogin?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    @if (user.IsActive)
+                                    {
+                                        <button class="btn btn-sm btn-danger" onclick="deleteUser(@user.Id)">
+                                            <i class="fas fa-ban"></i> Nonaktifkan
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-success" onclick="activateUser(@user.Id)">
+                                            <i class="fas fa-check"></i> Aktifkan
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getRequestVerificationToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]').value;
+        }
+
+        function deleteUser(id) {
+            if (confirm('Apakah Anda yakin ingin menonaktifkan user ini?')) {
+                fetch(`/Admin/Delete/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': getRequestVerificationToken()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    }
+                });
+            }
+        }
+
+        function activateUser(id) {
+            if (confirm('Apakah Anda yakin ingin mengaktifkan user ini?')) {
+                fetch(`/Admin/Activate/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': getRequestVerificationToken()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    }
+                });
+            }
+        }
+    </script>
+}

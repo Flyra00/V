@@ -1,0 +1,210 @@
+@model IEnumerable<Restoran.Models.Category>
+
+@{
+    ViewData["Title"] = "Manajemen Kategori";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1">Manajemen Kategori</h2>
+                    <p class="text-muted mb-0">Kelola kategori menu restoran</p>
+                </div>
+                <a asp-action="Create" class="btn btn-gradient-primary">
+                    <i class="fas fa-plus me-2"></i>Tambah Kategori
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="flex-shrink-0">
+                        <div class="d-flex align-items-center justify-content-center rounded" 
+                             style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-tags fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">Total Kategori</h6>
+                        <h4 class="fw-bold mb-0">@Model.Count()</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="flex-shrink-0">
+                        <div class="d-flex align-items-center justify-content-center rounded" 
+                             style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <i class="fas fa-utensils fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">Total Menu</h6>
+                        <h4 class="fw-bold mb-0">@Model.Sum(c => c.Products.Count)</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="flex-shrink-0">
+                        <div class="d-flex align-items-center justify-content-center rounded" 
+                             style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                            <i class="fas fa-star fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">Kategori Populer</h6>
+                        <h4 class="fw-bold mb-0">@(Model.OrderByDescending(c => c.Products.Count).FirstOrDefault()?.Name ?? "-")</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-0">Daftar Kategori</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="categoryTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nama Kategori</th>
+                                    <th>Deskripsi</th>
+                                    <th class="text-center">Jumlah Menu</th>
+                                    <th>Tanggal Dibuat</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    <div class="d-flex align-items-center justify-content-center rounded" 
+                                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                                        <i class="fas fa-tag text-white"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fw-bold mb-0">@item.Name</h6>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (string.IsNullOrEmpty(item.Description))
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                            else
+                                            {
+                                                @item.Description
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary">@item.Products.Count menu</span>
+                                        </td>
+                                        <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                        <td class="text-end">
+                                            <div class="btn-group">
+                                                <a asp-action="Edit" asp-route-id="@item.Id" 
+                                                   class="btn btn-sm btn-outline-primary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="confirmDelete(@item.Id, '@item.Name')" title="Hapus">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Konfirmasi Hapus
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle" 
+                         style="width: 80px; height: 80px; background: rgba(239, 68, 68, 0.1);">
+                        <i class="fas fa-trash fa-2x text-danger"></i>
+                    </div>
+                </div>
+                <h5 class="fw-bold">Apakah Anda yakin?</h5>
+                <p class="text-muted">Anda akan menghapus kategori <strong id="deleteCategoryName"></strong></p>
+                <p class="text-danger small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Kategori yang memiliki menu tidak dapat dihapus
+                </p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Ya, Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, name) {
+            document.getElementById('deleteCategoryName').textContent = name;
+            document.getElementById('deleteForm').action = '/Category/Delete/' + id;
+            
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+    </script>
+}

@@ -1,0 +1,137 @@
+@model ChargeSettingsViewModel
+
+@{
+    ViewData["Title"] = "Pengaturan PPN dan Service";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">Pengaturan Charge</h2>
+                <p class="text-muted mb-0">Kelola PPN dan service charge yang dipakai di transaksi baru.</p>
+            </div>
+            <a href="/Admin" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Kembali ke User
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form method="post" class="row g-4">
+        @Html.AntiForgeryToken()
+        <input asp-for="TaxSettingId" type="hidden" />
+        <input asp-for="ServiceChargeSettingId" type="hidden" />
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-percent me-2 text-primary"></i>Pengaturan PPN</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label asp-for="TaxName" class="form-label fw-bold"></label>
+                        <input asp-for="TaxName" class="form-control" />
+                        <span asp-validation-for="TaxName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="TaxPercentage" class="form-label fw-bold"></label>
+                        <div class="input-group">
+                            <input asp-for="TaxPercentage" class="form-control" type="number" step="0.01" min="0" max="100" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <span asp-validation-for="TaxPercentage" class="text-danger"></span>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input asp-for="IsTaxActive" class="form-check-input" />
+                        <label asp-for="IsTaxActive" class="form-check-label"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-concierge-bell me-2 text-warning"></i>Pengaturan Service Charge</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label asp-for="ServiceChargeName" class="form-label fw-bold"></label>
+                        <input asp-for="ServiceChargeName" class="form-control" />
+                        <span asp-validation-for="ServiceChargeName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ServiceChargePercentage" class="form-label fw-bold"></label>
+                        <div class="input-group">
+                            <input asp-for="ServiceChargePercentage" class="form-control" type="number" step="0.01" min="0" max="100" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <span asp-validation-for="ServiceChargePercentage" class="text-danger"></span>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input asp-for="IsServiceChargeActive" class="form-check-input" />
+                        <label asp-for="IsServiceChargeActive" class="form-check-label"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-receipt me-2 text-success"></i>Simulasi Transaksi</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label asp-for="ExampleSubtotal" class="form-label fw-bold">Contoh Subtotal</label>
+                            <input asp-for="ExampleSubtotal" class="form-control" type="number" step="1000" min="0" />
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 h-100">
+                                        <small class="text-muted d-block">@Model.TaxName</small>
+                                        <strong>Rp @Model.ExampleTaxAmount.ToString("N0")</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 h-100">
+                                        <small class="text-muted d-block">@Model.ServiceChargeName</small>
+                                        <strong>Rp @Model.ExampleServiceChargeAmount.ToString("N0")</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 h-100 bg-light">
+                                        <small class="text-muted d-block">Total Bayar</small>
+                                        <strong>Rp @Model.ExampleTotal.ToString("N0")</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
+                    <a href="/Dashboard/RevenueReport" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line me-2"></i>Lihat Laporan
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Simpan Pengaturan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

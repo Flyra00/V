@@ -1,0 +1,198 @@
+@using Restoran.Models
+@model Restoran.ViewModels.TableManagementViewModel
+
+@{
+    ViewData["Title"] = "Manajemen Meja";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1">Manajemen Meja</h2>
+                    <p class="text-muted mb-0">Kelola nomor meja, status operasional, sesi aktif, dan QR meja.</p>
+                </div>
+                <a asp-action="Create" class="btn btn-gradient-primary">
+                    <i class="fas fa-plus me-2"></i>Tambah Meja
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="flex-shrink-0">
+                        <div class="d-flex align-items-center justify-content-center rounded"
+                             style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-table fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">Total Meja</h6>
+                        <h4 class="fw-bold mb-0">@Model.Tables.Count</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="flex-shrink-0">
+                        <div class="d-flex align-items-center justify-content-center rounded"
+                             style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <i class="fas fa-door-open fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">Tersedia</h6>
+                        <h4 class="fw-bold mb-0">@Model.Tables.Count(item => item.Status == TableStatus.Available)</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center p-4">
+                    <div class="flex-shrink-0">
+                        <div class="d-flex align-items-center justify-content-center rounded"
+                             style="width: 60px; height: 60px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                            <i class="fas fa-users fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="text-muted mb-1">Sesi Aktif</h6>
+                        <h4 class="fw-bold mb-0">@Model.Tables.Count(item => item.HasActiveSession)</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+            <h5 class="fw-bold mb-0">Daftar Meja</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Meja</th>
+                            <th>Kapasitas</th>
+                            <th>Status</th>
+                            <th>Sesi Aktif</th>
+                            <th>QR</th>
+                            <th class="text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var table in Model.Tables)
+                        {
+                            var badgeClass = table.Status switch
+                            {
+                                TableStatus.Available => "bg-success",
+                                TableStatus.Reserved => "bg-secondary",
+                                _ => "bg-warning text-dark"
+                            };
+
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">Meja @table.TableNumber</div>
+                                    <small class="text-muted">@table.ActiveTransactionCount transaksi aktif</small>
+                                </td>
+                                <td>@table.Capacity orang</td>
+                                <td>
+                                    <span class="badge @badgeClass">@table.StatusLabel</span>
+                                </td>
+                                <td>
+                                    @if (table.HasActiveSession)
+                                    {
+                                        <div class="fw-semibold">@table.SessionCustomerType</div>
+                                        <small class="text-muted">
+                                            @(string.IsNullOrWhiteSpace(table.SessionCustomerName) ? "Tanpa nama customer" : table.SessionCustomerName)
+                                            sejak @table.SessionStartedAt?.ToString("dd/MM HH:mm")
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Tidak ada sesi aktif</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="@table.QrCodeUrl" alt="QR meja @table.TableNumber" width="56" height="56" class="border rounded">
+                                        <a href="@table.QrCodeUrl" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-up-right-from-square"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a asp-action="Edit" asp-route-id="@table.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(@table.Id, '@table.TableNumber')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Hapus Meja
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="mb-0">Hapus <strong id="deleteTableNumber"></strong>?</p>
+                <small class="text-muted">Meja yang punya histori sesi atau transaksi tidak bisa dihapus.</small>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                <form id="deleteForm" method="post">
+                    <button type="submit" class="btn btn-danger">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id, tableNumber) {
+            document.getElementById('deleteTableNumber').textContent = `Meja ${tableNumber}`;
+            document.getElementById('deleteForm').action = '/Table/Delete/' + id;
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        }
+    </script>
+}
