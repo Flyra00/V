@@ -7,7 +7,7 @@ using Restoran.ViewModels;
 
 namespace Restoran.Controllers
 {
-    [RoleAuthorization(UserRole.Supervisor, UserRole.Admin)]
+    [RoleAuthorization(UserRole.Owner, UserRole.Supervisor, UserRole.Admin)]
     public class AssetLogController : Controller
     {
         private readonly IAssetLogService _assetLogService;
@@ -19,6 +19,7 @@ namespace Restoran.Controllers
             _authCookieService = authCookieService;
         }
 
+        [RoleAuthorization(UserRole.Supervisor, UserRole.Admin)]
         public async Task<IActionResult> Create()
         {
             return View(new AssetLogViewModel
@@ -27,6 +28,7 @@ namespace Restoran.Controllers
             });
         }
 
+        [RoleAuthorization(UserRole.Supervisor, UserRole.Admin)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(AssetLogViewModel model)
@@ -59,11 +61,13 @@ namespace Restoran.Controllers
             return View(model);
         }
 
+        [RoleAuthorization(UserRole.Supervisor, UserRole.Admin)]
         public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, LogStatus? status)
         {
             return View(await _assetLogService.GetLogsAsync(fromDate, toDate, status));
         }
 
+        [RoleAuthorization(UserRole.Supervisor, UserRole.Admin)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Approve(int id)

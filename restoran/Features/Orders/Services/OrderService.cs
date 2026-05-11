@@ -56,12 +56,14 @@ namespace Restoran.Features.Orders.Services
                 .ThenBy(p => p.Name)
                 .ToListAsync(cancellationToken);
             var now = _dateTimeProvider.Now;
-            var activePromos = await _context.Promos
+            var activePromosRaw = await _context.Promos
                 .AsNoTracking()
                 .Where(promo => promo.IsActive && promo.StartsAt <= now && promo.EndsAt >= now)
+                .ToListAsync(cancellationToken);
+            var activePromos = activePromosRaw
                 .OrderBy(promo => promo.MinimumPurchase)
                 .ThenByDescending(promo => promo.DiscountValue)
-                .ToListAsync(cancellationToken);
+                .ToList();
             var chargeConfiguration = await _chargeConfigurationProvider.GetCurrentAsync(cancellationToken);
             var paymentMethods = await _paymentService.GetActiveCustomerMethodsAsync(cancellationToken);
 

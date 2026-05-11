@@ -248,6 +248,11 @@
             drawer.classList.toggle("is-open", isOpen);
             overlay.classList.toggle("is-open", isOpen);
             document.body.classList.toggle("customer-drawer-open", isOpen);
+            drawer.setAttribute("aria-hidden", String(!isOpen));
+        }
+
+        function toggleDrawer() {
+            setDrawerState(!drawer.classList.contains("is-open"));
         }
 
         function applyFilter(term) {
@@ -301,7 +306,7 @@
                         </div>
                         <div class="summary-line-item__content">
                             <strong>${escapeHtml(item.productName)}</strong>
-                            <span>${item.quantity}x • ${formatCurrency(item.price)}</span>
+                            <span>${item.quantity}x - ${formatCurrency(item.price)}</span>
                             ${item.notes ? `<small>${escapeHtml(item.notes)}</small>` : ""}
                         </div>
                         <div class="summary-line-item__price">${formatCurrency(item.price * item.quantity)}</div>
@@ -317,19 +322,19 @@
 
             drawerList.innerHTML = cart.map(function (item) {
                 return `
-                    <article class="drawer-item-card">
-                        <div class="drawer-item-card__thumb">
+                    <article class="cart-item">
+                        <div class="cart-item-image">
                             ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.productName)}">` : ""}
                         </div>
-                        <div class="drawer-item-card__content">
-                            <div class="drawer-item-card__price-row">
-                                <strong>${escapeHtml(item.productName)}</strong>
-                                <strong>${formatCurrency(item.price * item.quantity)}</strong>
+                        <div class="cart-item-content">
+                            <div class="cart-item-price-row">
+                                <strong class="cart-item-title">${escapeHtml(item.productName)}</strong>
+                                <strong class="cart-item-price">${formatCurrency(item.price * item.quantity)}</strong>
                             </div>
-                            <span>${formatCurrency(item.price)} per item</span>
-                            <textarea class="drawer-inline-note" data-note-input="${item.lineId}" placeholder="Catatan item...">${escapeHtml(item.notes)}</textarea>
-                            <div class="drawer-item-card__controls">
-                                <div class="drawer-stepper">
+                            <span class="cart-item-unit-price">${formatCurrency(item.price)} per item</span>
+                            <textarea class="cart-item-note" data-note-input="${item.lineId}" placeholder="Catatan item...">${escapeHtml(item.notes)}</textarea>
+                            <div class="cart-item-controls">
+                                <div class="cart-qty-control">
                                     <button type="button" data-qty-action="${item.lineId}" data-change="-1" aria-label="Kurangi jumlah">
                                         <i class="fas fa-minus"></i>
                                     </button>
@@ -338,7 +343,7 @@
                                         <i class="fas fa-plus"></i>
                                     </button>
                                 </div>
-                                <button type="button" class="drawer-remove-button" data-remove-line="${item.lineId}" aria-label="Hapus item">
+                                <button type="button" class="cart-remove-button" data-remove-line="${item.lineId}" aria-label="Hapus item">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -618,6 +623,7 @@
                         }
 
                         addItemToCart(product, 1, "");
+                        setDrawerState(true);
                         showToast(`${product.productName} ditambahkan ke keranjang.`, "success");
                     });
                 }
@@ -638,12 +644,14 @@
             }
 
             if (modalAdd) {
-                modalAdd.addEventListener("click", function () {
+                modalAdd.addEventListener("click", function (event) {
+                    event.stopPropagation();
                     if (!activeProduct) {
                         return;
                     }
 
                     addItemToCart(activeProduct, modalQuantity, modalNotes.value);
+                    setDrawerState(true);
                     productModal.hide();
                     showToast(`${activeProduct.productName} masuk ke keranjang.`, "success");
                 });
@@ -659,7 +667,7 @@
 
             if (cartToggle) {
                 cartToggle.addEventListener("click", function () {
-                    setDrawerState(true);
+                    toggleDrawer();
                 });
             }
 
@@ -674,6 +682,24 @@
                     setDrawerState(false);
                 });
             }
+
+            document.addEventListener("click", function (event) {
+                if (!drawer || !cartToggle) {
+                    return;
+                }
+
+                if (!drawer.classList.contains("is-open")) {
+                    return;
+                }
+
+                const clickedOverlay = overlay && overlay.contains(event.target);
+                const clickedInsideDrawer = drawer.contains(event.target);
+                const clickedCartButton = cartToggle.contains(event.target);
+
+                if (!clickedOverlay && !clickedInsideDrawer && !clickedCartButton) {
+                    setDrawerState(false);
+                }
+            });
 
             document.addEventListener("keydown", function (event) {
                 if (event.key === "Escape") {
@@ -755,3 +781,5 @@
         initMenuPage();
     });
 })();
+
+

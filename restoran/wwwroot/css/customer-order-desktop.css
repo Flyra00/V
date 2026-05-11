@@ -940,6 +940,7 @@ select {
     transform: translateX(0);
 }
 
+.cart-drawer-header,
 .drawer-header {
     display: flex;
     align-items: flex-start;
@@ -948,11 +949,13 @@ select {
     margin-bottom: 20px;
 }
 
+.cart-drawer-header p,
 .drawer-header p {
     margin: 6px 0 0;
     color: var(--ceria-text-soft);
 }
 
+.cart-drawer-close,
 .drawer-close-button {
     width: 44px;
     height: 44px;
@@ -962,6 +965,7 @@ select {
     color: var(--ceria-text-soft);
 }
 
+.cart-drawer-body,
 .drawer-body {
     display: flex;
     flex-direction: column;
@@ -970,11 +974,13 @@ select {
     flex: 1 1 auto;
 }
 
+.cart-item-list,
 .drawer-item-list {
     overflow-y: auto;
     padding-right: 8px;
 }
 
+.cart-item,
 .drawer-item-card {
     display: grid;
     grid-template-columns: 68px minmax(0, 1fr);
@@ -985,13 +991,16 @@ select {
     border: 1px solid rgba(230, 205, 194, 0.72);
 }
 
+.cart-item-content,
 .drawer-item-card__content {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
+.cart-item-price-row,
 .drawer-item-card__price-row,
+.cart-item-controls,
 .drawer-item-card__controls {
     display: flex;
     align-items: center;
@@ -999,10 +1008,12 @@ select {
     gap: 12px;
 }
 
+.cart-item-price,
 .drawer-item-card__price-row strong:last-child {
     color: var(--ceria-primary);
 }
 
+.cart-qty-control,
 .drawer-stepper {
     display: inline-flex;
     align-items: center;
@@ -1012,12 +1023,15 @@ select {
     background: #fff4ee;
 }
 
+.cart-qty-control button,
 .drawer-stepper button,
+.cart-remove-button,
 .drawer-remove-button {
     border: 0;
     background: transparent;
 }
 
+.cart-qty-control button,
 .drawer-stepper button {
     width: 30px;
     height: 30px;
@@ -1026,6 +1040,7 @@ select {
     color: var(--ceria-primary);
 }
 
+.cart-remove-button,
 .drawer-remove-button {
     width: 34px;
     height: 34px;
@@ -1034,6 +1049,7 @@ select {
     background: rgba(255, 225, 219, 0.72);
 }
 
+.cart-item-note,
 .drawer-inline-note {
     width: 100%;
     min-height: 42px;
@@ -1045,11 +1061,33 @@ select {
     resize: vertical;
 }
 
+.cart-drawer-summary,
 .drawer-footer {
     padding-top: 18px;
     border-top: 1px solid rgba(215, 178, 162, 0.56);
     display: grid;
     gap: 18px;
+}
+
+.cart-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-radius: var(--ceria-radius-pill);
+    background: rgba(255, 122, 0, 0.14);
+    color: var(--ceria-primary);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.cart-empty-state {
+    padding: 22px 18px;
+    text-align: center;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px dashed rgba(215, 178, 162, 0.85);
+    color: var(--ceria-text-soft);
 }
 
 .customer-product-modal .modal-content {

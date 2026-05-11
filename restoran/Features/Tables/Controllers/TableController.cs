@@ -6,7 +6,7 @@ using Restoran.ViewModels;
 
 namespace Restoran.Controllers
 {
-    [RoleAuthorization(UserRole.Owner, UserRole.Admin, UserRole.Supervisor)]
+    [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
     public class TableController : Controller
     {
         private readonly ITableService _tableService;

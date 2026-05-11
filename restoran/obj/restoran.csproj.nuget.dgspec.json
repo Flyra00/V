@@ -1,15 +1,15 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\Restoran.csproj": {}
+    "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\restoran.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\Restoran.csproj": {
+    "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\restoran.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\Restoran.csproj",
-        "projectName": "Restoran",
-        "projectPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\Restoran.csproj",
+        "projectUniqueName": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\restoran.csproj",
+        "projectName": "restoran",
+        "projectPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\restoran.csproj",
         "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\obj\\",
         "projectStyle": "PackageReference",

@@ -341,33 +341,33 @@
 
     <div id="cart-overlay" class="cart-overlay"></div>
     <aside id="cart-drawer" class="cart-drawer" aria-hidden="true">
-        <div class="drawer-header">
+        <header class="cart-drawer-header">
             <div>
-                <div class="promo-chip mb-2">
+                <div class="cart-eyebrow">
                     <i class="fas fa-basket-shopping"></i>
                     Cart Drawer
                 </div>
                 <h2>Keranjang Pesanan</h2>
                 <p id="drawer-item-count">Belum ada item</p>
             </div>
-            <button id="cart-drawer-close" class="drawer-close-button" type="button" aria-label="Tutup keranjang">
+            <button id="cart-drawer-close" class="cart-drawer-close" type="button" aria-label="Tutup keranjang">
                 <i class="fas fa-xmark"></i>
             </button>
-        </div>
+        </header>
 
-        <div class="drawer-body">
-            <div id="drawer-empty-state" class="summary-empty-state">
+        <div class="cart-drawer-body">
+            <div id="drawer-empty-state" class="cart-empty-state">
                 <i class="fas fa-basket-shopping fa-2x mb-3"></i>
                 <h3 class="customer-section-title fs-4 mb-2">Keranjang masih kosong</h3>
                 <p>Tambah menu dari katalog untuk mulai membuat pesanan meja Anda.</p>
                 <button class="customer-secondary-button mt-3" type="button" data-browse-menu>Lihat Menu</button>
             </div>
 
-            <div id="drawer-item-list" class="drawer-item-list" hidden></div>
+            <div id="drawer-item-list" class="cart-item-list" hidden></div>
         </div>
 
-        <div class="drawer-footer">
-            <div class="drawer-breakdown">
+        <footer class="cart-drawer-summary">
+            <div class="cart-summary">
                 <div class="summary-breakdown__row">
                     <span>Subtotal</span>
                     <strong id="drawer-subtotal">Rp0</strong>
@@ -418,7 +418,7 @@
                 <button id="drawer-confirm-order" class="drawer-primary-button" type="button">Konfirmasi Pesanan</button>
                 <button class="drawer-secondary-button" type="button" data-browse-menu>Tambah Menu Lagi</button>
             </div>
-        </div>
+        </footer>
     </aside>
 
     <div class="modal fade customer-product-modal" id="product-detail-modal" tabindex="-1" aria-hidden="true">
