@@ -9,6 +9,7 @@ namespace Restoran.Features.Kasir.Services
         Task<IReadOnlyList<Transaction>> GetTransactionsAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Product>> GetAvailableProductsAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Table>> GetAvailableTablesAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<PaymentMethodOption>> GetAvailablePaymentMethodsAsync(CancellationToken cancellationToken = default);
         Task<OperationResult> ConfirmPaymentAsync(int transactionId, CancellationToken cancellationToken = default);
         Task<OperationResult<PosOrderResponse>> CreatePosOrderAsync(
             CreatePosOrderRequest request,

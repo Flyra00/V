@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Restoran.Data;
+using Restoran.Features.Payments.Services;
 using Restoran.Features.Orders.Dtos;
 using Restoran.Features.Tables.Services;
 using Restoran.Models;
@@ -18,6 +19,7 @@ namespace Restoran.Features.Orders.Services
         private readonly IPaymentProofStorage _paymentProofStorage;
         private readonly IChargeConfigurationProvider _chargeConfigurationProvider;
         private readonly ITableService _tableService;
+        private readonly IPaymentService _paymentService;
 
         public OrderService(
             ApplicationDbContext context,
@@ -25,7 +27,8 @@ namespace Restoran.Features.Orders.Services
             ITransactionNumberGenerator transactionNumberGenerator,
             IPaymentProofStorage paymentProofStorage,
             IChargeConfigurationProvider chargeConfigurationProvider,
-            ITableService tableService)
+            ITableService tableService,
+            IPaymentService paymentService)
         {
             _context = context;
             _dateTimeProvider = dateTimeProvider;
@@ -33,6 +36,7 @@ namespace Restoran.Features.Orders.Services
             _paymentProofStorage = paymentProofStorage;
             _chargeConfigurationProvider = chargeConfigurationProvider;
             _tableService = tableService;
+            _paymentService = paymentService;
         }
 
         public async Task<OrderMenuViewModel?> GetMenuAsync(int tableId, CancellationToken cancellationToken = default)
@@ -48,11 +52,18 @@ namespace Restoran.Features.Orders.Services
             var products = await _context.Products
                 .AsNoTracking()
                 .Include(p => p.Category)
-                .Where(p => p.IsAvailable)
                 .OrderBy(p => p.Category.Name)
                 .ThenBy(p => p.Name)
                 .ToListAsync(cancellationToken);
+            var now = _dateTimeProvider.Now;
+            var activePromos = await _context.Promos
+                .AsNoTracking()
+                .Where(promo => promo.IsActive && promo.StartsAt <= now && promo.EndsAt >= now)
+                .OrderBy(promo => promo.MinimumPurchase)
+                .ThenByDescending(promo => promo.DiscountValue)
+                .ToListAsync(cancellationToken);
             var chargeConfiguration = await _chargeConfigurationProvider.GetCurrentAsync(cancellationToken);
+            var paymentMethods = await _paymentService.GetActiveCustomerMethodsAsync(cancellationToken);
 
             return new OrderMenuViewModel
             {
@@ -62,6 +73,26 @@ namespace Restoran.Features.Orders.Services
                 TaxRate = chargeConfiguration.TaxRate,
                 ServiceChargeName = chargeConfiguration.ServiceChargeName,
                 ServiceChargeRate = chargeConfiguration.ServiceChargeRate,
+                ActivePromos = activePromos
+                    .Select(promo => new PromoSummaryViewModel
+                    {
+                        Name = promo.Name,
+                        DiscountPercentage = promo.DiscountValue,
+                        MinimumPurchase = promo.MinimumPurchase,
+                        EndsAt = promo.EndsAt
+                    })
+                    .ToList(),
+                PaymentMethods = paymentMethods
+                    .Select(method => new PaymentMethodSelectionViewModel
+                    {
+                        Id = method.Id,
+                        Code = method.Code,
+                        DisplayName = method.DisplayName,
+                        LegacyMethod = method.LegacyMethod,
+                        IsCustomerFacing = method.IsCustomerFacing,
+                        IsCashierFacing = method.IsCashierFacing
+                    })
+                    .ToList(),
                 ProductsByCategory = products
                     .GroupBy(p => p.Category.Name)
                     .ToDictionary(group => group.Key, group => group.ToList())
@@ -83,6 +114,13 @@ namespace Restoran.Features.Orders.Services
 
             var now = _dateTimeProvider.Now;
             var transactionNumber = await _transactionNumberGenerator.GenerateAsync(cancellationToken);
+            var availablePaymentMethod = (await _paymentService.GetActiveCustomerMethodsAsync(cancellationToken))
+                .Any(method => method.LegacyMethod == request.PaymentMethod);
+            if (!availablePaymentMethod)
+            {
+                return OperationResult<CreateOrderResponse>.Failure("Metode pembayaran tidak tersedia");
+            }
+
             var productIds = request.Items.Select(item => item.ProductId).Distinct().ToList();
             var products = await _context.Products
                 .Where(product => productIds.Contains(product.Id))
@@ -105,8 +143,6 @@ namespace Restoran.Features.Orders.Services
                     TableSessionId = activeSession.Id,
                     CustomerName = string.IsNullOrWhiteSpace(request.CustomerName) ? "Guest" : request.CustomerName,
                     CustomerType = request.IsMember ? CustomerType.Member : CustomerType.Guest,
-                    PaymentMethod = request.PaymentMethod,
-                    PaymentStatus = PaymentStatus.Pending,
                     OrderStatus = OrderStatus.New,
                     CreatedAt = now
                 };
@@ -147,27 +183,29 @@ namespace Restoran.Features.Orders.Services
                 transaction.Tax = chargeConfiguration.CalculateTax(subtotal);
                 transaction.ServiceCharge = chargeConfiguration.CalculateServiceCharge(subtotal);
 
-                if (request.IsMember)
-                {
-                    Member? member = null;
+                var memberDiscount = await CalculateMemberDiscountAsync(request, subtotal, cancellationToken);
+                var promoSelection = await SelectBestPromoAsync(subtotal, memberDiscount, now, cancellationToken);
 
-                    if (request.MemberId.HasValue)
-                    {
-                        member = await _context.Members.FindAsync([request.MemberId.Value], cancellationToken);
-                    }
-
-                    if (member == null && request.MemberId.HasValue)
-                    {
-                        member = await _context.Members.FirstOrDefaultAsync(m => m.UserId == request.MemberId.Value, cancellationToken);
-                    }
-
-                    if (member != null)
-                    {
-                        transaction.Discount = subtotal * (member.DiscountPercentage / 100);
-                    }
-                }
+                transaction.Discount = memberDiscount + promoSelection.DiscountAmount;
+                transaction.PromoId = promoSelection.Promo?.Id;
+                transaction.AppliedPromoName = promoSelection.Promo?.Name ?? string.Empty;
 
                 transaction.Total = transaction.Subtotal + transaction.Tax + transaction.ServiceCharge - transaction.Discount;
+
+                var paymentResult = await _paymentService.CreateOrSyncPaymentAsync(
+                    transaction,
+                    transaction.Total,
+                    request.PaymentMethod,
+                    PaymentStatus.Pending,
+                    now,
+                    string.Empty,
+                    cancellationToken);
+
+                if (!paymentResult.Succeeded)
+                {
+                    await dbTransaction.RollbackAsync(cancellationToken);
+                    return OperationResult<CreateOrderResponse>.Failure(paymentResult.Message);
+                }
 
                 _context.Notifications.Add(new Notification
                 {
@@ -184,7 +222,9 @@ namespace Restoran.Features.Orders.Services
                 return OperationResult<CreateOrderResponse>.Success(new CreateOrderResponse
                 {
                     TransactionId = transaction.Id,
-                    TransactionNumber = transaction.TransactionNumber
+                    TransactionNumber = transaction.TransactionNumber,
+                    AppliedPromoName = transaction.AppliedPromoName,
+                    DiscountAmount = transaction.Discount
                 });
             }
             catch (Exception ex)
@@ -209,14 +249,11 @@ namespace Restoran.Features.Orders.Services
 
             try
             {
-                transaction.PaymentProofUrl = await _paymentProofStorage.SaveAsync(
+                var proofUrl = await _paymentProofStorage.SaveAsync(
                     transaction.TransactionNumber,
                     paymentProof,
                     cancellationToken);
-                transaction.PaymentStatus = PaymentStatus.Pending;
-
-                await _context.SaveChangesAsync(cancellationToken);
-                return OperationResult.Success("Bukti pembayaran berhasil diupload");
+                return await _paymentService.UpdatePaymentProofAsync(transactionId, proofUrl, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -229,9 +266,192 @@ namespace Restoran.Features.Orders.Services
             return await _context.Transactions
                 .AsNoTracking()
                 .Include(t => t.Table)
+                .Include(t => t.Payment!)
+                    .ThenInclude(payment => payment.PaymentMethodOption)
                 .Include(t => t.TransactionDetails)
                     .ThenInclude(td => td.Product)
                 .FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
+        }
+
+        public async Task<int?> ResolveTrackingTransactionIdAsync(
+            int? activeTransactionId,
+            int? activeTableId,
+            int? memberUserId,
+            CancellationToken cancellationToken = default)
+        {
+            if (activeTransactionId.HasValue &&
+                await _context.Transactions.AnyAsync(transaction => transaction.Id == activeTransactionId.Value, cancellationToken))
+            {
+                return activeTransactionId.Value;
+            }
+
+            return await _context.Transactions
+                .AsNoTracking()
+                .Where(transaction =>
+                    (activeTableId.HasValue && transaction.TableId == activeTableId.Value) ||
+                    (memberUserId.HasValue &&
+                     transaction.TableSession != null &&
+                     transaction.TableSession.Member != null &&
+                     transaction.TableSession.Member.UserId == memberUserId.Value))
+                .OrderByDescending(transaction => transaction.CreatedAt)
+                .Select(transaction => (int?)transaction.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<OrderTrackingViewModel?> GetTrackingAsync(int transactionId, CancellationToken cancellationToken = default)
+        {
+            var transaction = await GetTrackingTransactionQuery()
+                .FirstOrDefaultAsync(entity => entity.Id == transactionId, cancellationToken);
+
+            return transaction == null ? null : MapToTrackingViewModel(transaction);
+        }
+
+        public async Task<OrderTrackingStatusResponse?> GetTrackingStatusAsync(int transactionId, CancellationToken cancellationToken = default)
+        {
+            var transaction = await GetTrackingTransactionQuery()
+                .FirstOrDefaultAsync(entity => entity.Id == transactionId, cancellationToken);
+
+            if (transaction == null)
+            {
+                return null;
+            }
+
+            return new OrderTrackingStatusResponse
+            {
+                TransactionId = transaction.Id,
+                OrderStatus = transaction.OrderStatus,
+                PaymentStatus = transaction.Payment!.PaymentStatus,
+                PaidAt = transaction.Payment.PaymentDate,
+                IsTrackingFinal = IsTrackingFinal(transaction.OrderStatus, transaction.Payment.PaymentStatus),
+                RefreshedAt = _dateTimeProvider.Now,
+                Items = transaction.TransactionDetails
+                    .OrderBy(detail => detail.Id)
+                    .Select(detail => new OrderTrackingItemViewModel
+                    {
+                        DetailId = detail.Id,
+                        ProductName = detail.Product.Name,
+                        Quantity = detail.Quantity,
+                        Notes = detail.Notes,
+                        Status = detail.Status
+                    })
+                    .ToList()
+            };
+        }
+
+        private async Task<decimal> CalculateMemberDiscountAsync(
+            CreateOrderRequest request,
+            decimal subtotal,
+            CancellationToken cancellationToken)
+        {
+            if (!request.IsMember)
+            {
+                return 0m;
+            }
+
+            Member? member = null;
+
+            if (request.MemberId.HasValue)
+            {
+                member = await _context.Members.FindAsync([request.MemberId.Value], cancellationToken);
+            }
+
+            if (member == null && request.MemberId.HasValue)
+            {
+                member = await _context.Members.FirstOrDefaultAsync(
+                    m => m.UserId == request.MemberId.Value,
+                    cancellationToken);
+            }
+
+            return member == null ? 0m : subtotal * (member.DiscountPercentage / 100);
+        }
+
+        private async Task<PromoSelection> SelectBestPromoAsync(
+            decimal subtotal,
+            decimal memberDiscount,
+            DateTime now,
+            CancellationToken cancellationToken)
+        {
+            var discountedBase = Math.Max(0m, subtotal - memberDiscount);
+            var eligiblePromos = await _context.Promos
+                .Where(promo =>
+                    promo.IsActive &&
+                    promo.PromoType == PromoType.Percentage &&
+                    promo.StartsAt <= now &&
+                    promo.EndsAt >= now &&
+                    promo.MinimumPurchase <= subtotal)
+                .ToListAsync(cancellationToken);
+
+            Promo? bestPromo = null;
+            decimal bestDiscount = 0m;
+
+            foreach (var promo in eligiblePromos)
+            {
+                var discountAmount = discountedBase * (promo.DiscountValue / 100);
+                if (discountAmount > bestDiscount)
+                {
+                    bestPromo = promo;
+                    bestDiscount = discountAmount;
+                }
+            }
+
+            return new PromoSelection(bestPromo, bestDiscount);
+        }
+
+        private sealed record PromoSelection(Promo? Promo, decimal DiscountAmount);
+
+        private IQueryable<Transaction> GetTrackingTransactionQuery()
+        {
+            return _context.Transactions
+                .AsNoTracking()
+                .Include(transaction => transaction.Table)
+                .Include(transaction => transaction.TableSession!)
+                    .ThenInclude(session => session.Member)
+                        .ThenInclude(member => member!.User)
+                .Include(transaction => transaction.Payment!)
+                    .ThenInclude(payment => payment.PaymentMethodOption)
+                .Include(transaction => transaction.TransactionDetails)
+                    .ThenInclude(detail => detail.Product);
+        }
+
+        private static OrderTrackingViewModel MapToTrackingViewModel(Transaction transaction)
+        {
+            return new OrderTrackingViewModel
+            {
+                TransactionId = transaction.Id,
+                TransactionNumber = transaction.TransactionNumber,
+                TableId = transaction.TableId,
+                TableNumber = transaction.Table?.TableNumber ?? "Takeaway",
+                CreatedAt = transaction.CreatedAt,
+                OrderStatus = transaction.OrderStatus,
+                PaymentMethod = transaction.Payment!.PaymentMethodOption.LegacyMethod,
+                PaymentMethodDisplayName = transaction.Payment.PaymentMethodOption.DisplayName,
+                PaymentStatus = transaction.Payment.PaymentStatus,
+                PaidAt = transaction.Payment.PaymentDate,
+                Subtotal = transaction.Subtotal,
+                Discount = transaction.Discount,
+                Tax = transaction.Tax,
+                ServiceCharge = transaction.ServiceCharge,
+                Total = transaction.Total,
+                AppliedPromoName = transaction.AppliedPromoName,
+                PaymentProofUrl = transaction.Payment.ProofUrl,
+                Items = transaction.TransactionDetails
+                    .OrderBy(detail => detail.Id)
+                    .Select(detail => new OrderTrackingItemViewModel
+                    {
+                        DetailId = detail.Id,
+                        ProductName = detail.Product.Name,
+                        Quantity = detail.Quantity,
+                        Notes = detail.Notes,
+                        Status = detail.Status
+                    })
+                    .ToList()
+            };
+        }
+
+        private static bool IsTrackingFinal(OrderStatus orderStatus, PaymentStatus paymentStatus)
+        {
+            return orderStatus is OrderStatus.Completed or OrderStatus.Cancelled ||
+                   (orderStatus == OrderStatus.Served && paymentStatus is PaymentStatus.Paid or PaymentStatus.Cancelled);
         }
     }
 }

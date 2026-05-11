@@ -34,15 +34,15 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Role" class="form-label">Role</label>
-                            <select asp-for="Role" class="form-select" required>
+                            <label asp-for="RoleId" class="form-label">Role</label>
+                            <select asp-for="RoleId" class="form-select" required>
                                 <option value="">Pilih Role</option>
                                 @foreach (var role in Model.AvailableRoles)
                                 {
                                     <option value="@role.Value">@role.Text</option>
                                 }
                             </select>
-                            <span asp-validation-for="Role" class="text-danger"></span>
+                            <span asp-validation-for="RoleId" class="text-danger"></span>
                         </div>
 
                         <div class="d-flex gap-2">

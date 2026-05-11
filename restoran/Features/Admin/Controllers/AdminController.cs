@@ -26,6 +26,244 @@ namespace Restoran.Controllers
             return View(await _adminService.GetChargeSettingsAsync());
         }
 
+        public async Task<IActionResult> Promos()
+        {
+            return View(await _adminService.GetPromosAsync());
+        }
+
+        public async Task<IActionResult> Roles()
+        {
+            return View(await _adminService.GetRolesAsync());
+        }
+
+        public IActionResult CreateRole()
+        {
+            return View(new RoleFormViewModel
+            {
+                IsActive = true
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateRole(RoleFormViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _adminService.CreateRoleAsync(model);
+                if (result.Succeeded)
+                {
+                    TempData["Success"] = result.Message;
+                    return RedirectToAction(nameof(Roles));
+                }
+
+                AddRoleErrors(result.Message);
+            }
+
+            return View(model);
+        }
+
+        public async Task<IActionResult> EditRole(int id)
+        {
+            var role = await _adminService.GetRoleByIdAsync(id);
+            if (role == null)
+            {
+                return NotFound();
+            }
+
+            return View(new RoleFormViewModel
+            {
+                Id = role.Id,
+                Name = role.Name,
+                Code = role.Code,
+                IsSystemRole = role.IsSystemRole,
+                IsActive = role.IsActive,
+                SortOrder = role.SortOrder
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditRole(int id, RoleFormViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var result = await _adminService.UpdateRoleAsync(id, model);
+                if (result.Succeeded)
+                {
+                    TempData["Success"] = result.Message;
+                    return RedirectToAction(nameof(Roles));
+                }
+
+                if (result.IsNotFound)
+                {
+                    return NotFound();
+                }
+
+                AddRoleErrors(result.Message);
+            }
+
+            return View(model);
+        }
+
+        public async Task<IActionResult> PaymentMethods()
+        {
+            return View(await _adminService.GetPaymentMethodsAsync());
+        }
+
+        public IActionResult CreatePaymentMethod()
+        {
+            return View(new PaymentMethodFormViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePaymentMethod(PaymentMethodFormViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _adminService.CreatePaymentMethodAsync(model);
+                if (result.Succeeded)
+                {
+                    TempData["Success"] = result.Message;
+                    return RedirectToAction(nameof(PaymentMethods));
+                }
+
+                AddPaymentMethodErrors(result.Message);
+            }
+
+            return View(model);
+        }
+
+        public async Task<IActionResult> EditPaymentMethod(int id)
+        {
+            var paymentMethod = await _adminService.GetPaymentMethodByIdAsync(id);
+            if (paymentMethod == null)
+            {
+                return NotFound();
+            }
+
+            return View(new PaymentMethodFormViewModel
+            {
+                Id = paymentMethod.Id,
+                Code = paymentMethod.Code,
+                DisplayName = paymentMethod.DisplayName,
+                LegacyMethod = paymentMethod.LegacyMethod,
+                IsActive = paymentMethod.IsActive,
+                IsCustomerFacing = paymentMethod.IsCustomerFacing,
+                IsCashierFacing = paymentMethod.IsCashierFacing,
+                SortOrder = paymentMethod.SortOrder
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditPaymentMethod(int id, PaymentMethodFormViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var result = await _adminService.UpdatePaymentMethodAsync(id, model);
+                if (result.Succeeded)
+                {
+                    TempData["Success"] = result.Message;
+                    return RedirectToAction(nameof(PaymentMethods));
+                }
+
+                if (result.IsNotFound)
+                {
+                    return NotFound();
+                }
+
+                AddPaymentMethodErrors(result.Message);
+            }
+
+            return View(model);
+        }
+
+        public IActionResult CreatePromo()
+        {
+            return View(new PromoFormViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePromo(PromoFormViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _adminService.CreatePromoAsync(model);
+                if (result.Succeeded)
+                {
+                    TempData["Success"] = result.Message;
+                    return RedirectToAction(nameof(Promos));
+                }
+
+                AddPromoErrors(result.Message);
+            }
+
+            return View(model);
+        }
+
+        public async Task<IActionResult> EditPromo(int id)
+        {
+            var promo = await _adminService.GetPromoByIdAsync(id);
+            if (promo == null)
+            {
+                return NotFound();
+            }
+
+            return View(new PromoFormViewModel
+            {
+                Id = promo.Id,
+                Name = promo.Name,
+                PromoType = promo.PromoType,
+                DiscountValue = promo.DiscountValue,
+                MinimumPurchase = promo.MinimumPurchase,
+                StartsAt = promo.StartsAt,
+                EndsAt = promo.EndsAt,
+                IsActive = promo.IsActive
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditPromo(int id, PromoFormViewModel model)
+        {
+            if (id != model.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var result = await _adminService.UpdatePromoAsync(id, model);
+                if (result.Succeeded)
+                {
+                    TempData["Success"] = result.Message;
+                    return RedirectToAction(nameof(Promos));
+                }
+
+                if (result.IsNotFound)
+                {
+                    return NotFound();
+                }
+
+                AddPromoErrors(result.Message);
+            }
+
+            return View(model);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChargeSettings(ChargeSettingsViewModel model)
@@ -45,11 +283,11 @@ namespace Restoran.Controllers
             return View(model);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             return View(new AdminUserFormViewModel
             {
-                AvailableRoles = _adminService.GetAssignableRoles()
+                AvailableRoles = await _adminService.GetAssignableRolesAsync()
             });
         }
 
@@ -70,7 +308,7 @@ namespace Restoran.Controllers
                 AddCreateErrors(result.Message);
             }
 
-            model.AvailableRoles = _adminService.GetAssignableRoles();
+            model.AvailableRoles = await _adminService.GetAssignableRolesAsync();
             return View(model);
         }
 
@@ -87,9 +325,10 @@ namespace Restoran.Controllers
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
-                Role = user.Role,
+                RoleId = user.RoleId,
+                SelectedRoleName = user.RoleEntity?.Name ?? user.Role.ToString(),
                 IsActive = user.IsActive,
-                AvailableRoles = _adminService.GetAssignableRoles()
+                AvailableRoles = await _adminService.GetAssignableRolesAsync()
             });
         }
 
@@ -119,7 +358,7 @@ namespace Restoran.Controllers
                 AddEditErrors(result.Message);
             }
 
-            model.AvailableRoles = _adminService.GetAssignableRoles();
+            model.AvailableRoles = await _adminService.GetAssignableRolesAsync();
             return View(model);
         }
 
@@ -169,6 +408,12 @@ namespace Restoran.Controllers
                 return;
             }
 
+            if (message.Contains("Role", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("RoleId", message);
+                return;
+            }
+
             ModelState.AddModelError(string.Empty, message);
         }
 
@@ -186,6 +431,103 @@ namespace Restoran.Controllers
                 return;
             }
 
+            if (message.Contains("Role", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("RoleId", message);
+                return;
+            }
+
+            ModelState.AddModelError(string.Empty, message);
+        }
+
+        private void AddPromoErrors(string message)
+        {
+            if (message.Contains("Nama promo", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("Nama", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("Name", message);
+                return;
+            }
+
+            if (message.Contains("Diskon", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("DiscountValue", message);
+                return;
+            }
+
+            if (message.Contains("Minimum pembelian", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("MinimumPurchase", message);
+                return;
+            }
+
+            if (message.Contains("Periode", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("EndsAt", message);
+                return;
+            }
+
+            ModelState.AddModelError(string.Empty, message);
+        }
+
+        private void AddPaymentMethodErrors(string message)
+        {
+            if (message.Contains("Kode", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("Code", message);
+                return;
+            }
+
+            if (message.Contains("Nama tampilan", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("DisplayName", message);
+                return;
+            }
+
+            if (message.Contains("legacy", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("Tipe metode", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("LegacyMethod", message);
+                return;
+            }
+
+            if (message.Contains("customer", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("IsCustomerFacing", message);
+                return;
+            }
+
+            if (message.Contains("kasir", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("IsCashierFacing", message);
+                return;
+            }
+
+            ModelState.AddModelError(string.Empty, message);
+        }
+
+        private void AddRoleErrors(string message)
+        {
+            if (message.Contains("Nama role", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("Name", message);
+                return;
+            }
+
+            if (message.Contains("Kode role", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("Kode", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("Code", message);
+                return;
+            }
+
+            if (message.Contains("aktif", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("dinonaktifkan", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("IsActive", message);
+                return;
+            }
+
             ModelState.AddModelError(string.Empty, message);
         }
 
@@ -196,7 +538,7 @@ namespace Restoran.Controllers
                 Id = model.Id,
                 Username = model.Username,
                 Email = model.Email,
-                Role = model.Role,
+                RoleId = model.RoleId,
                 IsActive = model.IsActive
             };
         }

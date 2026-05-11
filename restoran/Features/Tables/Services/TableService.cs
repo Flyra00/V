@@ -285,6 +285,7 @@ namespace Restoran.Features.Tables.Services
             var session = await _context.TableSessions
                 .Include(entity => entity.Table)
                 .Include(entity => entity.Transactions)
+                    .ThenInclude(transaction => transaction.Payment)
                 .FirstOrDefaultAsync(entity => entity.Id == transaction.TableSessionId.Value, cancellationToken);
 
             if (session == null || session.Status != TableSessionStatus.Active)
@@ -319,7 +320,7 @@ namespace Restoran.Features.Tables.Services
             => status == TableStatus.Occupied ? TableStatus.Available : status;
 
         private static bool IsSessionTerminal(Transaction transaction)
-            => transaction.PaymentStatus is PaymentStatus.Paid or PaymentStatus.Cancelled &&
+            => transaction.Payment is { PaymentStatus: PaymentStatus.Paid or PaymentStatus.Cancelled } &&
                transaction.OrderStatus is OrderStatus.Served or OrderStatus.Completed or OrderStatus.Cancelled;
 
         private static bool IsTerminalOrderStatus(OrderStatus status)

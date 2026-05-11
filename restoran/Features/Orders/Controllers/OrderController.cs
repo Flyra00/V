@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Restoran.Features.Auth.Services;
+using Restoran.Features.Customer.Services;
 using Restoran.Features.Orders.Services;
 using Restoran.Models;
 using Restoran.ViewModels;
@@ -8,10 +10,17 @@ namespace Restoran.Controllers
     public class OrderController : Controller
     {
         private readonly IOrderService _orderService;
+        private readonly IAuthCookieService _authCookieService;
+        private readonly ICustomerOrderContextService _customerOrderContextService;
 
-        public OrderController(IOrderService orderService)
+        public OrderController(
+            IOrderService orderService,
+            IAuthCookieService authCookieService,
+            ICustomerOrderContextService customerOrderContextService)
         {
             _orderService = orderService;
+            _authCookieService = authCookieService;
+            _customerOrderContextService = customerOrderContextService;
         }
 
         [HttpGet]
@@ -29,6 +38,7 @@ namespace Restoran.Controllers
                 return NotFound("Meja tidak ditemukan");
             }
 
+            _customerOrderContextService.SetActiveTableId(Response, effectiveTableId.Value);
             return View(viewModel);
         }
 
@@ -39,11 +49,17 @@ namespace Restoran.Controllers
             var result = await _orderService.CreateOrderAsync(request);
             if (result.Succeeded && result.Data != null)
             {
+                _customerOrderContextService.SetActiveTableId(Response, request.TableId);
+                _customerOrderContextService.SetActiveTransactionId(Response, result.Data.TransactionId);
+
                 return Json(new
                 {
                     success = true,
                     transactionId = result.Data.TransactionId,
-                    transactionNumber = result.Data.TransactionNumber
+                    transactionNumber = result.Data.TransactionNumber,
+                    appliedPromoName = result.Data.AppliedPromoName,
+                    discountAmount = result.Data.DiscountAmount,
+                    trackingUrl = Url.Action(nameof(Tracking), new { id = result.Data.TransactionId })
                 });
             }
 
@@ -68,15 +84,85 @@ namespace Restoran.Controllers
             return Json(new { success = result.Succeeded, message = result.Message });
         }
 
-        public async Task<IActionResult> Confirmation(int id)
+        public IActionResult Confirmation(int id)
         {
-            var transaction = await _orderService.GetConfirmationAsync(id);
-            if (transaction == null)
+            return RedirectToAction(nameof(Tracking), new { id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Tracking(int? id)
+        {
+            var resolvedTransactionId = await ResolveAccessibleTransactionIdAsync();
+            var effectiveTransactionId = id ?? resolvedTransactionId;
+
+            if (!effectiveTransactionId.HasValue)
+            {
+                return View(new OrderTrackingViewModel
+                {
+                    IsEmptyState = true
+                });
+            }
+
+            if (id.HasValue && !_customerOrderContextService.GetActiveTransactionId(Request).Equals(id.Value) && resolvedTransactionId != id.Value)
             {
                 return NotFound();
             }
 
-            return View(transaction);
+            var tracking = await _orderService.GetTrackingAsync(effectiveTransactionId.Value);
+            if (tracking == null)
+            {
+                return NotFound();
+            }
+
+            _customerOrderContextService.SetActiveTransactionId(Response, tracking.TransactionId);
+            if (tracking.TableId.HasValue)
+            {
+                _customerOrderContextService.SetActiveTableId(Response, tracking.TableId.Value);
+            }
+
+            return View(tracking);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TrackingStatus(int id)
+        {
+            var resolvedTransactionId = await ResolveAccessibleTransactionIdAsync();
+            if (!_customerOrderContextService.GetActiveTransactionId(Request).Equals(id) && resolvedTransactionId != id)
+            {
+                return NotFound();
+            }
+
+            var status = await _orderService.GetTrackingStatusAsync(id);
+            if (status == null)
+            {
+                return NotFound();
+            }
+
+            return Json(new
+            {
+                transactionId = status.TransactionId,
+                orderStatus = status.OrderStatus.ToString(),
+                paymentStatus = status.PaymentStatus.ToString(),
+                paidAt = status.PaidAt?.ToString("O"),
+                isTrackingFinal = status.IsTrackingFinal,
+                refreshedAt = status.RefreshedAt.ToString("O"),
+                items = status.Items.Select(item => new
+                {
+                    detailId = item.DetailId,
+                    status = item.Status.ToString()
+                })
+            });
+        }
+
+        private async Task<int?> ResolveAccessibleTransactionIdAsync()
+        {
+            var session = _authCookieService.GetAuthenticatedSession(Request);
+            int? memberUserId = session?.IsMember == true ? session.UserId : null;
+
+            return await _orderService.ResolveTrackingTransactionIdAsync(
+                _customerOrderContextService.GetActiveTransactionId(Request),
+                _customerOrderContextService.GetActiveTableId(Request),
+                memberUserId);
         }
     }
 }

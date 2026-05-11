@@ -1,565 +1,475 @@
+@using System.Text.Json
 @model OrderMenuViewModel
 
 @{
-    ViewData["Title"] = "Menu Restoran";
+    ViewData["Title"] = "Pesan Menu";
+    ViewData["CustomerPage"] = "menu";
+    ViewData["CustomerActiveNav"] = "menu";
+    ViewData["CustomerMenuHref"] = "#order-catalog";
+    ViewData["CustomerPromoHref"] = "#promo-spotlight";
+    ViewData["CustomerHowHref"] = "#how-it-works";
+    ViewData["CustomerCtaHref"] = "#order-catalog";
+    ViewData["CustomerCtaText"] = "Order Now";
     Layout = "_OrderLayout";
-}
 
-<div class="menu-container">
-    @Html.AntiForgeryToken()
-    <!-- Header -->
-    <div class="menu-header">
-        <div class="container">
-            <div class="row align-items-center py-3">
-                <div class="col">
-                    <h4 class="fw-bold mb-0">Menu Restoran</h4>
-                    <p class="mb-0 text-white-75">Meja <strong>#@Model.TableNumber</strong></p>
-                </div>
-                <div class="col-auto">
-                    <button class="btn btn-light position-relative" onclick="showCart()">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-count">
-                            0
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search & Filter -->
-    <div class="container py-3">
-        <div class="row">
-            <div class="col-12">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="fas fa-search text-muted"></i>
-                    </span>
-                    <input type="text" class="form-control border-start-0" id="searchMenu" 
-                           placeholder="Cari menu..." onkeyup="searchMenu()">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Category Tabs -->
-    <div class="container pb-3">
-        <div class="category-scroll d-flex gap-2 overflow-auto pb-2">
-            <button class="btn btn-gradient-primary rounded-pill px-4 active" onclick="filterCategory('all')">
-                Semua
-            </button>
-            @foreach (var category in Model.ProductsByCategory)
-            {
-                <button class="btn btn-outline-primary rounded-pill px-4" onclick="filterCategory('@category.Key')">
-                    @category.Key
-                </button>
-            }
-        </div>
-    </div>
-
-    <!-- Menu Grid -->
-    <div class="container pb-5">
-        @foreach (var category in Model.ProductsByCategory)
+    var allProducts = Model.ProductsByCategory
+        .SelectMany(category => category.Value)
+        .ToList();
+    var heroProduct = allProducts.FirstOrDefault(product => !string.IsNullOrWhiteSpace(product.ImageUrl));
+    var orderConfig = new
+    {
+        tableId = Model.TableId,
+        taxRate = Model.TaxRate,
+        taxName = Model.TaxName,
+        serviceChargeRate = Model.ServiceChargeRate,
+        serviceChargeName = Model.ServiceChargeName,
+        orderCreateUrl = Url.Action("Create", "Order"),
+        promos = Model.ActivePromos.Select(promo => new
         {
-            <div class="category-section mb-4" data-category="@category.Key">
-                <h5 class="fw-bold mb-3 border-bottom pb-2">@category.Key</h5>
-                <div class="row g-3">
-                    @foreach (var product in category.Value)
-                    {
-                        <div class="col-6 col-md-4 col-lg-3 menu-item" data-name="@product.Name.ToLower()" data-category="@category.Key">
-                            <div class="card menu-card border-0 shadow-sm h-100" onclick="addToCart(@product.Id, '@product.Name', @product.Price, '@product.ImageUrl')">
-                                <div class="position-relative">
-                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
-                                    {
-                                        <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 160px; object-fit: cover;">
-                                    }
-                                    else
-                                    {
-                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 160px;">
-                                            <i class="fas fa-utensils fa-3x text-muted"></i>
-                                        </div>
-                                    }
-                                    <div class="position-absolute top-0 end-0 m-2">
-                                        <button class="btn btn-light btn-sm rounded-circle" style="width: 36px; height: 36px;"
-                                                onclick="event.stopPropagation(); quickAdd(@product.Id, '@product.Name', @product.Price)">
-                                            <i class="fas fa-plus text-primary"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="card-body p-3">
-                                    <h6 class="card-title fw-bold mb-1">@product.Name</h6>
-                                    <p class="card-text text-muted small mb-2" style="height: 40px; overflow: hidden;">
-                                        @(string.IsNullOrEmpty(product.Description) ? "Tidak ada deskripsi" : product.Description)
-                                    </p>
-                                    <h6 class="text-primary fw-bold mb-0">Rp @product.Price.ToString("N0")</h6>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-        }
-    </div>
-</div>
-
-<!-- Cart Modal -->
-<div class="modal fade" id="cartModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold">
-                    <i class="fas fa-shopping-cart text-primary me-2"></i>Keranjang Pesanan
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="cart-items" class="mb-3" style="max-height: 300px; overflow-y: auto;">
-                    <p class="text-muted text-center py-5">
-                        <i class="fas fa-shopping-basket fa-3x mb-3 d-block"></i>
-                        Keranjang masih kosong
-                    </p>
-                </div>
-                
-                <div class="card border-0 bg-light">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Catatan Pesanan</label>
-                            <textarea id="order-notes" class="form-control" rows="2" 
-                                      placeholder="Tambahkan catatan khusus untuk pesanan ini..."></textarea>
-                        </div>
-                        <div class="mb-0">
-                            <label class="form-label fw-bold">Metode Pembayaran</label>
-                            <div class="row g-2">
-                                <div class="col-4">
-                                    <div class="form-check card border p-3 text-center cursor-pointer payment-option" 
-                                         onclick="selectPayment(0)">
-                                        <input class="form-check-input d-none" type="radio" name="payment" value="0" checked>
-                                        <i class="fas fa-money-bill-wave fa-2x mb-2 text-success"></i>
-                                        <div class="small">Bayar di Kasir</div>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="form-check card border p-3 text-center cursor-pointer payment-option" 
-                                         onclick="selectPayment(1)">
-                                        <input class="form-check-input d-none" type="radio" name="payment" value="1">
-                                        <i class="fas fa-qrcode fa-2x mb-2 text-primary"></i>
-                                        <div class="small">QRIS</div>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="form-check card border p-3 text-center cursor-pointer payment-option" 
-                                         onclick="selectPayment(2)">
-                                        <input class="form-check-input d-none" type="radio" name="payment" value="2">
-                                        <i class="fas fa-university fa-2x mb-2 text-info"></i>
-                                        <div class="small">Transfer</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <div class="w-100">
-                    <div class="border rounded p-3 mb-3 bg-light">
-                        <div class="d-flex justify-content-between small mb-2">
-                            <span>Subtotal</span>
-                            <span id="cart-subtotal">Rp 0</span>
-                        </div>
-                        <div class="d-flex justify-content-between small mb-2">
-                            <span>@Model.TaxName (@Model.TaxRate.ToString("N2")%)</span>
-                            <span id="cart-tax">Rp 0</span>
-                        </div>
-                        <div class="d-flex justify-content-between small mb-2">
-                            <span>@Model.ServiceChargeName (@Model.ServiceChargeRate.ToString("N2")%)</span>
-                            <span id="cart-service-charge">Rp 0</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                            <span class="fw-bold">Total Pembayaran</span>
-                            <h4 class="fw-bold text-primary mb-0" id="cart-total">Rp 0</h4>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-gradient-primary w-100 py-3" onclick="checkout()">
-                        <i class="fas fa-check me-2"></i>Pesan Sekarang
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Product Detail Modal -->
-<div class="modal fade" id="productModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0">
-            <div class="modal-header border-0">
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div id="product-image" class="mb-3">
-                    <div class="d-inline-flex align-items-center justify-content-center rounded" 
-                         style="width: 150px; height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <i class="fas fa-utensils fa-4x text-white"></i>
-                    </div>
-                </div>
-                <h4 class="fw-bold" id="product-name">Nama Produk</h4>
-                <h5 class="text-primary fw-bold" id="product-price">Rp 0</h5>
-                <p class="text-muted" id="product-desc">Deskripsi produk</p>
-                
-                <div class="d-flex justify-content-center align-items-center gap-3 my-4">
-                    <button class="btn btn-outline-secondary rounded-circle" style="width: 45px; height: 45px;" 
-                            onclick="updateModalQty(-1)">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    <span class="fw-bold fs-4" id="modal-qty">1</span>
-                    <button class="btn btn-outline-secondary rounded-circle" style="width: 45px; height: 45px;" 
-                            onclick="updateModalQty(1)">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-                
-                <button class="btn btn-gradient-primary w-100 py-3" onclick="addFromModal()">
-                    <i class="fas fa-plus me-2"></i>Tambah ke Keranjang
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script>
-        let cart = [];
-        let tableId = @Model.TableId;
-        const taxRate = @Model.TaxRate.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        const serviceChargeRate = @Model.ServiceChargeRate.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        let modalProduct = null;
-        let modalQty = 1;
-
-        function getRequestVerificationToken() {
-            return document.querySelector('input[name="__RequestVerificationToken"]').value;
-        }
-
-        function addToCart(productId, productName, price, imageUrl) {
-            modalProduct = { productId, productName, price, imageUrl };
-            modalQty = 1;
-            
-            document.getElementById('product-name').textContent = productName;
-            document.getElementById('product-price').textContent = 'Rp ' + price.toLocaleString();
-            document.getElementById('modal-qty').textContent = modalQty;
-            
-            const productImage = document.getElementById('product-image');
-            if (imageUrl) {
-                productImage.innerHTML = `<img src="${imageUrl}" class="rounded" style="width: 150px; height: 150px; object-fit: cover;">`;
-            } else {
-                productImage.innerHTML = `
-                    <div class="d-inline-flex align-items-center justify-content-center rounded" 
-                         style="width: 150px; height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <i class="fas fa-utensils fa-4x text-white"></i>
-                    </div>`;
-            }
-            
-            const modal = new bootstrap.Modal(document.getElementById('productModal'));
-            modal.show();
-        }
-
-        function updateModalQty(change) {
-            modalQty += change;
-            if (modalQty < 1) modalQty = 1;
-            document.getElementById('modal-qty').textContent = modalQty;
-        }
-
-        function addFromModal() {
-            if (modalProduct) {
-                const existingItem = cart.find(item => item.productId === modalProduct.productId);
-                if (existingItem) {
-                    existingItem.quantity += modalQty;
-                } else {
-                    cart.push({ 
-                        productId: modalProduct.productId, 
-                        productName: modalProduct.productName, 
-                        price: modalProduct.price, 
-                        quantity: modalQty 
-                    });
-                }
-                updateCartUI();
-                
-                // Close modal and show toast
-                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
-                showToast(`${modalProduct.productName} ditambahkan ke keranjang`, 'success');
-            }
-        }
-
-        function quickAdd(productId, productName, price) {
-            const existingItem = cart.find(item => item.productId === productId);
-            if (existingItem) {
-                existingItem.quantity++;
-            } else {
-                cart.push({ productId, productName, price, quantity: 1 });
-            }
-            updateCartUI();
-            showToast(`${productName} ditambahkan ke keranjang`, 'success');
-        }
-
-        function updateCartUI() {
-            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-            document.getElementById('cart-count').textContent = count;
-            
-            let html = '';
-            let subtotal = 0;
-            
-            if (cart.length === 0) {
-                html = `
-                    <p class="text-muted text-center py-5">
-                        <i class="fas fa-shopping-basket fa-3x mb-3 d-block"></i>
-                        Keranjang masih kosong
-                    </p>`;
-            } else {
-                cart.forEach((item, index) => {
-                    const itemSubtotal = item.price * item.quantity;
-                    subtotal += itemSubtotal;
-                    html += `
-                        <div class="d-flex align-items-center p-3 mb-2 rounded" style="background: var(--bs-body-bg);">
-                            <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-1">${item.productName}</h6>
-                                <small class="text-muted">Rp ${item.price.toLocaleString()}</small>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <button class="btn btn-sm btn-outline-secondary rounded-circle" 
-                                        style="width: 32px; height: 32px; padding: 0;"
-                                        onclick="updateQuantity(${index}, -1)">
-                                    <i class="fas fa-minus small"></i>
-                                </button>
-                                <span class="fw-bold" style="min-width: 30px; text-align: center;">${item.quantity}</span>
-                                <button class="btn btn-sm btn-outline-secondary rounded-circle" 
-                                        style="width: 32px; height: 32px; padding: 0;"
-                                        onclick="updateQuantity(${index}, 1)">
-                                    <i class="fas fa-plus small"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger rounded-circle ms-2" 
-                                        style="width: 32px; height: 32px; padding: 0;"
-                                        onclick="removeItem(${index})">
-                                    <i class="fas fa-trash small"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            
-            document.getElementById('cart-items').innerHTML = html;
-            const taxAmount = subtotal * (taxRate / 100);
-            const serviceChargeAmount = subtotal * (serviceChargeRate / 100);
-            const total = subtotal + taxAmount + serviceChargeAmount;
-            document.getElementById('cart-subtotal').textContent = 'Rp ' + subtotal.toLocaleString();
-            document.getElementById('cart-tax').textContent = 'Rp ' + taxAmount.toLocaleString();
-            document.getElementById('cart-service-charge').textContent = 'Rp ' + serviceChargeAmount.toLocaleString();
-            document.getElementById('cart-total').textContent = 'Rp ' + total.toLocaleString();
-        }
-
-        function updateQuantity(index, change) {
-            cart[index].quantity += change;
-            if (cart[index].quantity <= 0) {
-                cart.splice(index, 1);
-            }
-            updateCartUI();
-        }
-
-        function removeItem(index) {
-            const itemName = cart[index].productName;
-            cart.splice(index, 1);
-            updateCartUI();
-            showToast(`${itemName} dihapus dari keranjang`, 'warning');
-        }
-
-        function showCart() {
-            if (cart.length === 0) {
-                showToast('Keranjang masih kosong!', 'warning');
-                return;
-            }
-            const modal = new bootstrap.Modal(document.getElementById('cartModal'));
-            modal.show();
-        }
-
-        function selectPayment(method) {
-            document.querySelectorAll('.payment-option').forEach(el => {
-                el.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
-                el.querySelector('input').checked = false;
-            });
-            
-            const selected = document.querySelector(`.payment-option:nth-child(${method + 1})`);
-            if (selected) {
-                selected.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
-                selected.querySelector('input').checked = true;
-            }
-        }
-
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) {
-                return parts.pop().split(';').shift();
-            }
-            return null;
-        }
-
-        function checkout() {
-            if (cart.length === 0) {
-                showToast('Keranjang masih kosong!', 'warning');
-                return;
-            }
-
-            const isMember = getCookie('IsMember') === 'true';
-            const customerName = getCookie('Username') || 'Guest';
-            const memberIdValue = isMember ? parseInt(getCookie('UserId')) : NaN;
-            const memberId = Number.isInteger(memberIdValue) && memberIdValue > 0 ? memberIdValue : null;
-
-            const orderData = {
-                tableId: tableId,
-                customerName: customerName,
-                isMember: isMember,
-                memberId: memberId,
-                paymentMethod: parseInt(document.querySelector('input[name="payment"]:checked').value),
-                items: cart.map(item => ({
-                    productId: item.productId,
-                    quantity: item.quantity,
-                    notes: document.getElementById('order-notes').value
-                }))
-            };
-
-            // Show loading
-            const btn = document.querySelector('#cartModal .btn-gradient-primary');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
-            btn.disabled = true;
-
-            fetch('/Order/Create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': getRequestVerificationToken()
-                },
-                body: JSON.stringify(orderData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(`Pesanan berhasil dibuat! Nomor: ${data.transactionNumber}`, 'success');
-                    cart = [];
-                    updateCartUI();
-                    bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
-                    
-                    if (orderData.paymentMethod === 1 || orderData.paymentMethod === 2) {
-                        window.location.href = '/Order/Confirmation/' + data.transactionId;
-                    }
-                } else {
-                    showToast('Error: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                showToast('Terjadi kesalahan: ' + error.message, 'error');
-            })
-            .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-        }
-
-        function searchMenu() {
-            const searchTerm = document.getElementById('searchMenu').value.toLowerCase();
-            document.querySelectorAll('.menu-item').forEach(item => {
-                const name = item.getAttribute('data-name');
-                if (name.includes(searchTerm)) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        }
-
-        function filterCategory(category) {
-            document.querySelectorAll('.category-scroll button').forEach(btn => {
-                btn.classList.remove('btn-gradient-primary', 'active');
-                btn.classList.add('btn-outline-primary');
-            });
-            event.target.classList.remove('btn-outline-primary');
-            event.target.classList.add('btn-gradient-primary', 'active');
-
-            if (category === 'all') {
-                document.querySelectorAll('.category-section').forEach(section => {
-                    section.style.display = '';
-                });
-            } else {
-                document.querySelectorAll('.category-section').forEach(section => {
-                    if (section.getAttribute('data-category') === category) {
-                        section.style.display = '';
-                    } else {
-                        section.style.display = 'none';
-                    }
-                });
-            }
-        }
-
-        // Initialize payment option
-        selectPayment(0);
-    </script>
+            name = promo.Name,
+            discountPercentage = promo.DiscountPercentage,
+            minimumPurchase = promo.MinimumPurchase
+        })
+    };
 }
 
-<style>
-    .menu-container {
-        min-height: 100vh;
-        background: var(--bs-body-bg);
-    }
+<div id="customer-order-app"
+     class="customer-order-page"
+     data-config='@Html.Raw(JsonSerializer.Serialize(orderConfig))'>
+    @Html.AntiForgeryToken()
 
-    .menu-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
+    <section class="customer-section-shell">
+        <div class="customer-page-hero">
+            <div class="customer-page-hero__content">
+                <span class="customer-page-hero__eyebrow">
+                    <i class="fas fa-sparkles"></i>
+                    Desktop Ordering Ceria
+                </span>
+                <h1>Menu Hangat untuk Meja <span class="text-nowrap">#@Model.TableNumber</span></h1>
+                <p>
+                    Pilih hidangan favorit Anda, atur catatan pesanan, dan konfirmasi langsung dari halaman ini.
+                    Semua perhitungan subtotal, @Model.TaxName, service charge, dan promo otomatis tersinkron.
+                </p>
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <a class="customer-primary-button" href="#order-catalog">
+                        <i class="fas fa-utensils"></i>
+                        Jelajahi Menu
+                    </a>
+                    <button class="customer-secondary-button" type="button" data-cart-toggle>
+                        <i class="fas fa-basket-shopping"></i>
+                        Buka Keranjang
+                    </button>
+                </div>
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <span class="small-chip"><i class="fas fa-receipt"></i>@Model.TaxName @Model.TaxRate.ToString("N0")%</span>
+                    <span class="small-chip"><i class="fas fa-bell-concierge"></i>@Model.ServiceChargeName @Model.ServiceChargeRate.ToString("N0")%</span>
+                    <span class="small-chip"><i class="fas fa-shield-heart"></i>@allProducts.Count menu siap ditinjau</span>
+                </div>
+            </div>
 
-    .menu-card {
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+            <div class="customer-page-hero__media">
+                @if (!string.IsNullOrWhiteSpace(heroProduct?.ImageUrl))
+                {
+                    <img src="@heroProduct.ImageUrl" alt="@heroProduct.Name" />
+                }
+                else
+                {
+                    <img src="~/assets/img/hero-img.png" alt="Ceria Resto" />
+                }
+                <div class="customer-page-hero__note">
+                    <span class="landing-step-card__icon mb-0" style="width: 44px; height: 44px; margin: 0;">
+                        <i class="fas fa-kitchen-set"></i>
+                    </span>
+                    <div>
+                        <strong>Siap Dimasak</strong>
+                        <div class="customer-section-subtitle">Pesanan masuk real-time ke kasir dan kitchen.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    .menu-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
-    }
+        <section id="promo-spotlight" class="promo-spotlight">
+            <div>
+                <h2>Promo Ceria Hari Ini</h2>
+                @if (Model.ActivePromos.Count > 0)
+                {
+                    <p>
+                        Promo terbaik diterapkan otomatis saat checkout.
+                        @foreach (var promo in Model.ActivePromos.Take(2))
+                        {
+                            <span class="d-inline-block me-3"><strong>@promo.Name</strong> @promo.DiscountPercentage.ToString("N0")% mulai @promo.MinimumPurchase.ToString("C0", new System.Globalization.CultureInfo("id-ID"))</span>
+                        }
+                    </p>
+                }
+                else
+                {
+                    <p>Belum ada promo aktif hari ini, tetapi semua menu tetap siap dipesan untuk meja Anda.</p>
+                }
+            </div>
+            <button class="customer-secondary-button" type="button" onclick="document.getElementById('order-catalog')?.scrollIntoView({ behavior: 'smooth' });">
+                Lihat Promo
+            </button>
+        </section>
+    </section>
 
-    .menu-card:active {
-        transform: scale(0.98);
-    }
+    <section class="catalog-shell">
+        <div class="catalog-main">
+            <div class="catalog-toolbar">
+                <div>
+                    <div class="promo-chip mb-3">
+                        <i class="fas fa-book-open"></i>
+                        Katalog Menu
+                    </div>
+                    <h2 class="customer-section-title mb-2">Pilih Menu Favorit Anda</h2>
+                    <div class="customer-section-subtitle">Klik kartu menu untuk melihat detail, isi catatan, lalu tambahkan ke keranjang.</div>
+                </div>
 
-    .category-scroll {
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
+                <label class="catalog-search">
+                    <i class="fas fa-search"></i>
+                    <input id="catalog-search" type="search" placeholder="Cari makanan, minuman, atau dessert..." />
+                </label>
+            </div>
 
-    .category-scroll::-webkit-scrollbar {
-        display: none;
-    }
+            <div class="category-chip-row">
+                <button class="category-chip is-active" type="button" data-category-filter="all">
+                    <i class="fas fa-grip"></i>
+                    Semua
+                </button>
+                @foreach (var category in Model.ProductsByCategory)
+                {
+                    <button class="category-chip" type="button" data-category-filter="@category.Key">
+                        <i class="fas fa-tag"></i>
+                        @category.Key
+                    </button>
+                }
+            </div>
 
-    .category-scroll button {
-        white-space: nowrap;
-        transition: all 0.3s ease;
-    }
+            <div id="order-catalog" class="d-flex flex-column gap-4">
+                @foreach (var category in Model.ProductsByCategory)
+                {
+                    <section class="catalog-category-block" data-menu-category="@category.Key">
+                        <div>
+                            <h3 class="customer-section-title">@category.Key</h3>
+                            <div class="customer-section-subtitle">@category.Value.Count pilihan menu untuk kategori ini.</div>
+                        </div>
 
-    .payment-option {
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
+                        <div class="menu-grid">
+                            @foreach (var product in category.Value)
+                            {
+                                <div class="menu-card-wrapper">
+                                    <article class="menu-card @(product.IsAvailable ? null : "is-unavailable")"
+                                             data-menu-card
+                                             data-product-id="@product.Id"
+                                             data-product-name="@product.Name"
+                                             data-product-description="@product.Description"
+                                             data-product-image="@product.ImageUrl"
+                                             data-product-price="@product.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                             data-product-available="@product.IsAvailable.ToString().ToLowerInvariant()">
+                                        <div class="menu-card__media">
+                                            @if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+                                            {
+                                                <img src="@product.ImageUrl" alt="@product.Name" />
+                                            }
+                                            else
+                                            {
+                                                <div class="customer-product-modal__image d-flex align-items-center justify-content-center">
+                                                    <i class="fas fa-bowl-food fa-3x text-secondary"></i>
+                                                </div>
+                                            }
 
-    .payment-option:hover {
-        border-color: var(--bs-primary) !important;
-    }
+                                            <div class="menu-card__badges">
+                                                <span class="availability-badge @(product.IsAvailable ? null : "is-unavailable")">
+                                                    <i class="fas @(product.IsAvailable ? "fa-circle-check" : "fa-circle-xmark")"></i>
+                                                    @(product.IsAvailable ? "Tersedia" : "Tidak tersedia")
+                                                </span>
+                                                <span class="small-chip">
+                                                    <i class="fas fa-star"></i> Ceria
+                                                </span>
+                                            </div>
+                                        </div>
 
-    .payment-option.border-primary {
-        border-width: 2px !important;
-    }
+                                        <div class="menu-card__body">
+                                            <div>
+                                                <h3>@product.Name</h3>
+                                                <p>@(string.IsNullOrWhiteSpace(product.Description) ? "Menu spesial Ceria Resto yang disiapkan hangat untuk meja Anda." : product.Description)</p>
+                                            </div>
 
-    .text-white-75 {
-        color: rgba(255, 255, 255, 0.75) !important;
-    }
-</style>
+                                            <div class="menu-card__footer">
+                                                <div class="menu-card__price">
+                                                    <strong>@product.Price.ToString("C0", new System.Globalization.CultureInfo("id-ID"))</strong>
+                                                    <span>@(product.IsAvailable ? "Siap ditambahkan ke keranjang" : "Sementara tidak bisa dipesan")</span>
+                                                </div>
+
+                                                <div class="menu-card__actions">
+                                                    <button class="menu-card__quick"
+                                                            type="button"
+                                                            data-quick-add
+                                                            @(product.IsAvailable ? null : "disabled")>
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                    <button class="menu-card__cta"
+                                                            type="button"
+                                                            @(product.IsAvailable ? null : "disabled")>
+                                                        Tambah
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </article>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <div id="catalog-empty-state" class="catalog-empty-state is-hidden">
+                    <i class="fas fa-magnifying-glass mb-3"></i>
+                    <h3 class="customer-section-title fs-4 mb-2">Menu tidak ditemukan</h3>
+                    <p>Coba ganti kata kunci pencarian atau pilih kategori lain.</p>
+                </div>
+            </div>
+
+            <section id="how-it-works" class="steps-panel p-4">
+                <div class="mb-4">
+                    <div class="promo-chip mb-3">
+                        <i class="fas fa-circle-info"></i>
+                        Cara Pesan
+                    </div>
+                    <h2 class="customer-section-title">Pesan Lebih Cepat dari Desktop</h2>
+                    <div class="customer-section-subtitle">Alur order tetap sama, hanya tampilannya yang dibuat lebih nyaman untuk layar besar.</div>
+                </div>
+
+                <div class="landing-step-grid">
+                    <article class="landing-step-card">
+                        <div class="landing-step-card__icon"><i class="fas fa-table-cells-large"></i></div>
+                        <h3>Pilih Menu</h3>
+                        <p>Gunakan search dan category chips untuk menyaring menu tanpa membuat halaman terasa penuh.</p>
+                    </article>
+                    <article class="landing-step-card">
+                        <div class="landing-step-card__icon"><i class="fas fa-note-sticky"></i></div>
+                        <h3>Isi Catatan</h3>
+                        <p>Tambahkan catatan per item lewat modal produk atau edit langsung dari cart drawer di sisi kanan.</p>
+                    </article>
+                    <article class="landing-step-card">
+                        <div class="landing-step-card__icon"><i class="fas fa-credit-card"></i></div>
+                        <h3>Konfirmasi</h3>
+                        <p>Pilih metode pembayaran, cek total, lalu kirim order ke backend yang sama seperti sebelumnya.</p>
+                    </article>
+                </div>
+            </section>
+        </div>
+
+        <aside class="summary-card order-summary-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="promo-chip mb-2">
+                        <i class="fas fa-cart-shopping"></i>
+                        Ringkasan
+                    </div>
+                    <h2>Pesanan Saya</h2>
+                </div>
+                <span class="small-chip">Meja @Model.TableNumber</span>
+            </div>
+
+            <div id="summary-empty-state" class="summary-empty-state">
+                <i class="fas fa-basket-shopping fa-2x mb-3"></i>
+                <h3 class="customer-section-title fs-4 mb-2">Belum ada pesanan</h3>
+                <p>Pilih menu di katalog kiri, lalu keranjang akan muncul di panel ini.</p>
+                <button id="summary-browse-menu" class="customer-secondary-button mt-3" type="button">Pilih Menu</button>
+            </div>
+
+            <div id="summary-item-list" class="summary-item-list" hidden></div>
+
+            <div class="summary-breakdown">
+                <div class="summary-breakdown__row">
+                    <span>Subtotal</span>
+                    <strong id="summary-subtotal">Rp0</strong>
+                </div>
+                <div class="summary-breakdown__row">
+                    <span>@Model.TaxName (@Model.TaxRate.ToString("N0")%)</span>
+                    <strong id="summary-tax">Rp0</strong>
+                </div>
+                <div class="summary-breakdown__row">
+                    <span>@Model.ServiceChargeName (@Model.ServiceChargeRate.ToString("N0")%)</span>
+                    <strong id="summary-service">Rp0</strong>
+                </div>
+                <div class="summary-breakdown__row">
+                    <span id="summary-discount-label">Diskon</span>
+                    <strong id="summary-discount">Rp0</strong>
+                </div>
+                <div id="summary-discount-note" class="customer-section-subtitle small"></div>
+                <div class="summary-breakdown__row is-total">
+                    <span>Total</span>
+                    <strong id="summary-total">Rp0</strong>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="customer-section-title fs-4 mb-3">Metode Pembayaran</h3>
+                <div class="payment-selector-grid">
+                    @for (var index = 0; index < Model.PaymentMethods.Count; index++)
+                    {
+                        var method = Model.PaymentMethods[index];
+                        var summaryId = $"summary-payment-{index}";
+                        <div class="payment-selector">
+                            <input id="@summaryId"
+                                   type="radio"
+                                   name="summary-payment-method"
+                                   value="@((int)method.LegacyMethod)"
+                                   data-payment-selector="summary"
+                                   @(index == 0 ? "checked" : null) />
+                            <label for="@summaryId">
+                                <span><i class="fas @GetPaymentIconClass(method.LegacyMethod)"></i>@method.DisplayName</span>
+                                <i class="fas fa-circle-check"></i>
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="summary-meta">
+                <i class="fas fa-circle-info"></i>
+                <span>Promo dan diskon member dihitung otomatis sesuai rule backend saat ini.</span>
+            </div>
+
+            <div class="summary-cta-group">
+                <button id="summary-confirm-order" class="drawer-primary-button" type="button">Konfirmasi Pesanan</button>
+                <button class="drawer-secondary-button" type="button" data-cart-toggle>Lihat Drawer Keranjang</button>
+            </div>
+        </aside>
+    </section>
+
+    <div id="cart-overlay" class="cart-overlay"></div>
+    <aside id="cart-drawer" class="cart-drawer" aria-hidden="true">
+        <div class="drawer-header">
+            <div>
+                <div class="promo-chip mb-2">
+                    <i class="fas fa-basket-shopping"></i>
+                    Cart Drawer
+                </div>
+                <h2>Keranjang Pesanan</h2>
+                <p id="drawer-item-count">Belum ada item</p>
+            </div>
+            <button id="cart-drawer-close" class="drawer-close-button" type="button" aria-label="Tutup keranjang">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="drawer-body">
+            <div id="drawer-empty-state" class="summary-empty-state">
+                <i class="fas fa-basket-shopping fa-2x mb-3"></i>
+                <h3 class="customer-section-title fs-4 mb-2">Keranjang masih kosong</h3>
+                <p>Tambah menu dari katalog untuk mulai membuat pesanan meja Anda.</p>
+                <button class="customer-secondary-button mt-3" type="button" data-browse-menu>Lihat Menu</button>
+            </div>
+
+            <div id="drawer-item-list" class="drawer-item-list" hidden></div>
+        </div>
+
+        <div class="drawer-footer">
+            <div class="drawer-breakdown">
+                <div class="summary-breakdown__row">
+                    <span>Subtotal</span>
+                    <strong id="drawer-subtotal">Rp0</strong>
+                </div>
+                <div class="summary-breakdown__row">
+                    <span>@Model.TaxName (@Model.TaxRate.ToString("N0")%)</span>
+                    <strong id="drawer-tax">Rp0</strong>
+                </div>
+                <div class="summary-breakdown__row">
+                    <span>@Model.ServiceChargeName (@Model.ServiceChargeRate.ToString("N0")%)</span>
+                    <strong id="drawer-service">Rp0</strong>
+                </div>
+                <div class="summary-breakdown__row">
+                    <span id="drawer-discount-label">Diskon</span>
+                    <strong id="drawer-discount">Rp0</strong>
+                </div>
+                <div id="drawer-discount-note" class="customer-section-subtitle small"></div>
+                <div class="summary-breakdown__row is-total">
+                    <span>Total</span>
+                    <strong id="drawer-total">Rp0</strong>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="customer-section-title fs-5 mb-3">Metode Pembayaran</h3>
+                <div class="payment-selector-grid">
+                    @for (var index = 0; index < Model.PaymentMethods.Count; index++)
+                    {
+                        var method = Model.PaymentMethods[index];
+                        var drawerId = $"drawer-payment-{index}";
+                        <div class="payment-selector">
+                            <input id="@drawerId"
+                                   type="radio"
+                                   name="drawer-payment-method"
+                                   value="@((int)method.LegacyMethod)"
+                                   data-payment-selector="drawer"
+                                   @(index == 0 ? "checked" : null) />
+                            <label for="@drawerId">
+                                <span><i class="fas @GetPaymentIconClass(method.LegacyMethod)"></i>@method.DisplayName</span>
+                                <i class="fas fa-circle-check"></i>
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="drawer-cta-group">
+                <button id="drawer-confirm-order" class="drawer-primary-button" type="button">Konfirmasi Pesanan</button>
+                <button class="drawer-secondary-button" type="button" data-browse-menu>Tambah Menu Lagi</button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="modal fade customer-product-modal" id="product-detail-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="customer-product-modal__image" id="modal-product-image">
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <i class="fas fa-bowl-food fa-3x text-secondary"></i>
+                    </div>
+                </div>
+                <div class="customer-product-modal__body">
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <div>
+                            <span id="modal-product-status" class="availability-badge">Tersedia</span>
+                            <h3 id="modal-product-title">Nama Menu</h3>
+                            <div id="modal-product-price" class="customer-product-modal__price">Rp0</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+
+                    <p id="modal-product-description" class="customer-product-modal__description">
+                        Detail menu Ceria Resto tampil di sini.
+                    </p>
+
+                    <label class="customer-field-label" for="modal-product-notes">Catatan Pesanan</label>
+                    <textarea id="modal-product-notes" class="customer-product-modal__notes" placeholder="Contoh: tanpa sambal, kurang es, atau request khusus lainnya."></textarea>
+
+                    <div class="customer-product-modal__meta mt-4">
+                        <div class="customer-product-modal__stepper">
+                            <button id="modal-qty-minus" type="button"><i class="fas fa-minus"></i></button>
+                            <strong id="modal-product-qty">1</strong>
+                            <button id="modal-qty-plus" type="button"><i class="fas fa-plus"></i></button>
+                        </div>
+
+                        <button id="modal-add-to-cart" class="customer-primary-button" type="button">
+                            <i class="fas fa-plus"></i>
+                            Tambah ke Keranjang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private static string GetPaymentIconClass(PaymentMethod paymentMethod) => paymentMethod switch
+    {
+        PaymentMethod.Tunai => "fa-money-bill-wave",
+        PaymentMethod.QRIS => "fa-qrcode",
+        PaymentMethod.Transfer => "fa-building-columns",
+        _ => "fa-cash-register"
+    };
+}

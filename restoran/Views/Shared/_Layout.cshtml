@@ -570,6 +570,18 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Promos") || Context.Request.Path.StartsWithSegments("/Admin/CreatePromo") || Context.Request.Path.StartsWithSegments("/Admin/EditPromo") ? "active" : "")" href="/Admin/Promos">
+                        <i class="fas fa-tags"></i>
+                        <span class="nav-text">Promo</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/Roles") || Context.Request.Path.StartsWithSegments("/Admin/CreateRole") || Context.Request.Path.StartsWithSegments("/Admin/EditRole") ? "active" : "")" href="/Admin/Roles">
+                        <i class="fas fa-user-shield"></i>
+                        <span class="nav-text">Role</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link @(Context.Request.Path.StartsWithSegments("/Admin/ChargeSettings") ? "active" : "")" href="/Admin/ChargeSettings">
                         <i class="fas fa-percent"></i>
                         <span class="nav-text">PPN & Service</span>

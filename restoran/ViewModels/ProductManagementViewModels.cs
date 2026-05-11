@@ -58,7 +58,7 @@ namespace Restoran.ViewModels
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Role wajib dipilih")]
-        public UserRole Role { get; set; }
+        public int? RoleId { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -68,6 +68,8 @@ namespace Restoran.ViewModels
         [DataType(DataType.Password)]
         public string? NewPassword { get; set; }
 
+        public string SelectedRoleName { get; set; } = string.Empty;
+
         public IReadOnlyList<RoleOption> AvailableRoles { get; set; } = Array.Empty<RoleOption>();
     }
 
@@ -75,5 +77,6 @@ namespace Restoran.ViewModels
     {
         public IReadOnlyList<Product> Products { get; init; } = Array.Empty<Product>();
         public IReadOnlyList<Table> Tables { get; init; } = Array.Empty<Table>();
+        public IReadOnlyList<PaymentMethodSelectionViewModel> PaymentMethods { get; init; } = Array.Empty<PaymentMethodSelectionViewModel>();
     }
 }

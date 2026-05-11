@@ -1,0 +1,476 @@
+@model OrderTrackingViewModel
+
+@{
+    ViewData["Title"] = "Lacak Pesanan";
+    ViewData["CustomerPage"] = "tracking";
+    ViewData["CustomerActiveNav"] = "status";
+    ViewData["CustomerMenuHref"] = "/Customer/Index#menu-preview";
+    ViewData["CustomerPromoHref"] = "/Customer/Index#promo-highlight";
+    ViewData["CustomerHowHref"] = "/Customer/Index#how-it-works";
+    ViewData["CustomerCtaHref"] = "/Customer/Index#table-cta";
+    ViewData["CustomerCtaText"] = "Pesan Lagi";
+    Layout = "_OrderLayout";
+}
+
+<div class="tracking-page-shell">
+    @Html.AntiForgeryToken()
+
+    @if (Model.IsEmptyState)
+    {
+        <section class="tracking-empty-shell">
+            <article class="summary-card text-center p-5">
+                <div class="landing-step-card__icon mx-auto mb-4">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <span class="promo-chip mb-3"><i class="fas fa-clock"></i>Status Pesanan</span>
+                <h1 class="customer-section-title mb-3">Belum ada pesanan aktif</h1>
+                <p class="customer-section-subtitle mb-4">
+                    Pesanan yang Anda buat dari meja ini akan muncul otomatis di halaman tracking.
+                    Setelah checkout, status kitchen dan pembayaran tetap dipantau dari sini.
+                </p>
+                <a href="/Customer/Index#table-cta" class="customer-primary-button mx-auto">
+                    <i class="fas fa-utensils"></i>
+                    Kembali ke Flow Order
+                </a>
+            </article>
+        </section>
+    }
+    else
+    {
+        <section class="customer-section-shell">
+            <div class="tracking-headline">
+                <span class="customer-page-hero__eyebrow">
+                    <i class="fas fa-bell-concierge"></i>
+                    Status Pesanan Desktop
+                </span>
+                <h1 class="customer-section-title mt-3 mb-2">Pantau Pesanan Anda Secara Real-Time</h1>
+                <p class="customer-section-subtitle">
+                    Tracking tetap memakai endpoint dan polling yang sama, tetapi sekarang tampil dalam layout desktop Ceria Resto
+                    yang lebih rapi untuk memantau status kitchen dan pembayaran.
+                </p>
+            </div>
+
+            <div class="tracking-shell">
+                <div class="d-flex flex-column gap-4">
+                    <article class="summary-card tracking-surface">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                            <div>
+                                <span class="promo-chip mb-3"><i class="fas fa-hashtag"></i>@Model.TransactionNumber</span>
+                                <h2 class="customer-section-title mb-2">Meja @Model.TableNumber</h2>
+                                <p class="customer-section-subtitle mb-0">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</p>
+                            </div>
+                            <div class="text-end">
+                                <div class="customer-section-subtitle mb-2">Status Pembayaran</div>
+                                <span id="payment-status-badge" class="tracking-status-badge @GetPaymentBadgeClass(Model.PaymentStatus)">
+                                    @Model.PaymentStatus
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="tracking-progress mt-4" id="tracking-steps" data-order-status="@Model.OrderStatus">
+                            <div class="tracking-progress__step" data-step="New">
+                                <strong>Pesanan Diterima</strong>
+                            </div>
+                            <div class="tracking-progress__step" data-step="Processing">
+                                <strong>Sedang Diproses</strong>
+                            </div>
+                            <div class="tracking-progress__step" data-step="Ready">
+                                <strong>Siap Disajikan</strong>
+                            </div>
+                            <div class="tracking-progress__step" data-step="Served">
+                                <strong>Sudah Tersaji</strong>
+                            </div>
+                        </div>
+
+                        <div class="tracking-status-band @GetOrderAlertClass(Model.OrderStatus)" id="order-status-alert">
+                            <div class="d-flex align-items-center gap-3">
+                                <i id="order-status-icon" class="fas @GetOrderIconClass(Model.OrderStatus) fa-lg"></i>
+                                <div>
+                                    <div class="fw-semibold">Status saat ini: <span id="order-status-text">@Model.OrderStatus</span></div>
+                                    <small id="tracking-refresh-note">Halaman ini akan memperbarui status otomatis setiap @Model.RefreshIntervalSeconds detik.</small>
+                                </div>
+                            </div>
+                            <button type="button" class="customer-secondary-button" onclick="refreshTracking()">
+                                <i class="fas fa-rotate-right"></i>
+                                Refresh
+                            </button>
+                        </div>
+                    </article>
+
+                    <article class="summary-card tracking-surface">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                            <div>
+                                <span class="promo-chip mb-3"><i class="fas fa-plate-wheat"></i>Detail Item</span>
+                                <h2 class="customer-section-title mb-1">Rincian Pesanan</h2>
+                                <p class="customer-section-subtitle mb-0">Setiap item tetap menampilkan status proses yang dikirim dari kitchen.</p>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="tracking-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Menu</th>
+                                        <th class="text-center">Qty</th>
+                                        <th>Status Item</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Items)
+                                    {
+                                        <tr data-detail-id="@item.DetailId">
+                                            <td>
+                                                <div class="fw-semibold">@item.ProductName</div>
+                                                @if (!string.IsNullOrWhiteSpace(item.Notes))
+                                                {
+                                                    <small class="customer-section-subtitle">@item.Notes</small>
+                                                }
+                                            </td>
+                                            <td class="text-center fw-semibold">@item.Quantity</td>
+                                            <td>
+                                                <span class="detail-status-badge @GetDetailBadgeClass(item.Status)" data-detail-status="@item.DetailId">
+                                                    @item.Status
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="d-flex flex-column gap-4">
+                    <article class="summary-card tracking-side-card">
+                        <span class="promo-chip mb-3"><i class="fas fa-wallet"></i>Ringkasan Pembayaran</span>
+                        <h2>Pesanan Saya</h2>
+                        <div class="tracking-summary-grid">
+                            <div class="tracking-summary-grid__row">
+                                <span>Subtotal</span>
+                                <strong>Rp @Model.Subtotal.ToString("N0")</strong>
+                            </div>
+                            <div class="tracking-summary-grid__row">
+                                <span>PPN</span>
+                                <strong>Rp @Model.Tax.ToString("N0")</strong>
+                            </div>
+                            <div class="tracking-summary-grid__row">
+                                <span>Service Charge</span>
+                                <strong>Rp @Model.ServiceCharge.ToString("N0")</strong>
+                            </div>
+                            @if (Model.Discount > 0)
+                            {
+                                <div class="tracking-summary-grid__row">
+                                    <span>Diskon</span>
+                                    <strong>-Rp @Model.Discount.ToString("N0")</strong>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(Model.AppliedPromoName))
+                                {
+                                    <div class="customer-section-subtitle">Promo aktif: @Model.AppliedPromoName</div>
+                                }
+                            }
+                            <div class="tracking-summary-grid__row is-total">
+                                <span>Total</span>
+                                <strong>Rp @Model.Total.ToString("N0")</strong>
+                            </div>
+                        </div>
+                        <div class="summary-meta mt-4">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Metode pembayaran: @Model.PaymentMethodDisplayName</span>
+                        </div>
+                    </article>
+
+                    @if (Model.RequiresOnlinePaymentProof)
+                    {
+                        <article class="summary-card tracking-side-card tracking-action-card" id="payment-proof-card">
+                            <div>
+                                <span class="promo-chip mb-3"><i class="fas fa-cloud-arrow-up"></i>Upload Bukti</span>
+                                <h3>Konfirmasi Pembayaran</h3>
+                                <p class="customer-section-subtitle mb-0">Gunakan panel ini untuk mengirim bukti bayar tanpa meninggalkan halaman tracking.</p>
+                            </div>
+
+                            @if (Model.PaymentMethod == PaymentMethod.QRIS)
+                            {
+                                <div class="summary-card p-4 text-center">
+                                    <div class="customer-section-subtitle mb-2">Scan QRIS berikut</div>
+                                    <div class="d-flex align-items-center justify-content-center bg-white rounded-4 border mx-auto" style="width: 180px; height: 180px;">
+                                        <span class="customer-section-subtitle">[QRIS Placeholder]</span>
+                                    </div>
+                                    <div class="fw-semibold mt-3">Total: Rp @Model.Total.ToString("N0")</div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="summary-card p-4">
+                                    <div class="fw-semibold">Transfer ke rekening restoran</div>
+                                    <div class="customer-section-subtitle mt-2">Bank BCA</div>
+                                    <div class="customer-section-subtitle">No. Rekening: 123-456-7890</div>
+                                    <div class="customer-section-subtitle">Atas Nama: PT Restoran Ceria</div>
+                                    <div class="fw-semibold mt-3">Total: Rp @Model.Total.ToString("N0")</div>
+                                </div>
+                            }
+
+                            <div>
+                                <label class="customer-field-label" for="payment-proof">Upload bukti pembayaran</label>
+                                <input type="file" id="payment-proof" class="tracking-file-input" accept="image/*">
+                            </div>
+                            <button class="customer-primary-button w-100" type="button" onclick="uploadProof(@Model.TransactionId)">
+                                <i class="fas fa-upload"></i>
+                                Upload Bukti Bayar
+                            </button>
+                        </article>
+                    }
+
+                    <article class="summary-card tracking-side-card">
+                        <span class="promo-chip mb-3"><i class="fas fa-clock-rotate-left"></i>Informasi Tracking</span>
+                        <h3>Update Pesanan</h3>
+                        <div class="tracking-summary-grid">
+                            <div class="tracking-summary-grid__row">
+                                <span>Tracking ID</span>
+                                <strong>@Model.TransactionNumber</strong>
+                            </div>
+                            <div class="tracking-summary-grid__row">
+                                <span>Update terakhir</span>
+                                <strong id="tracking-last-updated">@DateTime.Now.ToString("HH:mm:ss")</strong>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    }
+</div>
+
+@functions {
+    private static string GetPaymentBadgeClass(PaymentStatus status) => status switch
+    {
+        PaymentStatus.Paid => "is-paid",
+        PaymentStatus.Failed => "is-failed",
+        PaymentStatus.Cancelled => "is-cancelled",
+        _ => "is-pending"
+    };
+
+    private static string GetOrderAlertClass(OrderStatus status) => status switch
+    {
+        OrderStatus.New => "is-new",
+        OrderStatus.Processing => "is-processing",
+        OrderStatus.Ready => "is-ready",
+        OrderStatus.Served => "is-served",
+        OrderStatus.Completed => "is-ready",
+        OrderStatus.Cancelled => "is-cancelled",
+        _ => "is-processing"
+    };
+
+    private static string GetOrderIconClass(OrderStatus status) => status switch
+    {
+        OrderStatus.New => "fa-receipt",
+        OrderStatus.Processing => "fa-fire-burner",
+        OrderStatus.Ready => "fa-bell-concierge",
+        OrderStatus.Served => "fa-utensils",
+        OrderStatus.Completed => "fa-circle-check",
+        OrderStatus.Cancelled => "fa-ban",
+        _ => "fa-info-circle"
+    };
+
+    private static string GetDetailBadgeClass(DetailStatus status) => status switch
+    {
+        DetailStatus.Ready => "is-ready",
+        DetailStatus.Served => "is-served",
+        DetailStatus.Preparing => "is-preparing",
+        _ => "is-pending"
+    };
+}
+
+@section Scripts {
+    @if (!Model.IsEmptyState)
+    {
+        <script>
+            const trackingId = @Model.TransactionId;
+            const refreshIntervalMs = @(Model.RefreshIntervalSeconds * 1000);
+            let trackingTimer = null;
+
+            function refreshTracking() {
+                fetch(`/Order/TrackingStatus/${trackingId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Tracking tidak tersedia');
+                        }
+
+                        return response.json();
+                    })
+                    .then(data => {
+                        applyTrackingUpdate(data);
+
+                        if (data.isTrackingFinal && trackingTimer) {
+                            clearInterval(trackingTimer);
+                            trackingTimer = null;
+                            document.getElementById('tracking-refresh-note').textContent = 'Pesanan sudah mencapai status akhir.';
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+            }
+
+            function applyTrackingUpdate(data) {
+                const orderStatusText = document.getElementById('order-status-text');
+                const paymentStatusBadge = document.getElementById('payment-status-badge');
+                const orderStatusAlert = document.getElementById('order-status-alert');
+                const orderStatusIcon = document.getElementById('order-status-icon');
+                const lastUpdated = document.getElementById('tracking-last-updated');
+                const paymentProofCard = document.getElementById('payment-proof-card');
+
+                orderStatusText.textContent = data.orderStatus;
+                paymentStatusBadge.textContent = data.paymentStatus;
+                paymentStatusBadge.className = `tracking-status-badge ${getPaymentBadgeClass(data.paymentStatus)}`;
+                orderStatusAlert.className = `tracking-status-band ${getOrderAlertClass(data.orderStatus)}`;
+                orderStatusIcon.className = `fas ${getOrderIconClass(data.orderStatus)} fa-lg`;
+                lastUpdated.textContent = new Date(data.refreshedAt).toLocaleTimeString('id-ID');
+
+                if (paymentProofCard && data.paymentStatus === 'Paid') {
+                    paymentProofCard.remove();
+                }
+
+                document.querySelectorAll('[data-detail-status]').forEach(element => {
+                    const detailId = parseInt(element.getAttribute('data-detail-status'));
+                    const item = data.items.find(entry => entry.detailId === detailId);
+                    if (!item) {
+                        return;
+                    }
+
+                    element.textContent = item.status;
+                    element.className = `detail-status-badge ${getDetailBadgeClass(item.status)}`;
+                });
+
+                updateTrackingSteps(data.orderStatus);
+            }
+
+            function updateTrackingSteps(orderStatus) {
+                const stepOrder = ['New', 'Processing', 'Ready', 'Served'];
+                const activeIndex = stepOrder.indexOf(orderStatus);
+
+                document.querySelectorAll('.tracking-progress__step').forEach((stepElement, index) => {
+                    stepElement.classList.remove('is-active', 'is-complete', 'is-cancelled');
+
+                    if (orderStatus === 'Cancelled') {
+                        stepElement.classList.add('is-cancelled');
+                        return;
+                    }
+
+                    if (activeIndex === -1 && orderStatus === 'Completed') {
+                        stepElement.classList.add('is-complete');
+                        return;
+                    }
+
+                    if (index < activeIndex) {
+                        stepElement.classList.add('is-complete');
+                    } else if (index === activeIndex) {
+                        stepElement.classList.add('is-active');
+                    }
+                });
+            }
+
+            function getPaymentBadgeClass(paymentStatus) {
+                switch (paymentStatus) {
+                    case 'Paid':
+                        return 'is-paid';
+                    case 'Failed':
+                        return 'is-failed';
+                    case 'Cancelled':
+                        return 'is-cancelled';
+                    default:
+                        return 'is-pending';
+                }
+            }
+
+            function getOrderAlertClass(orderStatus) {
+                switch (orderStatus) {
+                    case 'New':
+                        return 'is-new';
+                    case 'Processing':
+                        return 'is-processing';
+                    case 'Ready':
+                        return 'is-ready';
+                    case 'Served':
+                        return 'is-served';
+                    case 'Completed':
+                        return 'is-ready';
+                    case 'Cancelled':
+                        return 'is-cancelled';
+                    default:
+                        return 'is-processing';
+                }
+            }
+
+            function getOrderIconClass(orderStatus) {
+                switch (orderStatus) {
+                    case 'New':
+                        return 'fa-receipt';
+                    case 'Processing':
+                        return 'fa-fire-burner';
+                    case 'Ready':
+                        return 'fa-bell-concierge';
+                    case 'Served':
+                        return 'fa-utensils';
+                    case 'Completed':
+                        return 'fa-circle-check';
+                    case 'Cancelled':
+                        return 'fa-ban';
+                    default:
+                        return 'fa-info-circle';
+                }
+            }
+
+            function getDetailBadgeClass(status) {
+                switch (status) {
+                    case 'Ready':
+                        return 'is-ready';
+                    case 'Served':
+                        return 'is-served';
+                    case 'Preparing':
+                        return 'is-preparing';
+                    default:
+                        return 'is-pending';
+                }
+            }
+
+            function getRequestVerificationToken() {
+                return document.querySelector('input[name="__RequestVerificationToken"]').value;
+            }
+
+            function uploadProof(transactionId) {
+                const fileInput = document.getElementById('payment-proof');
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    alert('Pilih file bukti pembayaran terlebih dahulu');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('transactionId', transactionId);
+                formData.append('paymentProof', fileInput.files[0]);
+
+                fetch('/Order/UploadPaymentProof', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': getRequestVerificationToken()
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        refreshTracking();
+                    } else {
+                        showToast(`Error: ${data.message}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    showToast(`Terjadi kesalahan: ${error.message}`, 'error');
+                });
+            }
+
+            updateTrackingSteps('@Model.OrderStatus');
+            trackingTimer = setInterval(refreshTracking, refreshIntervalMs);
+        </script>
+    }
+}

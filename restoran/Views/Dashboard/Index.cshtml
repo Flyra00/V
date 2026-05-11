@@ -193,23 +193,23 @@
                         <h5 class="fw-bold mb-0">
                             <i class="fas fa-exclamation-triangle text-warning me-2"></i>Inventaris Perlu Perhatian
                         </h5>
-                        @if (Model.LowStockIngredients.Any())
+                        @if (Model.InventoryAlerts.Any())
                         {
-                            <span class="badge bg-danger">@Model.LowStockIngredients.Count</span>
+                            <span class="badge bg-danger">@Model.InventoryAlerts.Count</span>
                         }
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    @if (Model.LowStockIngredients.Any())
+                    @if (Model.InventoryAlerts.Any())
                     {
-                        @foreach (var ingredient in Model.LowStockIngredients.Take(5))
+                        @foreach (var asset in Model.InventoryAlerts.Take(5))
                         {
                             <div class="alert alert-warning border-0 mb-2" style="background: rgba(245, 158, 11, 0.1);">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <strong>@ingredient.Name</strong>
+                                        <strong>@asset.Name</strong>
                                         <div class="small text-muted">
-                                            Jumlah: @ingredient.CurrentStock @ingredient.Unit (Patokan minimum: @ingredient.MinStock)
+                                            Jumlah: @asset.CurrentQuantity @asset.Unit (Patokan minimum: @asset.AlertThreshold) • Kondisi: @asset.Condition
                                         </div>
                                     </div>
                                     <a href="/Supervisor/Assets" class="btn btn-sm btn-warning">
@@ -218,7 +218,7 @@
                                 </div>
                                 <div class="progress mt-2" style="height: 4px;">
                                     <div class="progress-bar bg-warning" 
-                                         style="width: @(Math.Min((ingredient.CurrentStock * 100) / ingredient.MinStock, 100))%"></div>
+                                         style="width: @(Math.Min((asset.CurrentQuantity * 100) / asset.AlertThreshold, 100))%"></div>
                                 </div>
                             </div>
                         }

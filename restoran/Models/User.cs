@@ -23,11 +23,16 @@ namespace Restoran.Models
         [Required]
         public UserRole Role { get; set; }
 
+        public int? RoleId { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public DateTime? LastLogin { get; set; }
+
+        [ForeignKey(nameof(RoleId))]
+        public virtual Role? RoleEntity { get; set; }
 
         public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
         public virtual ICollection<AssetLog> AssetLogs { get; set; } = new List<AssetLog>();

@@ -29,43 +29,72 @@ namespace Restoran.Features.Dashboard.Services
             var firstDayOfMonth = new DateTime(today.Year, today.Month, 1);
             var thirtyDaysAgo = _dateTimeProvider.Now.AddDays(-30);
             var lastWeek = _dateTimeProvider.Now.AddDays(-7);
+            var paidTodayTotals = await _context.Payments
+                .Where(payment => payment.PaymentStatus == PaymentStatus.Paid &&
+                                  payment.PaymentDate.HasValue &&
+                                  payment.PaymentDate.Value.Date == today)
+                .Select(payment => payment.Amount)
+                .ToListAsync(cancellationToken);
+            var paidMonthlyTotals = await _context.Payments
+                .Where(payment => payment.PaymentStatus == PaymentStatus.Paid &&
+                                  payment.PaymentDate.HasValue &&
+                                  payment.PaymentDate.Value >= firstDayOfMonth)
+                .Select(payment => payment.Amount)
+                .ToListAsync(cancellationToken);
+            var topProductRows = await _context.TransactionDetails
+                .Where(td => td.Transaction.CreatedAt.Date == today)
+                .Select(td => new
+                {
+                    ProductName = td.Product.Name,
+                    td.Quantity,
+                    td.UnitPrice
+                })
+                .ToListAsync(cancellationToken);
+            var paidTransactionsForChart = await _context.Payments
+                .Where(payment => payment.PaymentStatus == PaymentStatus.Paid &&
+                                  payment.PaymentDate.HasValue &&
+                                  payment.PaymentDate.Value >= lastWeek)
+                .Select(t => new
+                {
+                    Date = t.PaymentDate!.Value.Date,
+                    t.Amount
+                })
+                .ToListAsync(cancellationToken);
 
             return new DashboardViewModel
             {
-                TodayRevenue = await _context.Transactions
-                    .Where(t => t.PaymentStatus == PaymentStatus.Paid && t.PaidAt.HasValue && t.PaidAt.Value.Date == today)
-                    .SumAsync(t => t.Total, cancellationToken),
+                TodayRevenue = paidTodayTotals.Sum(),
                 TodayTransactionCount = await _context.Transactions
                     .CountAsync(t => t.CreatedAt.Date == today, cancellationToken),
-                MonthlyRevenue = await _context.Transactions
-                    .Where(t => t.PaymentStatus == PaymentStatus.Paid && t.PaidAt.HasValue && t.PaidAt.Value >= firstDayOfMonth)
-                    .SumAsync(t => t.Total, cancellationToken),
+                MonthlyRevenue = paidMonthlyTotals.Sum(),
                 MonthlyTransactionCount = await _context.Transactions
                     .CountAsync(t => t.CreatedAt >= firstDayOfMonth, cancellationToken),
-                TopProductsToday = await _context.TransactionDetails
-                    .Where(td => td.Transaction.CreatedAt.Date == today)
-                    .GroupBy(td => td.Product.Name)
-                    .Select(g => new TopProductViewModel
+                TopProductsToday = topProductRows
+                    .GroupBy(row => row.ProductName)
+                    .Select(group => new TopProductViewModel
                     {
-                        ProductName = g.Key,
-                        QuantitySold = g.Sum(td => td.Quantity),
-                        Revenue = g.Sum(td => td.Quantity * td.UnitPrice)
+                        ProductName = group.Key,
+                        QuantitySold = group.Sum(row => row.Quantity),
+                        Revenue = group.Sum(row => row.Quantity * row.UnitPrice)
                     })
                     .OrderByDescending(x => x.QuantitySold)
                     .Take(5)
-                    .ToListAsync(cancellationToken),
+                    .ToList(),
                 AvailableProductsCount = await _context.Products.CountAsync(p => p.IsAvailable, cancellationToken),
                 UnavailableProductsCount = await _context.Products.CountAsync(p => !p.IsAvailable, cancellationToken),
-                LowStockIngredients = await _context.Assets
+                InventoryAlerts = (await _context.Assets
                     .Where(asset => asset.Condition != AssetCondition.Baik || asset.Quantity <= 5)
-                    .Select(asset => new LowStockViewModel
+                    .Select(asset => new InventoryAlertViewModel
                     {
                         Name = asset.Name,
-                        CurrentStock = asset.Quantity,
-                        MinStock = 5,
-                        Unit = asset.Unit
+                        CurrentQuantity = asset.Quantity,
+                        AlertThreshold = 5,
+                        Unit = asset.Unit,
+                        Condition = asset.Condition.ToString()
                     })
-                    .ToListAsync(cancellationToken),
+                    .ToListAsync(cancellationToken))
+                    .OrderBy(asset => asset.CurrentQuantity)
+                    .ToList(),
                 RecentAssetDamages = await _context.AssetLogs
                     .Include(al => al.Asset)
                     .Where(al => al.ReportedAt >= thirtyDaysAgo)
@@ -92,16 +121,15 @@ namespace Restoran.Features.Dashboard.Services
                         CreatedAt = t.CreatedAt
                     })
                     .ToListAsync(cancellationToken),
-                RevenueChartData = await _context.Transactions
-                    .Where(t => t.PaymentStatus == PaymentStatus.Paid && t.PaidAt.HasValue && t.PaidAt.Value >= lastWeek)
-                    .GroupBy(t => t.PaidAt!.Value.Date)
-                    .Select(g => new ChartDataViewModel
+                RevenueChartData = paidTransactionsForChart
+                    .GroupBy(transaction => transaction.Date)
+                    .Select(group => new ChartDataViewModel
                     {
-                        Label = g.Key.ToString("dd/MM"),
-                        Value = g.Sum(t => t.Total)
+                        Label = group.Key.ToString("dd/MM"),
+                        Value = group.Sum(transaction => transaction.Amount)
                     })
                     .OrderBy(x => x.Label)
-                    .ToListAsync(cancellationToken)
+                    .ToList()
             };
         }
 
@@ -180,51 +208,59 @@ namespace Restoran.Features.Dashboard.Services
             var effectiveTo = toDate ?? _dateTimeProvider.Now;
             var toInclusive = effectiveTo.AddDays(1);
             var chargeConfiguration = await _chargeConfigurationProvider.GetCurrentAsync(cancellationToken);
+            var paidTransactions = await _context.Payments
+                .AsNoTracking()
+                .Include(payment => payment.Transaction)
+                .Include(payment => payment.PaymentMethodOption)
+                .Where(payment => payment.PaymentStatus == PaymentStatus.Paid &&
+                                  payment.PaymentDate >= effectiveFrom &&
+                                  payment.PaymentDate <= toInclusive)
+                .Select(payment => new
+                {
+                    PaidDate = payment.PaymentDate!.Value.Date,
+                    payment.Transaction.Total,
+                    payment.Transaction.Tax,
+                    payment.Transaction.ServiceCharge,
+                    PaymentMethodName = payment.PaymentMethodOption.DisplayName
+                })
+                .ToListAsync(cancellationToken);
 
             return new RevenueReportViewModel
             {
                 FromDate = effectiveFrom,
                 ToDate = effectiveTo,
-                TotalRevenue = await _context.Transactions
-                    .Where(t => t.PaymentStatus == PaymentStatus.Paid && t.PaidAt >= effectiveFrom && t.PaidAt <= toInclusive)
-                    .SumAsync(t => t.Total, cancellationToken),
+                TotalRevenue = paidTransactions.Sum(transaction => transaction.Total),
                 TotalTransactions = await _context.Transactions
                     .CountAsync(t => t.CreatedAt >= effectiveFrom && t.CreatedAt <= toInclusive, cancellationToken),
-                TotalTax = await _context.Transactions
-                    .Where(t => t.PaymentStatus == PaymentStatus.Paid && t.PaidAt >= effectiveFrom && t.PaidAt <= toInclusive)
-                    .SumAsync(t => t.Tax, cancellationToken),
-                TotalServiceCharge = await _context.Transactions
-                    .Where(t => t.PaymentStatus == PaymentStatus.Paid && t.PaidAt >= effectiveFrom && t.PaidAt <= toInclusive)
-                    .SumAsync(t => t.ServiceCharge, cancellationToken),
-                AverageTransactionValue = await _context.Transactions
-                    .Where(t => t.PaymentStatus == PaymentStatus.Paid && t.PaidAt >= effectiveFrom && t.PaidAt <= toInclusive)
-                    .AverageAsync(t => (decimal?)t.Total, cancellationToken) ?? 0,
+                TotalTax = paidTransactions.Sum(transaction => transaction.Tax),
+                TotalServiceCharge = paidTransactions.Sum(transaction => transaction.ServiceCharge),
+                AverageTransactionValue = paidTransactions.Count > 0
+                    ? paidTransactions.Average(transaction => transaction.Total)
+                    : 0,
                 TaxName = chargeConfiguration.TaxName,
                 TaxRate = chargeConfiguration.TaxRate,
                 ServiceChargeName = chargeConfiguration.ServiceChargeName,
                 ServiceChargeRate = chargeConfiguration.ServiceChargeRate,
-                DailyRevenues = await _context.Transactions
-                    .Where(t => t.PaymentStatus == PaymentStatus.Paid && t.PaidAt >= effectiveFrom && t.PaidAt <= toInclusive)
-                    .GroupBy(t => t.PaidAt!.Value.Date)
-                    .Select(g => new DailyRevenueViewModel
+                DailyRevenues = paidTransactions
+                    .GroupBy(transaction => transaction.PaidDate)
+                    .Select(group => new DailyRevenueViewModel
                     {
-                        Date = g.Key,
-                        Revenue = g.Sum(t => t.Total),
-                        TransactionCount = g.Count()
+                        Date = group.Key,
+                        Revenue = group.Sum(transaction => transaction.Total),
+                        TransactionCount = group.Count()
                     })
                     .OrderBy(x => x.Date)
-                    .ToListAsync(cancellationToken),
-                PaymentMethods = await _context.Transactions
-                    .Where(t => t.PaymentStatus == PaymentStatus.Paid && t.PaidAt >= effectiveFrom && t.PaidAt <= toInclusive)
-                    .GroupBy(t => t.PaymentMethod)
+                    .ToList(),
+                PaymentMethods = paidTransactions
+                    .GroupBy(transaction => transaction.PaymentMethodName)
                     .Select(group => new PaymentMethodSummaryViewModel
                     {
-                        Method = group.Key.ToString(),
+                        Method = group.Key,
                         TransactionCount = group.Count(),
                         TotalAmount = group.Sum(transaction => transaction.Total)
                     })
                     .OrderByDescending(item => item.TotalAmount)
-                    .ToListAsync(cancellationToken)
+                    .ToList()
             };
         }
 
@@ -232,17 +268,6 @@ namespace Restoran.Features.Dashboard.Services
         {
             return new StockReportViewModel
             {
-                Ingredients = await _context.Ingredients
-                    .Select(i => new IngredientStockViewModel
-                    {
-                        Name = i.Name,
-                        StockQuantity = i.StockQuantity,
-                        MinStock = i.MinStock,
-                        Unit = i.Unit,
-                        IsLowStock = i.StockQuantity <= i.MinStock
-                    })
-                    .OrderBy(i => i.Name)
-                    .ToListAsync(cancellationToken),
                 Assets = await _context.Assets
                     .Select(a => new AssetStockViewModel
                     {

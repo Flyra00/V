@@ -1,0 +1,66 @@
+@model RoleFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Role";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Edit Role</h2>
+        <a asp-action="Roles" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Kembali
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form asp-action="EditRole" asp-route-id="@Model.Id" method="post">
+                <input asp-for="Id" type="hidden" />
+                <input asp-for="IsSystemRole" type="hidden" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Code" class="form-label"></label>
+                        <input asp-for="Code" class="form-control" readonly="@Model.IsSystemRole" />
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                        @if (Model.IsSystemRole)
+                        {
+                            <small class="text-muted d-block mt-1">Kode role sistem dikunci untuk menjaga bridge authorization.</small>
+                        }
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="SortOrder" class="form-label"></label>
+                        <input asp-for="SortOrder" class="form-control" />
+                        <span asp-validation-for="SortOrder" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" disabled="@Model.IsSystemRole" />
+                            <label asp-for="IsActive" class="form-check-label"></label>
+                        </div>
+                        @if (Model.IsSystemRole)
+                        {
+                            <input asp-for="IsActive" type="hidden" />
+                        }
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

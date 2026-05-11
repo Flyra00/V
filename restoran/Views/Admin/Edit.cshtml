@@ -34,15 +34,19 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Role" class="form-label">Role</label>
-                            <select asp-for="Role" class="form-select" required>
+                            <label asp-for="RoleId" class="form-label">Role</label>
+                            <select asp-for="RoleId" class="form-select" required>
                                 <option value="">Pilih Role</option>
                                 @foreach (var role in Model.AvailableRoles)
                                 {
-                                    <option value="@role.Value" selected="@(Model.Role == role.Value ? "selected" : null)">@role.Text</option>
+                                    <option value="@role.Value">@role.Text</option>
                                 }
                             </select>
-                            <span asp-validation-for="Role" class="text-danger"></span>
+                            <span asp-validation-for="RoleId" class="text-danger"></span>
+                            @if (!string.IsNullOrWhiteSpace(Model.SelectedRoleName))
+                            {
+                                <small class="text-muted d-block mt-1">Role saat ini: @Model.SelectedRoleName</small>
+                            }
                         </div>
 
                         <div class="mb-3 form-check">

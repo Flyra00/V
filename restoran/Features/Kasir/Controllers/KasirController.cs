@@ -44,7 +44,18 @@ namespace Restoran.Controllers
             return View(new PosPageViewModel
             {
                 Products = await _cashierService.GetAvailableProductsAsync(),
-                Tables = await _cashierService.GetAvailableTablesAsync()
+                Tables = await _cashierService.GetAvailableTablesAsync(),
+                PaymentMethods = (await _cashierService.GetAvailablePaymentMethodsAsync())
+                    .Select(method => new PaymentMethodSelectionViewModel
+                    {
+                        Id = method.Id,
+                        Code = method.Code,
+                        DisplayName = method.DisplayName,
+                        LegacyMethod = method.LegacyMethod,
+                        IsCustomerFacing = method.IsCustomerFacing,
+                        IsCashierFacing = method.IsCashierFacing
+                    })
+                    .ToList()
             });
         }
 

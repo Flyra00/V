@@ -11,6 +11,8 @@ namespace Restoran.ViewModels
         public decimal TaxRate { get; set; }
         public string ServiceChargeName { get; set; } = string.Empty;
         public decimal ServiceChargeRate { get; set; }
+        public IReadOnlyList<PromoSummaryViewModel> ActivePromos { get; set; } = Array.Empty<PromoSummaryViewModel>();
+        public IReadOnlyList<PaymentMethodSelectionViewModel> PaymentMethods { get; set; } = Array.Empty<PaymentMethodSelectionViewModel>();
         public Dictionary<string, List<Product>> ProductsByCategory { get; set; } = new();
     }
 

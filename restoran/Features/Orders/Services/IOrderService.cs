@@ -12,5 +12,8 @@ namespace Restoran.Features.Orders.Services
         Task<OperationResult<CreateOrderResponse>> CreateOrderAsync(CreateOrderRequest request, CancellationToken cancellationToken = default);
         Task<OperationResult> UploadPaymentProofAsync(int transactionId, IFormFile paymentProof, CancellationToken cancellationToken = default);
         Task<Transaction?> GetConfirmationAsync(int transactionId, CancellationToken cancellationToken = default);
+        Task<int?> ResolveTrackingTransactionIdAsync(int? activeTransactionId, int? activeTableId, int? memberUserId, CancellationToken cancellationToken = default);
+        Task<OrderTrackingViewModel?> GetTrackingAsync(int transactionId, CancellationToken cancellationToken = default);
+        Task<OrderTrackingStatusResponse?> GetTrackingStatusAsync(int transactionId, CancellationToken cancellationToken = default);
     }
 }

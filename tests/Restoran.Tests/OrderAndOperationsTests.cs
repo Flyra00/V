@@ -37,6 +37,7 @@ public static class OrderAndOperationsTests
                 FullName = "Member Test",
                 MemberType = MemberType.Gold
             });
+            await TestPaymentData.SeedDefaultPaymentMethodsAsync(arrangeContext);
             await arrangeContext.SaveChangesAsync();
         }
 
@@ -48,7 +49,8 @@ public static class OrderAndOperationsTests
             new StubTransactionNumberGenerator("TRX-001"),
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(taxRate: 10m, serviceChargeRate: 5m),
-            tableService);
+            tableService,
+            TestPaymentData.CreatePaymentService(context));
 
         var result = await service.CreateOrderAsync(new CreateOrderRequest
         {
@@ -71,15 +73,17 @@ public static class OrderAndOperationsTests
         TestAssert.True(result.Succeeded);
         TestAssert.NotNull(result.Data);
 
-        var transaction = await context.Transactions.SingleAsync();
+        var transaction = await context.Transactions.Include(entity => entity.Payment).SingleAsync();
         TestAssert.Equal("TRX-001", transaction.TransactionNumber);
         TestAssert.Equal(40000m, transaction.Subtotal);
         TestAssert.Equal(4000m, transaction.Tax);
         TestAssert.Equal(2000m, transaction.ServiceCharge);
         TestAssert.Equal(4000m, transaction.Discount);
         TestAssert.Equal(42000m, transaction.Total);
-        TestAssert.Equal(PaymentStatus.Pending, transaction.PaymentStatus);
+        TestAssert.NotNull(transaction.Payment);
+        TestAssert.Equal(PaymentStatus.Pending, transaction.Payment!.PaymentStatus);
         TestAssert.NotNull(transaction.TableSessionId);
+        TestAssert.Equal(1, await context.Payments.CountAsync());
 
         var detail = await context.TransactionDetails.SingleAsync();
         TestAssert.Equal(2, detail.Quantity);
@@ -108,11 +112,13 @@ public static class OrderAndOperationsTests
             {
                 TransactionNumber = "TRX-002",
                 CustomerName = "Guest",
-                PaymentMethod = PaymentMethod.Transfer,
-                PaymentStatus = PaymentStatus.Pending,
                 OrderStatus = OrderStatus.New
             });
+            await TestPaymentData.SeedDefaultPaymentMethodsAsync(arrangeContext);
             await arrangeContext.SaveChangesAsync();
+
+            var seededTransaction = await arrangeContext.Transactions.SingleAsync();
+            await TestPaymentData.SeedPaymentAsync(arrangeContext, seededTransaction.Id, PaymentMethod.Transfer, PaymentStatus.Pending, 0m);
         }
 
         await using var context = database.CreateContext();
@@ -122,14 +128,19 @@ public static class OrderAndOperationsTests
             new FixedDateTimeProvider(now),
             new StubTransactionNumberGenerator("IGNORED"),
             new StubChargeConfigurationProvider(),
-            tableService);
+            tableService,
+            TestPaymentData.CreatePaymentService(context));
 
         var result = await service.ConfirmPaymentAsync(1);
 
         TestAssert.True(result.Succeeded);
-        var transaction = await context.Transactions.SingleAsync();
-        TestAssert.Equal(PaymentStatus.Paid, transaction.PaymentStatus);
-        TestAssert.Equal(now, transaction.PaidAt);
+        var transaction = await context.Transactions.Include(entity => entity.Payment).SingleAsync();
+        TestAssert.NotNull(transaction.Payment);
+        TestAssert.Equal(PaymentStatus.Paid, transaction.Payment!.PaymentStatus);
+        TestAssert.Equal(now, transaction.Payment.PaymentDate);
+        var payment = await context.Payments.SingleAsync();
+        TestAssert.Equal(PaymentStatus.Paid, payment.PaymentStatus);
+        TestAssert.Equal(now, payment.PaymentDate);
     }
 
     public static async Task UpdateStatusAsync_PropagatesStatusToOrderDetails()
@@ -146,8 +157,6 @@ public static class OrderAndOperationsTests
                 Id = 1,
                 TransactionNumber = "TRX-003",
                 CustomerName = "Guest",
-                PaymentMethod = PaymentMethod.Tunai,
-                PaymentStatus = PaymentStatus.Paid,
                 OrderStatus = OrderStatus.Processing
             });
             arrangeContext.TransactionDetails.Add(new TransactionDetail
@@ -158,7 +167,9 @@ public static class OrderAndOperationsTests
                 UnitPrice = 25000,
                 Status = DetailStatus.Preparing
             });
+            await TestPaymentData.SeedDefaultPaymentMethodsAsync(arrangeContext);
             await arrangeContext.SaveChangesAsync();
+            await TestPaymentData.SeedPaymentAsync(arrangeContext, 1, PaymentMethod.Tunai, PaymentStatus.Paid, 25000m, now);
         }
 
         await using var context = database.CreateContext();

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Restoran.Data;
 using Restoran.Features.Kasir.Dtos;
+using Restoran.Features.Payments.Services;
 using Restoran.Features.Tables.Services;
 using Restoran.Models;
 using Restoran.Shared.Abstractions;
@@ -15,19 +16,22 @@ namespace Restoran.Features.Kasir.Services
         private readonly ITransactionNumberGenerator _transactionNumberGenerator;
         private readonly IChargeConfigurationProvider _chargeConfigurationProvider;
         private readonly ITableService _tableService;
+        private readonly IPaymentService _paymentService;
 
         public CashierService(
             ApplicationDbContext context,
             IDateTimeProvider dateTimeProvider,
             ITransactionNumberGenerator transactionNumberGenerator,
             IChargeConfigurationProvider chargeConfigurationProvider,
-            ITableService tableService)
+            ITableService tableService,
+            IPaymentService paymentService)
         {
             _context = context;
             _dateTimeProvider = dateTimeProvider;
             _transactionNumberGenerator = transactionNumberGenerator;
             _chargeConfigurationProvider = chargeConfigurationProvider;
             _tableService = tableService;
+            _paymentService = paymentService;
         }
 
         public async Task<IReadOnlyList<Transaction>> GetTransactionsAsync(CancellationToken cancellationToken = default)
@@ -35,9 +39,12 @@ namespace Restoran.Features.Kasir.Services
             return await _context.Transactions
                 .AsNoTracking()
                 .Include(t => t.Table)
+                .Include(t => t.Payment!)
+                    .ThenInclude(payment => payment.PaymentMethodOption)
                 .Include(t => t.TransactionDetails)
                     .ThenInclude(td => td.Product)
-                .Where(t => t.PaymentStatus == PaymentStatus.Pending || t.PaymentStatus == PaymentStatus.Paid)
+                .Where(t => t.Payment != null &&
+                            (t.Payment.PaymentStatus == PaymentStatus.Pending || t.Payment.PaymentStatus == PaymentStatus.Paid))
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync(cancellationToken);
         }
@@ -57,19 +64,20 @@ namespace Restoran.Features.Kasir.Services
             return await _tableService.GetAvailableTablesAsync(cancellationToken);
         }
 
+        public Task<IReadOnlyList<PaymentMethodOption>> GetAvailablePaymentMethodsAsync(CancellationToken cancellationToken = default)
+        {
+            return _paymentService.GetActiveCashierMethodsAsync(cancellationToken);
+        }
+
         public async Task<OperationResult> ConfirmPaymentAsync(int transactionId, CancellationToken cancellationToken = default)
         {
-            var transaction = await _context.Transactions.FindAsync([transactionId], cancellationToken);
-            if (transaction == null)
+            var result = await _paymentService.MarkPaymentPaidAsync(transactionId, _dateTimeProvider.Now, cancellationToken);
+            if (!result.Succeeded)
             {
-                return OperationResult.NotFound("Transaksi tidak ditemukan");
+                return result;
             }
 
-            transaction.PaymentStatus = PaymentStatus.Paid;
-            transaction.PaidAt = _dateTimeProvider.Now;
-
-            await _context.SaveChangesAsync(cancellationToken);
-            await _tableService.TryCloseSessionForTransactionAsync(transaction.Id, cancellationToken);
+            await _tableService.TryCloseSessionForTransactionAsync(transactionId, cancellationToken);
             return OperationResult.Success("Pembayaran berhasil dikonfirmasi");
         }
 
@@ -85,6 +93,13 @@ namespace Restoran.Features.Kasir.Services
 
             var now = _dateTimeProvider.Now;
             var transactionNumber = await _transactionNumberGenerator.GenerateAsync(cancellationToken);
+            var availablePaymentMethod = (await _paymentService.GetActiveCashierMethodsAsync(cancellationToken))
+                .Any(method => method.LegacyMethod == request.PaymentMethod);
+            if (!availablePaymentMethod)
+            {
+                return OperationResult<PosOrderResponse>.Failure("Metode pembayaran tidak tersedia");
+            }
+
             var productIds = request.Items.Select(item => item.ProductId).Distinct().ToList();
             var products = await _context.Products
                 .Where(product => productIds.Contains(product.Id))
@@ -112,8 +127,6 @@ namespace Restoran.Features.Kasir.Services
                     UserId = userId,
                     CustomerName = request.CustomerName,
                     CustomerType = CustomerType.Guest,
-                    PaymentMethod = request.PaymentMethod,
-                    PaymentStatus = request.PaymentMethod == PaymentMethod.Tunai ? PaymentStatus.Paid : PaymentStatus.Pending,
                     OrderStatus = OrderStatus.New,
                     CreatedAt = now
                 };
@@ -154,10 +167,20 @@ namespace Restoran.Features.Kasir.Services
                 transaction.Tax = chargeConfiguration.CalculateTax(subtotal);
                 transaction.ServiceCharge = chargeConfiguration.CalculateServiceCharge(subtotal);
                 transaction.Total = transaction.Subtotal + transaction.Tax + transaction.ServiceCharge;
+                var initialPaymentStatus = request.PaymentMethod == PaymentMethod.Tunai ? PaymentStatus.Paid : PaymentStatus.Pending;
+                var paymentResult = await _paymentService.CreateOrSyncPaymentAsync(
+                    transaction,
+                    transaction.Total,
+                    request.PaymentMethod,
+                    initialPaymentStatus,
+                    now,
+                    string.Empty,
+                    cancellationToken);
 
-                if (request.PaymentMethod == PaymentMethod.Tunai)
+                if (!paymentResult.Succeeded)
                 {
-                    transaction.PaidAt = now;
+                    await dbTransaction.RollbackAsync(cancellationToken);
+                    return OperationResult<PosOrderResponse>.Failure(paymentResult.Message);
                 }
 
                 await _context.SaveChangesAsync(cancellationToken);

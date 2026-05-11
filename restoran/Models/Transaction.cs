@@ -38,18 +38,14 @@ namespace Restoran.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal Total { get; set; }
 
-        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.BayarDiKasir;
+        public int? PromoId { get; set; }
 
-        public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
+        [StringLength(100)]
+        public string AppliedPromoName { get; set; } = string.Empty;
 
         public OrderStatus OrderStatus { get; set; } = OrderStatus.New;
 
-        [StringLength(200)]
-        public string PaymentProofUrl { get; set; } = string.Empty;
-
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-        public DateTime? PaidAt { get; set; }
 
         [ForeignKey("TableId")]
         public virtual Table? Table { get; set; }
@@ -59,6 +55,11 @@ namespace Restoran.Models
 
         [ForeignKey("UserId")]
         public virtual User? User { get; set; }
+
+        [ForeignKey("PromoId")]
+        public virtual Promo? Promo { get; set; }
+
+        public virtual Payment? Payment { get; set; }
 
         public virtual ICollection<TransactionDetail> TransactionDetails { get; set; } = new List<TransactionDetail>();
     }

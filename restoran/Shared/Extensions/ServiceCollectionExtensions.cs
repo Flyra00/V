@@ -6,6 +6,7 @@ using Restoran.Features.Dashboard.Services;
 using Restoran.Features.Kasir.Services;
 using Restoran.Features.Kitchen.Services;
 using Restoran.Features.Orders.Services;
+using Restoran.Features.Payments.Services;
 using Restoran.Features.Supervisor.Services;
 using Restoran.Features.Tables.Services;
 using Restoran.Infrastructure.Files;
@@ -27,7 +28,9 @@ namespace Restoran.Shared.Extensions
             services.AddScoped<IAuthCookieService, AuthCookieService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICustomerMenuService, CustomerMenuService>();
+            services.AddScoped<ICustomerOrderContextService, CustomerOrderContextService>();
             services.AddScoped<IQrCodeService, QrCodeService>();
+            services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<ICashierService, CashierService>();
             services.AddScoped<IDashboardService, DashboardService>();

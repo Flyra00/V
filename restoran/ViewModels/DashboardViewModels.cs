@@ -9,7 +9,7 @@ namespace Restoran.ViewModels
         public List<TopProductViewModel> TopProductsToday { get; set; } = new();
         public int AvailableProductsCount { get; set; }
         public int UnavailableProductsCount { get; set; }
-        public List<LowStockViewModel> LowStockIngredients { get; set; } = new();
+        public List<InventoryAlertViewModel> InventoryAlerts { get; set; } = new();
         public List<AssetDamageViewModel> RecentAssetDamages { get; set; } = new();
         public List<ActiveTransactionViewModel> ActiveTransactions { get; set; } = new();
         public List<ChartDataViewModel> RevenueChartData { get; set; } = new();
@@ -22,12 +22,13 @@ namespace Restoran.ViewModels
         public decimal Revenue { get; set; }
     }
 
-    public class LowStockViewModel
+    public class InventoryAlertViewModel
     {
         public string Name { get; set; } = string.Empty;
-        public decimal CurrentStock { get; set; }
-        public decimal MinStock { get; set; }
+        public decimal CurrentQuantity { get; set; }
+        public decimal AlertThreshold { get; set; }
         public string Unit { get; set; } = string.Empty;
+        public string Condition { get; set; } = string.Empty;
     }
 
     public class AssetDamageViewModel
@@ -86,18 +87,8 @@ namespace Restoran.ViewModels
 
     public class StockReportViewModel
     {
-        public List<IngredientStockViewModel> Ingredients { get; set; } = new();
         public List<AssetStockViewModel> Assets { get; set; } = new();
         public List<ProductAvailabilityViewModel> ProductsAvailability { get; set; } = new();
-    }
-
-    public class IngredientStockViewModel
-    {
-        public string Name { get; set; } = string.Empty;
-        public decimal StockQuantity { get; set; }
-        public decimal MinStock { get; set; }
-        public string Unit { get; set; } = string.Empty;
-        public bool IsLowStock { get; set; }
     }
 
     public class AssetStockViewModel

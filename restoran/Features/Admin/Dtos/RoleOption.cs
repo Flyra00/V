@@ -1,10 +1,10 @@
-using Restoran.Models;
-
 namespace Restoran.Features.Admin.Dtos
 {
     public class RoleOption
     {
-        public UserRole Value { get; init; }
+        public int Value { get; init; }
+        public string Code { get; init; } = string.Empty;
         public string Text { get; init; } = string.Empty;
+        public bool IsSystemRole { get; init; }
     }
 }

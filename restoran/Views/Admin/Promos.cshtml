@@ -1,0 +1,84 @@
+@model IEnumerable<Restoran.Models.Promo>
+
+@{
+    ViewData["Title"] = "Kelola Promo";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">Kelola Promo</h2>
+            <div class="d-flex gap-2">
+                <a asp-action="CreatePromo" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Tambah Promo
+                </a>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Kembali ke User
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nama Promo</th>
+                            <th>Tipe</th>
+                            <th>Diskon</th>
+                            <th>Minimum Belanja</th>
+                            <th>Periode</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var promo in Model)
+                        {
+                            var isLive = promo.IsActive && promo.StartsAt <= DateTime.Now && promo.EndsAt >= DateTime.Now;
+                            <tr>
+                                <td class="fw-semibold">@promo.Name</td>
+                                <td>@promo.PromoType</td>
+                                <td>@promo.DiscountValue.ToString("N0")%</td>
+                                <td>Rp @promo.MinimumPurchase.ToString("N0")</td>
+                                <td>
+                                    <div>@promo.StartsAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                    <small class="text-muted">s/d @promo.EndsAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                </td>
+                                <td>
+                                    @if (!promo.IsActive)
+                                    {
+                                        <span class="badge bg-secondary">Nonaktif</span>
+                                    }
+                                    else if (isLive)
+                                    {
+                                        <span class="badge bg-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">Terjadwal</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="EditPromo" asp-route-id="@promo.Id" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

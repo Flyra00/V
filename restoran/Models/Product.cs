@@ -37,7 +37,6 @@ namespace Restoran.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        public virtual ICollection<ProductIngredient> ProductIngredients { get; set; } = new List<ProductIngredient>();
         public virtual ICollection<TransactionDetail> TransactionDetails { get; set; } = new List<TransactionDetail>();
     }
 }

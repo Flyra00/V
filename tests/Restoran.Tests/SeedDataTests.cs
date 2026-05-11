@@ -36,6 +36,9 @@ public static class SeedDataTests
             TestAssert.Equal(countsAfterFirstRun.Members, countsAfterSecondRun.Members);
             TestAssert.Equal(countsAfterFirstRun.Transactions, countsAfterSecondRun.Transactions);
             TestAssert.Equal(countsAfterFirstRun.TransactionDetails, countsAfterSecondRun.TransactionDetails);
+            TestAssert.Equal(countsAfterFirstRun.Payments, countsAfterSecondRun.Payments);
+            TestAssert.Equal(countsAfterFirstRun.PaymentMethods, countsAfterSecondRun.PaymentMethods);
+            TestAssert.Equal(countsAfterFirstRun.Roles, countsAfterSecondRun.Roles);
             TestAssert.Equal(countsAfterFirstRun.AssetLogs, countsAfterSecondRun.AssetLogs);
             TestAssert.Equal(countsAfterFirstRun.Notifications, countsAfterSecondRun.Notifications);
             TestAssert.Equal(countsAfterFirstRun.TableSessions, countsAfterSecondRun.TableSessions);
@@ -58,9 +61,12 @@ public static class SeedDataTests
         TestAssert.Equal(4, await context.Categories.CountAsync());
         TestAssert.Equal(8, await context.Tables.CountAsync());
         TestAssert.Equal(12, await context.Products.CountAsync());
+        TestAssert.Equal(4, await context.PaymentMethodOptions.CountAsync());
+        TestAssert.Equal(6, await context.Roles.CountAsync());
         TestAssert.Equal(0, await context.Users.CountAsync());
         TestAssert.Equal(0, await context.Members.CountAsync());
         TestAssert.Equal(0, await context.Transactions.CountAsync());
+        TestAssert.Equal(0, await context.Payments.CountAsync());
         TestAssert.Equal(0, await context.TableSessions.CountAsync());
         TestAssert.Equal(0, await context.AssetLogs.CountAsync());
     }
@@ -72,7 +78,11 @@ public static class SeedDataTests
         TestAssert.Equal(10, await context.Users.CountAsync());
         TestAssert.Equal(4, await context.Members.CountAsync());
         TestAssert.Equal(6, await context.Transactions.CountAsync());
-        TestAssert.True(await context.Transactions.AnyAsync(transaction => transaction.PaymentProofUrl != string.Empty));
+        TestAssert.Equal(6, await context.Payments.CountAsync());
+        TestAssert.Equal(4, await context.PaymentMethodOptions.CountAsync());
+        TestAssert.Equal(6, await context.Roles.CountAsync());
+        TestAssert.True(await context.Users.AllAsync(user => user.RoleId != null));
+        TestAssert.True(await context.Payments.AnyAsync(payment => payment.ProofUrl != string.Empty));
         TestAssert.True(await context.Transactions.AnyAsync(transaction => transaction.OrderStatus == OrderStatus.Processing));
         TestAssert.True(await context.Transactions.AnyAsync(transaction => transaction.OrderStatus == OrderStatus.Ready));
         TestAssert.True(await context.Transactions.AnyAsync(transaction => transaction.OrderStatus == OrderStatus.Completed));
@@ -91,6 +101,9 @@ public static class SeedDataTests
             await context.Members.CountAsync(),
             await context.Transactions.CountAsync(),
             await context.TransactionDetails.CountAsync(),
+            await context.Payments.CountAsync(),
+            await context.PaymentMethodOptions.CountAsync(),
+            await context.Roles.CountAsync(),
             await context.TableSessions.CountAsync(),
             await context.AssetLogs.CountAsync(),
             await context.Notifications.CountAsync());
@@ -101,6 +114,9 @@ public static class SeedDataTests
         int Members,
         int Transactions,
         int TransactionDetails,
+        int Payments,
+        int PaymentMethods,
+        int Roles,
         int TableSessions,
         int AssetLogs,
         int Notifications);

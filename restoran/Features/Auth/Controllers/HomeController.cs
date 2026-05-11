@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Restoran.Features.Auth.Dtos;
 using Restoran.Features.Auth.Services;
+using Restoran.Features.Customer.Services;
 
 namespace Restoran.Controllers
 {
@@ -8,11 +9,16 @@ namespace Restoran.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IAuthCookieService _authCookieService;
+        private readonly ICustomerOrderContextService _customerOrderContextService;
 
-        public HomeController(IAuthService authService, IAuthCookieService authCookieService)
+        public HomeController(
+            IAuthService authService,
+            IAuthCookieService authCookieService,
+            ICustomerOrderContextService customerOrderContextService)
         {
             _authService = authService;
             _authCookieService = authCookieService;
+            _customerOrderContextService = customerOrderContextService;
         }
 
         public IActionResult Index()
@@ -49,6 +55,10 @@ namespace Restoran.Controllers
             if (result.Succeeded && result.Session != null)
             {
                 _authCookieService.SignIn(Response, result.Session);
+                if (tableId.HasValue && tableId.Value > 0)
+                {
+                    _customerOrderContextService.SetActiveTableId(Response, tableId.Value);
+                }
                 return Json(new { success = true, redirectUrl = result.RedirectUrl, role = result.Role });
             }
 
@@ -63,6 +73,10 @@ namespace Restoran.Controllers
             if (result.Succeeded && result.Session != null)
             {
                 _authCookieService.SignIn(Response, result.Session);
+                if (model.TableId.HasValue && model.TableId.Value > 0)
+                {
+                    _customerOrderContextService.SetActiveTableId(Response, model.TableId.Value);
+                }
                 return Json(new { success = true, message = result.Message, redirectUrl = result.RedirectUrl });
             }
 
@@ -74,12 +88,14 @@ namespace Restoran.Controllers
         public IActionResult GuestLogin(int tableId)
         {
             _authCookieService.SignIn(Response, _authService.CreateGuestSession());
+            _customerOrderContextService.SetActiveTableId(Response, tableId);
 
             return Json(new { success = true, tableId = tableId });
         }
 
         public IActionResult Logout()
         {
+            _customerOrderContextService.Clear(Response);
             _authCookieService.SignOut(Response);
             return RedirectToAction("Index", "Customer");
         }

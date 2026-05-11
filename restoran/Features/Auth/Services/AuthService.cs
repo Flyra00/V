@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Restoran.Data;
 using Restoran.Features.Auth.Dtos;
+using Restoran.Infrastructure.Security;
 using Restoran.Models;
 using Restoran.Shared.Abstractions;
 
@@ -20,6 +21,7 @@ namespace Restoran.Features.Auth.Services
         public async Task<AuthResult> LoginStaffAsync(string username, string password, CancellationToken cancellationToken = default)
         {
             var user = await _context.Users
+                .Include(u => u.RoleEntity)
                 .FirstOrDefaultAsync(u => u.Username == username && u.IsActive, cancellationToken);
 
             return await BuildLoginResultAsync(user, password, "Username atau password salah", cancellationToken);
@@ -29,6 +31,7 @@ namespace Restoran.Features.Auth.Services
         {
             var user = await _context.Users
                 .Include(u => u.Member)
+                .Include(u => u.RoleEntity)
                 .FirstOrDefaultAsync(
                     u => (u.Email == identifier || u.Username == identifier) && u.IsActive,
                     cancellationToken);
@@ -57,12 +60,15 @@ namespace Restoran.Features.Auth.Services
             }
 
             var now = _dateTimeProvider.Now;
+            var memberRole = await _context.Roles
+                .FirstOrDefaultAsync(role => role.Code == UserRole.Member.ToString(), cancellationToken);
             var user = new User
             {
                 Username = request.Username,
                 Email = request.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 Role = UserRole.Member,
+                RoleId = memberRole?.Id,
                 IsActive = true,
                 CreatedAt = now
             };
@@ -111,18 +117,23 @@ namespace Restoran.Features.Auth.Services
             await _context.SaveChangesAsync(cancellationToken);
 
             var session = CreateSession(user, user.Member?.MemberType.ToString());
-            return AuthResult.Success(session, ResolveRedirectUrl(user.Role), user.Role.ToString());
+            var sessionRole = Enum.Parse<UserRole>(session.Role);
+            return AuthResult.Success(session, ResolveRedirectUrl(sessionRole), session.Role);
         }
 
         private static AuthenticatedSession CreateSession(User user, string? memberType)
-            => new()
+        {
+            var runtimeRole = RoleBridge.ResolveRuntimeRole(user);
+
+            return new()
             {
                 UserId = user.Id,
                 Username = user.Username,
-                Role = user.Role.ToString(),
-                IsMember = user.Role == UserRole.Member,
-                MemberType = user.Role == UserRole.Member ? memberType ?? MemberType.Regular.ToString() : null
+                Role = runtimeRole.ToString(),
+                IsMember = runtimeRole == UserRole.Member,
+                MemberType = runtimeRole == UserRole.Member ? memberType ?? MemberType.Regular.ToString() : null
             };
+        }
 
         private static string ResolveRedirectUrl(UserRole role)
             => role switch

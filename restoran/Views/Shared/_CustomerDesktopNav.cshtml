@@ -1,0 +1,65 @@
+@{
+    var page = (ViewData["CustomerPage"] as string ?? string.Empty).ToLowerInvariant();
+    var menuHref = ViewData["CustomerMenuHref"] as string ?? "/Customer/Index#menu-preview";
+    var promoHref = ViewData["CustomerPromoHref"] as string ?? "/Customer/Index#promo-highlight";
+    var howHref = ViewData["CustomerHowHref"] as string ?? "/Customer/Index#how-it-works";
+    var statusHref = ViewData["CustomerStatusHref"] as string ?? "/Order/Tracking";
+    var isMenuPage = page == "menu";
+    var activeNav = (ViewData["CustomerActiveNav"] as string ?? (page == "tracking" ? "status" : "menu")).ToLowerInvariant();
+    var ctaHref = ViewData["CustomerCtaHref"] as string ?? (page == "menu" ? "#order-catalog" : "/Customer/Index#table-cta");
+    var ctaText = ViewData["CustomerCtaText"] as string ?? "Pesan Sekarang";
+}
+
+<header class="customer-navbar-wrap">
+    <div class="customer-navbar">
+        <a class="customer-brand" href="/Customer/Index">
+            <span class="customer-brand__mark">
+                <i class="fas fa-bowl-food"></i>
+            </span>
+            <span class="customer-brand__text">
+                <span>Ceria</span>
+                <span>Resto</span>
+            </span>
+        </a>
+
+        <nav class="customer-nav-links" aria-label="Navigasi customer">
+            <a class="customer-nav-link @(activeNav == "menu" ? "is-active" : null)" href="@menuHref">Menu</a>
+            <a class="customer-nav-link @(activeNav == "promo" ? "is-active" : null)" href="@promoHref">Promo</a>
+            <a class="customer-nav-link @(activeNav == "how" ? "is-active" : null)" href="@howHref">Cara Pesan</a>
+            <a class="customer-nav-link @(activeNav == "status" ? "is-active" : null)" href="@statusHref">Status Pesanan</a>
+        </nav>
+
+        <div class="customer-navbar-actions">
+            <label class="customer-nav-search" aria-label="Cari menu">
+                <i class="fas fa-search"></i>
+                <input id="customer-nav-search" type="search" placeholder="Cari menu favorit..." />
+            </label>
+
+            @if (isMenuPage)
+            {
+                <button id="customer-cart-toggle" class="customer-cart-button" type="button" data-cart-toggle aria-label="Buka keranjang pesanan">
+                    <i class="fas fa-basket-shopping"></i>
+                    <span id="customer-cart-count" class="customer-cart-badge is-hidden">0</span>
+                </button>
+            }
+            else
+            {
+                <a class="customer-cart-button" href="@statusHref" aria-label="Lihat status pesanan">
+                    <i class="fas fa-basket-shopping"></i>
+                    <span id="customer-cart-count" class="customer-cart-badge is-hidden">0</span>
+                </a>
+            }
+
+            @if (page == "landing")
+            {
+                <button class="customer-navbar-cta" type="button" onclick="if (typeof showOrderTableModal === 'function') { showOrderTableModal(); } else { window.location.href='@ctaHref'; }">
+                    @ctaText
+                </button>
+            }
+            else
+            {
+                <a class="customer-navbar-cta" href="@ctaHref">@ctaText</a>
+            }
+        </div>
+    </div>
+</header>

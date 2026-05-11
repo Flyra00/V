@@ -12,52 +12,10 @@
     </div>
 
     <div class="row">
-        <div class="col-md-6">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Stok Bahan Baku</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Nama</th>
-                                    <th>Stok</th>
-                                    <th>Unit</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.Ingredients)
-                                {
-                                    <tr class="@(item.IsLowStock ? "table-warning" : "")">
-                                        <td>@item.Name</td>
-                                        <td>@item.StockQuantity</td>
-                                        <td>@item.Unit</td>
-                                        <td>
-                                            @if (item.IsLowStock)
-                                            {
-                                                <span class="badge bg-danger">Menipis</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-success">Aman</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
+        <div class="col-12">
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Stok Aset</h5>
+                    <h5 class="mb-0">Inventaris Aset</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -66,13 +24,15 @@
                                 <tr>
                                     <th>Nama</th>
                                     <th>Tipe</th>
-                                    <th>Jumlah</th>
-                                    <th>Kondisi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                                        <th>Jumlah</th>
+                                        <th>Kondisi</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                 @foreach (var item in Model.Assets)
                                 {
+                                    var needsAttention = item.Condition != "Baik" || item.Quantity <= 5;
                                     <tr>
                                         <td>@item.Name</td>
                                         <td>@item.AssetType</td>
@@ -82,9 +42,14 @@
                                                 @item.Condition
                                             </span>
                                         </td>
+                                        <td>
+                                            <span class="badge bg-@(needsAttention ? "warning" : "success")">
+                                                @(needsAttention ? "Perlu Ditinjau" : "Normal")
+                                            </span>
+                                        </td>
                                     </tr>
                                 }
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>

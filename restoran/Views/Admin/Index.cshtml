@@ -13,6 +13,15 @@
                 <a asp-action="Create" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Tambah User Baru
                 </a>
+                <a asp-action="Promos" class="btn btn-outline-primary">
+                    <i class="fas fa-tags"></i> Kelola Promo
+                </a>
+                <a asp-action="Roles" class="btn btn-outline-dark">
+                    <i class="fas fa-user-shield"></i> Kelola Role
+                </a>
+                <a asp-action="PaymentMethods" class="btn btn-outline-success">
+                    <i class="fas fa-wallet"></i> Metode Pembayaran
+                </a>
                 <a asp-action="ChargeSettings" class="btn btn-outline-warning">
                     <i class="fas fa-percent"></i> PPN & Service
                 </a>
@@ -60,7 +69,7 @@
                                         UserRole.BagianMasak => "secondary",
                                         _ => "primary"
                                     })">
-                                        @user.Role
+                                        @(user.RoleEntity?.Name ?? user.Role.ToString())
                                     </span>
                                 </td>
                                 <td>

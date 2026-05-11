@@ -4,6 +4,9 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Restoran.Data;
+using Restoran.Infrastructure.Security;
+using Restoran.Features.Payments.Services;
+using Restoran.Models;
 using Restoran.Shared.Abstractions;
 using Restoran.Shared.Options;
 
@@ -103,6 +106,130 @@ internal sealed class StubPaymentProofStorage : IPaymentProofStorage
 
     public Task<string> SaveAsync(string transactionNumber, Microsoft.AspNetCore.Http.IFormFile file, CancellationToken cancellationToken = default)
         => Task.FromResult(_path);
+}
+
+internal static class TestPaymentData
+{
+    public static async Task SeedDefaultPaymentMethodsAsync(ApplicationDbContext context)
+    {
+        if (await context.PaymentMethodOptions.AnyAsync())
+        {
+            return;
+        }
+
+        context.PaymentMethodOptions.AddRange(
+            new PaymentMethodOption
+            {
+                Code = "tunai",
+                DisplayName = "Tunai",
+                LegacyMethod = PaymentMethod.Tunai,
+                IsActive = true,
+                IsCustomerFacing = true,
+                IsCashierFacing = true,
+                SortOrder = 1
+            },
+            new PaymentMethodOption
+            {
+                Code = "qris",
+                DisplayName = "QRIS",
+                LegacyMethod = PaymentMethod.QRIS,
+                IsActive = true,
+                IsCustomerFacing = true,
+                IsCashierFacing = true,
+                SortOrder = 2
+            },
+            new PaymentMethodOption
+            {
+                Code = "transfer",
+                DisplayName = "Transfer",
+                LegacyMethod = PaymentMethod.Transfer,
+                IsActive = true,
+                IsCustomerFacing = true,
+                IsCashierFacing = true,
+                SortOrder = 3
+            },
+            new PaymentMethodOption
+            {
+                Code = "bayar-di-kasir",
+                DisplayName = "Bayar di Kasir",
+                LegacyMethod = PaymentMethod.BayarDiKasir,
+                IsActive = true,
+                IsCustomerFacing = true,
+                IsCashierFacing = false,
+                SortOrder = 4
+            });
+
+        await context.SaveChangesAsync();
+    }
+
+    public static IPaymentService CreatePaymentService(ApplicationDbContext context) => new PaymentService(context);
+
+    public static async Task<Payment> SeedPaymentAsync(
+        ApplicationDbContext context,
+        int transactionId,
+        PaymentMethod method,
+        PaymentStatus status,
+        decimal amount,
+        DateTime? paymentDate = null,
+        string proofUrl = "")
+    {
+        await SeedDefaultPaymentMethodsAsync(context);
+
+        var methodOption = await context.PaymentMethodOptions.SingleAsync(option => option.LegacyMethod == method);
+        var payment = new Payment
+        {
+            TransactionId = transactionId,
+            PaymentMethodOptionId = methodOption.Id,
+            Amount = amount,
+            PaymentStatus = status,
+            PaymentDate = paymentDate,
+            ProofUrl = proofUrl
+        };
+
+        context.Payments.Add(payment);
+        await context.SaveChangesAsync();
+        return payment;
+    }
+}
+
+internal static class TestRoleData
+{
+    public static async Task SeedDefaultRolesAsync(ApplicationDbContext context)
+    {
+        if (await context.Roles.AnyAsync())
+        {
+            return;
+        }
+
+        context.Roles.AddRange(
+            CreateRole(1, "Administrator", UserRole.Admin, 1),
+            CreateRole(2, "Owner", UserRole.Owner, 2),
+            CreateRole(3, "Supervisor", UserRole.Supervisor, 3),
+            CreateRole(4, "Kasir", UserRole.Kasir, 4),
+            CreateRole(5, "Bagian Masak", UserRole.BagianMasak, 5),
+            CreateRole(6, "Member", UserRole.Member, 6));
+
+        await context.SaveChangesAsync();
+    }
+
+    public static async Task<int> GetRoleIdAsync(ApplicationDbContext context, UserRole role)
+    {
+        var roleEntity = await context.Roles.SingleAsync(entity => entity.Code == RoleBridge.GetSystemRoleCode(role));
+        return roleEntity.Id;
+    }
+
+    private static Role CreateRole(int id, string name, UserRole role, int sortOrder)
+    {
+        return new Role
+        {
+            Id = id,
+            Name = name,
+            Code = RoleBridge.GetSystemRoleCode(role),
+            IsSystemRole = true,
+            IsActive = true,
+            SortOrder = sortOrder
+        };
+    }
 }
 
 internal sealed class TestHostEnvironment : IHostEnvironment

@@ -1,155 +1,29 @@
 <!DOCTYPE html>
-<html lang="id" data-bs-theme="light">
+<html lang="id">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"] - Restoran Ceria</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Ceria Resto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        [data-bs-theme="dark"] {
-            --bs-body-bg: #0f172a;
-            --bs-body-color: #e2e8f0;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .navbar-custom {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 1rem 0;
-        }
-        .navbar-brand-custom {
-            font-weight: 700;
-            font-size: 1.5rem;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-decoration: none;
-        }
-        .btn-order-table {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            border: none;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            font-weight: 600;
-        }
-        .member-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.75rem;
-        }
-        .footer-custom {
-            background: var(--bs-card-bg);
-            border-top: 1px solid var(--bs-border-color);
-            padding: 2rem 0;
-            margin-top: auto;
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/customer-order-desktop.css" asp-append-version="true" />
 </head>
-<body class="d-flex flex-column min-vh-100">
-    <nav class="navbar-custom">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <a class="navbar-brand-custom" href="/">
-                    <i class="fas fa-utensils me-2"></i>Restoran Ceria
-                </a>
-                <div class="d-flex align-items-center gap-3">
-                    <a href="/Customer/Index" class="text-decoration-none text-dark">Home</a>
-                    <a href="#menu" class="text-decoration-none text-dark">Menu</a>
-                    <a href="#about" class="text-decoration-none text-dark">About</a>
-                    
-                    @{
-                        var userRole = Context.Request.Cookies["Role"];
-                        var isStaff = userRole == "Admin" || userRole == "Owner" || userRole == "Supervisor" || userRole == "Kasir" || userRole == "BagianMasak";
-                    }
-                    
-                    @if (isStaff)
-                    {
-                        <!-- Toggle Button for Staff -->
-                        <a href="#" class="btn btn-outline-primary btn-sm rounded-pill" onclick="redirectToDashboard()">
-                            <i class="fas fa-chart-line me-1"></i>Ke Dashboard
-                        </a>
-                        <a href="/Home/Logout" class="btn btn-outline-danger btn-sm">Logout</a>
-                    }
-                    else if (userRole == "Member")
-                    {
-                        <span class="member-badge"><i class="fas fa-crown me-1"></i>Member</span>
-                        <a href="/Home/Logout" class="btn btn-outline-danger btn-sm">Logout</a>
-                    }
-                    else
-                    {
-                        <button class="btn-order-table" onclick="showOrderTableModal()">
-                            <i class="fas fa-utensils me-2"></i>Order Table
-                        </button>
-                    }
-                </div>
-            </div>
-        </div>
-    </nav>
+<body class="customer-desktop-body" data-customer-page="@((ViewData["CustomerPage"] as string ?? "landing").ToLowerInvariant())">
+    @await Html.PartialAsync("_CustomerDesktopNav")
 
-    <main class="flex-grow-1">
+    <main class="customer-page-shell">
         @RenderBody()
     </main>
 
-    <footer class="footer-custom">
-        <div class="container text-center">
-            <small>&copy; 2025 Restoran Ceria. All rights reserved.</small>
-        </div>
-    </footer>
+    @await Html.PartialAsync("_CustomerDesktopFooter")
+
+    <div id="customer-toast-container" class="customer-toast-stack"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Get user role from cookie
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-
-        // Redirect to appropriate dashboard based on role
-        function redirectToDashboard() {
-            const role = getCookie('Role');
-            let dashboardUrl = '/Dashboard';
-            
-            switch(role) {
-                case 'Admin':
-                    dashboardUrl = '/Admin';
-                    break;
-                case 'Owner':
-                    dashboardUrl = '/Dashboard';
-                    break;
-                case 'Supervisor':
-                    dashboardUrl = '/Supervisor/Assets';
-                    break;
-                case 'Kasir':
-                    dashboardUrl = '/Kasir';
-                    break;
-                case 'BagianMasak':
-                    dashboardUrl = '/Kitchen/Display';
-                    break;
-                default:
-                    dashboardUrl = '/Dashboard';
-            }
-            
-            window.location.href = dashboardUrl;
-        }
-
-        // Show Order Table Modal (for guest users)
-        function showOrderTableModal() {
-            const modal = new bootstrap.Modal(document.getElementById('orderTableModal'));
-            modal.show();
-        }
-    </script>
+    <script src="~/js/customer-order.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

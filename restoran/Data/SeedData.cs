@@ -28,11 +28,12 @@ namespace Restoran.Data
         {
             var now = DateTime.Now;
 
+            await SeedRolesAsync(context, now, cancellationToken);
             await SeedCategoriesAsync(context, now, cancellationToken);
             await SeedChargeSettingsAsync(context, now, cancellationToken);
+            await SeedPaymentMethodsAsync(context, now, cancellationToken);
             await SeedTablesAsync(context, now, cancellationToken);
             await SeedProductsAsync(context, now, cancellationToken);
-            await SeedIngredientsAsync(context, now, cancellationToken);
             await SeedAssetsAsync(context, now, cancellationToken);
         }
 
@@ -103,6 +104,8 @@ namespace Restoran.Data
                 new UserSeed("member.platinum", "member.platinum@restoran.com", "member123", UserRole.Member, true),
                 new UserSeed("kasir.cadangan", "kasir.cadangan@restoran.com", "kasircad123", UserRole.Kasir, false)
             };
+            var roleLookup = await context.Roles
+                .ToDictionaryAsync(role => role.Code, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
             var users = await context.Users.ToListAsync(cancellationToken);
             var byUsername = users.ToDictionary(user => user.Username, StringComparer.OrdinalIgnoreCase);
@@ -114,12 +117,14 @@ namespace Restoran.Data
                 if (!byUsername.TryGetValue(definition.Username, out var user) &&
                     !byEmail.TryGetValue(definition.Email, out user))
                 {
+                    roleLookup.TryGetValue(definition.Role.ToString(), out var roleEntity);
                     user = new User
                     {
                         Username = definition.Username,
                         Email = definition.Email,
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword(definition.Password),
                         Role = definition.Role,
+                        RoleId = roleEntity?.Id,
                         IsActive = definition.IsActive,
                         CreatedAt = now
                     };
@@ -141,6 +146,13 @@ namespace Restoran.Data
                     hasChanges = true;
                 }
 
+                if (roleLookup.TryGetValue(definition.Role.ToString(), out var existingRoleEntity) &&
+                    user.RoleId != existingRoleEntity.Id)
+                {
+                    user.RoleId = existingRoleEntity.Id;
+                    hasChanges = true;
+                }
+
                 if (user.IsActive != definition.IsActive)
                 {
                     user.IsActive = definition.IsActive;
@@ -152,6 +164,102 @@ namespace Restoran.Data
                     user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(definition.Password);
                     hasChanges = true;
                 }
+            }
+
+            if (hasChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        private static async Task SeedRolesAsync(ApplicationDbContext context, DateTime now, CancellationToken cancellationToken)
+        {
+            var definitions = new[]
+            {
+                new RoleSeed("Administrator", UserRole.Admin.ToString(), true, 1),
+                new RoleSeed("Owner", UserRole.Owner.ToString(), true, 2),
+                new RoleSeed("Supervisor", UserRole.Supervisor.ToString(), true, 3),
+                new RoleSeed("Kasir", UserRole.Kasir.ToString(), true, 4),
+                new RoleSeed("Bagian Masak", UserRole.BagianMasak.ToString(), true, 5),
+                new RoleSeed("Member", UserRole.Member.ToString(), true, 6)
+            };
+
+            var existing = await context.Roles
+                .ToDictionaryAsync(role => role.Code, StringComparer.OrdinalIgnoreCase, cancellationToken);
+
+            var hasChanges = false;
+            foreach (var definition in definitions)
+            {
+                if (existing.TryGetValue(definition.Code, out var role))
+                {
+                    if (role.Name != definition.Name)
+                    {
+                        role.Name = definition.Name;
+                        hasChanges = true;
+                    }
+
+                    if (!role.IsSystemRole)
+                    {
+                        role.IsSystemRole = definition.IsSystemRole;
+                        hasChanges = true;
+                    }
+
+                    if (!role.IsActive)
+                    {
+                        role.IsActive = true;
+                        hasChanges = true;
+                    }
+
+                    if (role.SortOrder != definition.SortOrder)
+                    {
+                        role.SortOrder = definition.SortOrder;
+                        hasChanges = true;
+                    }
+
+                    continue;
+                }
+
+                context.Roles.Add(new Role
+                {
+                    Name = definition.Name,
+                    Code = definition.Code,
+                    IsSystemRole = definition.IsSystemRole,
+                    IsActive = true,
+                    SortOrder = definition.SortOrder,
+                    CreatedAt = now
+                });
+                hasChanges = true;
+            }
+
+            if (hasChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+
+            await BackfillUserRolesAsync(context, cancellationToken);
+        }
+
+        private static async Task BackfillUserRolesAsync(ApplicationDbContext context, CancellationToken cancellationToken)
+        {
+            var roleLookup = await context.Roles
+                .ToDictionaryAsync(role => role.Code, StringComparer.OrdinalIgnoreCase, cancellationToken);
+            var users = await context.Users.ToListAsync(cancellationToken);
+
+            var hasChanges = false;
+            foreach (var user in users)
+            {
+                if (!roleLookup.TryGetValue(user.Role.ToString(), out var roleEntity))
+                {
+                    continue;
+                }
+
+                if (user.RoleId == roleEntity.Id)
+                {
+                    continue;
+                }
+
+                user.RoleId = roleEntity.Id;
+                hasChanges = true;
             }
 
             if (hasChanges)
@@ -185,6 +293,83 @@ namespace Restoran.Data
             }
 
             await context.SaveChangesAsync(cancellationToken);
+        }
+
+        private static async Task SeedPaymentMethodsAsync(ApplicationDbContext context, DateTime now, CancellationToken cancellationToken)
+        {
+            var definitions = new[]
+            {
+                new PaymentMethodOptionSeed("tunai", "Tunai", PaymentMethod.Tunai, true, true, 1),
+                new PaymentMethodOptionSeed("qris", "QRIS", PaymentMethod.QRIS, true, true, 2),
+                new PaymentMethodOptionSeed("transfer", "Transfer", PaymentMethod.Transfer, true, true, 3),
+                new PaymentMethodOptionSeed("bayar-di-kasir", "Bayar di Kasir", PaymentMethod.BayarDiKasir, true, false, 4)
+            };
+
+            var existing = await context.PaymentMethodOptions
+                .ToDictionaryAsync(option => option.Code, StringComparer.OrdinalIgnoreCase, cancellationToken);
+
+            var hasChanges = false;
+            foreach (var definition in definitions)
+            {
+                if (existing.TryGetValue(definition.Code, out var option))
+                {
+                    if (option.DisplayName != definition.DisplayName)
+                    {
+                        option.DisplayName = definition.DisplayName;
+                        hasChanges = true;
+                    }
+
+                    if (option.LegacyMethod != definition.LegacyMethod)
+                    {
+                        option.LegacyMethod = definition.LegacyMethod;
+                        hasChanges = true;
+                    }
+
+                    if (option.IsCustomerFacing != definition.IsCustomerFacing)
+                    {
+                        option.IsCustomerFacing = definition.IsCustomerFacing;
+                        hasChanges = true;
+                    }
+
+                    if (option.IsCashierFacing != definition.IsCashierFacing)
+                    {
+                        option.IsCashierFacing = definition.IsCashierFacing;
+                        hasChanges = true;
+                    }
+
+                    if (option.SortOrder != definition.SortOrder)
+                    {
+                        option.SortOrder = definition.SortOrder;
+                        hasChanges = true;
+                    }
+
+                    if (!option.IsActive)
+                    {
+                        option.IsActive = true;
+                        hasChanges = true;
+                    }
+
+                    continue;
+                }
+
+                context.PaymentMethodOptions.Add(new PaymentMethodOption
+                {
+                    Code = definition.Code,
+                    DisplayName = definition.DisplayName,
+                    LegacyMethod = definition.LegacyMethod,
+                    IsActive = true,
+                    IsCustomerFacing = definition.IsCustomerFacing,
+                    IsCashierFacing = definition.IsCashierFacing,
+                    SortOrder = definition.SortOrder,
+                    CreatedAt = now
+                });
+                hasChanges = true;
+            }
+
+            if (hasChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
         }
 
         private static async Task SeedMembersAsync(ApplicationDbContext context, DateTime now, CancellationToken cancellationToken)
@@ -415,64 +600,6 @@ namespace Restoran.Data
             }
         }
 
-        private static async Task SeedIngredientsAsync(ApplicationDbContext context, DateTime now, CancellationToken cancellationToken)
-        {
-            var definitions = new[]
-            {
-                new IngredientSeed("Nasi", 50m, 20m, "kg", "Toko Beras Jaya"),
-                new IngredientSeed("Ayam", 30m, 15m, "kg", "Supplier Ayam Segar"),
-                new IngredientSeed("Minyak Goreng", 10m, 15m, "liter", "Toko Minyak"),
-                new IngredientSeed("Telur", 200m, 100m, "butir", "Peternakan Telur"),
-                new IngredientSeed("Kopi", 25m, 10m, "kg", "Supplier Kopi")
-            };
-
-            var existing = await context.Ingredients
-                .ToDictionaryAsync(ingredient => ingredient.Name, StringComparer.OrdinalIgnoreCase, cancellationToken);
-
-            var hasChanges = false;
-            foreach (var definition in definitions)
-            {
-                if (existing.TryGetValue(definition.Name, out var ingredient))
-                {
-                    if (ingredient.MinStock != definition.MinStock)
-                    {
-                        ingredient.MinStock = definition.MinStock;
-                        hasChanges = true;
-                    }
-
-                    if (ingredient.Unit != definition.Unit)
-                    {
-                        ingredient.Unit = definition.Unit;
-                        hasChanges = true;
-                    }
-
-                    if (ingredient.Supplier != definition.Supplier)
-                    {
-                        ingredient.Supplier = definition.Supplier;
-                        hasChanges = true;
-                    }
-
-                    continue;
-                }
-
-                context.Ingredients.Add(new Ingredient
-                {
-                    Name = definition.Name,
-                    StockQuantity = definition.StockQuantity,
-                    MinStock = definition.MinStock,
-                    Unit = definition.Unit,
-                    Supplier = definition.Supplier,
-                    CreatedAt = now
-                });
-                hasChanges = true;
-            }
-
-            if (hasChanges)
-            {
-                await context.SaveChangesAsync(cancellationToken);
-            }
-        }
-
         private static async Task SeedAssetsAsync(ApplicationDbContext context, DateTime now, CancellationToken cancellationToken)
         {
             var definitions = new[]
@@ -521,6 +648,8 @@ namespace Restoran.Data
                 .ToDictionaryAsync(table => table.TableNumber, StringComparer.OrdinalIgnoreCase, cancellationToken);
             var userLookup = await context.Users
                 .ToDictionaryAsync(user => user.Username, StringComparer.OrdinalIgnoreCase, cancellationToken);
+            var paymentMethodLookup = await context.PaymentMethodOptions
+                .ToDictionaryAsync(option => option.LegacyMethod, cancellationToken);
             var productLookup = await context.Products
                 .ToDictionaryAsync(product => product.Name, StringComparer.OrdinalIgnoreCase, cancellationToken);
             var memberLookup = await context.Members
@@ -565,12 +694,8 @@ namespace Restoran.Data
                     Tax = seed.Tax,
                     ServiceCharge = seed.ServiceCharge,
                     Total = seed.Total,
-                    PaymentMethod = seed.PaymentMethod,
-                    PaymentStatus = seed.PaymentStatus,
                     OrderStatus = seed.OrderStatus,
-                    PaymentProofUrl = seed.PaymentProofUrl,
-                    CreatedAt = seed.CreatedAt,
-                    PaidAt = seed.PaidAt
+                    CreatedAt = seed.CreatedAt
                 };
 
                 context.Transactions.Add(transaction);
@@ -646,6 +771,72 @@ namespace Restoran.Data
             }
 
             if (hasTableChanges || hasMemberChanges)
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+
+            await EnsureTransactionPaymentsAsync(context, transactionSeeds, paymentMethodLookup, now, cancellationToken);
+        }
+
+        private static async Task EnsureTransactionPaymentsAsync(
+            ApplicationDbContext context,
+            IReadOnlyList<TransactionSeed> transactionSeeds,
+            IReadOnlyDictionary<PaymentMethod, PaymentMethodOption> paymentMethodLookup,
+            DateTime now,
+            CancellationToken cancellationToken)
+        {
+            var seedLookup = transactionSeeds
+                .ToDictionary(seed => seed.TransactionNumber, StringComparer.OrdinalIgnoreCase);
+            var payments = await context.Payments
+                .ToDictionaryAsync(payment => payment.TransactionId, cancellationToken);
+            var transactions = await context.Transactions
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+
+            var hasChanges = false;
+            foreach (var transaction in transactions)
+            {
+                if (!seedLookup.TryGetValue(transaction.TransactionNumber, out var seed) ||
+                    !paymentMethodLookup.TryGetValue(seed.PaymentMethod, out var method))
+                {
+                    continue;
+                }
+
+                if (payments.TryGetValue(transaction.Id, out var payment))
+                {
+                    if (payment.PaymentMethodOptionId != method.Id ||
+                        payment.Amount != transaction.Total ||
+                        payment.PaymentStatus != seed.PaymentStatus ||
+                        payment.PaymentDate != seed.PaidAt ||
+                        payment.ProofUrl != seed.PaymentProofUrl)
+                    {
+                        payment.PaymentMethodOptionId = method.Id;
+                        payment.Amount = transaction.Total;
+                        payment.PaymentStatus = seed.PaymentStatus;
+                        payment.PaymentDate = seed.PaidAt;
+                        payment.ProofUrl = seed.PaymentProofUrl;
+                        payment.UpdatedAt = now;
+                        hasChanges = true;
+                    }
+
+                    continue;
+                }
+
+                context.Payments.Add(new Payment
+                {
+                    TransactionId = transaction.Id,
+                    PaymentMethodOptionId = method.Id,
+                    Amount = transaction.Total,
+                    PaymentStatus = seed.PaymentStatus,
+                    PaymentDate = seed.PaidAt,
+                    ProofUrl = seed.PaymentProofUrl,
+                    CreatedAt = transaction.CreatedAt,
+                    UpdatedAt = now
+                });
+                hasChanges = true;
+            }
+
+            if (hasChanges)
             {
                 await context.SaveChangesAsync(cancellationToken);
             }
@@ -962,12 +1153,19 @@ namespace Restoran.Data
         }
 
         private sealed record CategorySeed(string Name, string Description);
+        private sealed record RoleSeed(string Name, string Code, bool IsSystemRole, int SortOrder);
         private sealed record UserSeed(string Username, string Email, string Password, UserRole Role, bool IsActive);
         private sealed record MemberSeed(string Username, string FullName, string Phone, MemberType MemberType, int Points, DateTime JoinDate);
         private sealed record TableSeed(string TableNumber, int Capacity, TableStatus Status);
         private sealed record ProductSeed(string Name, string Description, decimal Price, string CategoryName, decimal MemberDiscountPercentage, bool IsAvailable);
-        private sealed record IngredientSeed(string Name, decimal StockQuantity, decimal MinStock, string Unit, string Supplier);
         private sealed record AssetSeed(string Name, AssetType AssetType, int Quantity, string Unit, AssetCondition Condition, DateTime PurchaseDate, decimal PurchasePrice);
+        private sealed record PaymentMethodOptionSeed(
+            string Code,
+            string DisplayName,
+            PaymentMethod LegacyMethod,
+            bool IsCustomerFacing,
+            bool IsCashierFacing,
+            int SortOrder);
         private sealed record AssetLogSeed(
             string AssetName,
             DamageType DamageType,

@@ -63,7 +63,13 @@
                                 {
                                     <tr>
                                         <td colspan="3" class="text-end"><strong>Diskon:</strong></td>
-                                        <td class="text-end">-Rp @Model.Discount.ToString("N0")</td>
+                                        <td class="text-end">
+                                            -Rp @Model.Discount.ToString("N0")
+                                            @if (!string.IsNullOrWhiteSpace(Model.AppliedPromoName))
+                                            {
+                                                <br><small class="text-muted">Termasuk promo @Model.AppliedPromoName</small>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                                 <tr class="table-primary">
@@ -74,12 +80,12 @@
                         </table>
                     </div>
 
-                    @if (Model.PaymentMethod == PaymentMethod.QRIS || Model.PaymentMethod == PaymentMethod.Transfer)
+                    @if (Model.Payment?.PaymentMethodOption.LegacyMethod == PaymentMethod.QRIS || Model.Payment?.PaymentMethodOption.LegacyMethod == PaymentMethod.Transfer)
                     {
                         <div class="text-center mb-4">
                             <h5>Silakan Lakukan Pembayaran</h5>
                             
-                            @if (Model.PaymentMethod == PaymentMethod.QRIS)
+                            @if (Model.Payment?.PaymentMethodOption.LegacyMethod == PaymentMethod.QRIS)
                             {
                                 <div class="p-4 bg-light rounded mb-3">
                                     <p class="mb-2">Scan QRIS berikut:</p>

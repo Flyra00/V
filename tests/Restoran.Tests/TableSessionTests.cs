@@ -42,8 +42,6 @@ public static class TableSessionTests
                 TableSessionId = 1,
                 CustomerName = "Budi",
                 CustomerType = CustomerType.Guest,
-                PaymentMethod = PaymentMethod.Transfer,
-                PaymentStatus = PaymentStatus.Pending,
                 OrderStatus = OrderStatus.Ready,
                 Subtotal = 25000,
                 Tax = 2500,
@@ -59,7 +57,9 @@ public static class TableSessionTests
                 UnitPrice = 25000,
                 Status = DetailStatus.Ready
             });
+            await TestPaymentData.SeedDefaultPaymentMethodsAsync(arrangeContext);
             await arrangeContext.SaveChangesAsync();
+            await TestPaymentData.SeedPaymentAsync(arrangeContext, 1, PaymentMethod.Transfer, PaymentStatus.Pending, 28750m);
         }
 
         await using (var paymentContext = database.CreateContext())
@@ -69,7 +69,8 @@ public static class TableSessionTests
                 new FixedDateTimeProvider(paidAt),
                 new StubTransactionNumberGenerator("IGNORED"),
                 new StubChargeConfigurationProvider(),
-                new TableService(paymentContext, new FixedDateTimeProvider(paidAt)));
+                new TableService(paymentContext, new FixedDateTimeProvider(paidAt)),
+                TestPaymentData.CreatePaymentService(paymentContext));
 
             var paymentResult = await paidService.ConfirmPaymentAsync(1);
             TestAssert.True(paymentResult.Succeeded);

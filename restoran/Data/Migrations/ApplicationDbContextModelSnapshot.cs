@@ -129,44 +129,6 @@ namespace Restoran.Data.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("Restoran.Models.Ingredient", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("LastUpdated")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("MinStock")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("StockQuantity")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Supplier")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Ingredients");
-                });
-
             modelBuilder.Entity("Restoran.Models.Member", b =>
                 {
                     b.Property<int>("Id")
@@ -238,6 +200,93 @@ namespace Restoran.Data.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("Restoran.Models.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PaymentDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PaymentMethodOptionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PaymentStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ProofUrl")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TransactionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentMethodOptionId");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique();
+
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("Restoran.Models.PaymentMethodOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCashierFacing")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCustomerFacing")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LegacyMethod")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("LegacyMethod")
+                        .IsUnique();
+
+                    b.ToTable("PaymentMethodOptions");
+                });
+
             modelBuilder.Entity("Restoran.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -281,28 +330,80 @@ namespace Restoran.Data.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("Restoran.Models.ProductIngredient", b =>
+            modelBuilder.Entity("Restoran.Models.Promo", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("IngredientId")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ProductId")
+                    b.Property<decimal>("MinimumPurchase")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PromoType")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("QuantityRequired")
+                    b.Property<DateTime>("StartsAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IngredientId");
+                    b.HasIndex("Name")
+                        .IsUnique();
 
-                    b.HasIndex("ProductId");
+                    b.ToTable("Promos");
+                });
 
-                    b.ToTable("ProductIngredients");
+            modelBuilder.Entity("Restoran.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSystemRole")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Restoran.Models.ServiceChargeSetting", b =>
@@ -438,6 +539,11 @@ namespace Restoran.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("AppliedPromoName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -455,18 +561,7 @@ namespace Restoran.Data.Migrations
                     b.Property<int>("OrderStatus")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PaymentMethod")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("PaymentProofUrl")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PaymentStatus")
+                    b.Property<int?>("PromoId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("ServiceCharge")
@@ -496,6 +591,8 @@ namespace Restoran.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PromoId");
 
                     b.HasIndex("TableId");
 
@@ -577,6 +674,9 @@ namespace Restoran.Data.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("RoleId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -586,6 +686,8 @@ namespace Restoran.Data.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("RoleId");
 
                     b.HasIndex("Username")
                         .IsUnique();
@@ -639,6 +741,25 @@ namespace Restoran.Data.Migrations
                     b.Navigation("Transaction");
                 });
 
+            modelBuilder.Entity("Restoran.Models.Payment", b =>
+                {
+                    b.HasOne("Restoran.Models.PaymentMethodOption", "PaymentMethodOption")
+                        .WithMany("Payments")
+                        .HasForeignKey("PaymentMethodOptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Restoran.Models.Transaction", "Transaction")
+                        .WithOne("Payment")
+                        .HasForeignKey("Restoran.Models.Payment", "TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentMethodOption");
+
+                    b.Navigation("Transaction");
+                });
+
             modelBuilder.Entity("Restoran.Models.Product", b =>
                 {
                     b.HasOne("Restoran.Models.Category", "Category")
@@ -648,25 +769,6 @@ namespace Restoran.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("Restoran.Models.ProductIngredient", b =>
-                {
-                    b.HasOne("Restoran.Models.Ingredient", "Ingredient")
-                        .WithMany("ProductIngredients")
-                        .HasForeignKey("IngredientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Restoran.Models.Product", "Product")
-                        .WithMany("ProductIngredients")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Ingredient");
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Restoran.Models.TableSession", b =>
@@ -689,6 +791,11 @@ namespace Restoran.Data.Migrations
 
             modelBuilder.Entity("Restoran.Models.Transaction", b =>
                 {
+                    b.HasOne("Restoran.Models.Promo", "Promo")
+                        .WithMany("Transactions")
+                        .HasForeignKey("PromoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Restoran.Models.Table", "Table")
                         .WithMany("Transactions")
                         .HasForeignKey("TableId");
@@ -701,6 +808,8 @@ namespace Restoran.Data.Migrations
                     b.HasOne("Restoran.Models.User", "User")
                         .WithMany("Transactions")
                         .HasForeignKey("UserId");
+
+                    b.Navigation("Promo");
 
                     b.Navigation("Table");
 
@@ -728,6 +837,16 @@ namespace Restoran.Data.Migrations
                     b.Navigation("Transaction");
                 });
 
+            modelBuilder.Entity("Restoran.Models.User", b =>
+                {
+                    b.HasOne("Restoran.Models.Role", "RoleEntity")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("RoleEntity");
+                });
+
             modelBuilder.Entity("Restoran.Models.Asset", b =>
                 {
                     b.Navigation("AssetLogs");
@@ -738,16 +857,24 @@ namespace Restoran.Data.Migrations
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("Restoran.Models.Ingredient", b =>
+            modelBuilder.Entity("Restoran.Models.PaymentMethodOption", b =>
                 {
-                    b.Navigation("ProductIngredients");
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("Restoran.Models.Product", b =>
                 {
-                    b.Navigation("ProductIngredients");
-
                     b.Navigation("TransactionDetails");
+                });
+
+            modelBuilder.Entity("Restoran.Models.Promo", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("Restoran.Models.Role", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Restoran.Models.Table", b =>
@@ -764,6 +891,8 @@ namespace Restoran.Data.Migrations
 
             modelBuilder.Entity("Restoran.Models.Transaction", b =>
                 {
+                    b.Navigation("Payment");
+
                     b.Navigation("TransactionDetails");
                 });
 

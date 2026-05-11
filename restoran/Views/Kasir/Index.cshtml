@@ -40,8 +40,8 @@
                                 <td>@item.CustomerName</td>
                                 <td>Rp @item.Total.ToString("N0")</td>
                                 <td>
-                                    <span class="badge bg-@(item.PaymentStatus == PaymentStatus.Paid ? "success" : "warning")">
-                                        @item.PaymentStatus
+                                    <span class="badge bg-@(item.Payment?.PaymentStatus == PaymentStatus.Paid ? "success" : "warning")">
+                                        @(item.Payment?.PaymentStatus.ToString() ?? "Unknown")
                                     </span>
                                 </td>
                                 <td>
@@ -51,7 +51,7 @@
                                 </td>
                                 <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                                 <td>
-                                    @if (item.PaymentStatus != PaymentStatus.Paid)
+                                    @if (item.Payment?.PaymentStatus != PaymentStatus.Paid)
                                     {
                                         <button class="btn btn-sm btn-success" onclick="confirmPayment(@item.Id)">
                                             <i class="fas fa-check"></i> Konfirmasi
