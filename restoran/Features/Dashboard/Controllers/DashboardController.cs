@@ -27,7 +27,7 @@ namespace Restoran.Controllers
             return View(await _dashboardService.GetDashboardAsync());
         }
 
-        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin)]
         public async Task<IActionResult> ManageProducts()
         {
             return View(new ProductManagementViewModel
@@ -37,13 +37,13 @@ namespace Restoran.Controllers
             });
         }
 
-        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin)]
         public async Task<IActionResult> CreateProduct()
         {
             return View(await BuildProductFormAsync());
         }
 
-        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateProduct(ProductFormViewModel model)
@@ -67,7 +67,7 @@ namespace Restoran.Controllers
             return View(model);
         }
 
-        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin)]
         public async Task<IActionResult> EditProduct(int? id)
         {
             if (id == null)
@@ -84,7 +84,7 @@ namespace Restoran.Controllers
             return View(await BuildProductFormAsync(product));
         }
 
-        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProduct(int id, ProductFormViewModel model)
@@ -118,7 +118,7 @@ namespace Restoran.Controllers
             return View(model);
         }
 
-        [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
+        [RoleAuthorization(UserRole.Admin)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteProduct(int id)

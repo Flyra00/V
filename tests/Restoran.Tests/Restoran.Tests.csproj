@@ -13,6 +13,8 @@
     <Compile Remove="tests\**\*.cs" />
     <Compile Remove=".codex-msbuild\**\*.cs" />
     <Compile Remove=".codex-test-obj\**\*.cs" />
+    <Compile Remove=".codex-test-obj-v2\**\*.cs" />
+    <Compile Remove=".codex-test-obj-v3\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,47 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Restoran">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\Restoran.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Data.Sqlite">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\Microsoft.Data.Sqlite.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.EntityFrameworkCore">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\Microsoft.EntityFrameworkCore.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.EntityFrameworkCore.Abstractions">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\Microsoft.EntityFrameworkCore.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.EntityFrameworkCore.Relational">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\Microsoft.EntityFrameworkCore.Relational.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.EntityFrameworkCore.Sqlite">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\Microsoft.EntityFrameworkCore.Sqlite.dll</HintPath>
-    </Reference>
-    <Reference Include="BCrypt.Net-Next">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\BCrypt.Net-Next.dll</HintPath>
-    </Reference>
-    <Reference Include="SQLitePCLRaw.batteries_v2">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\SQLitePCLRaw.batteries_v2.dll</HintPath>
-    </Reference>
-    <Reference Include="SQLitePCLRaw.core">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\SQLitePCLRaw.core.dll</HintPath>
-    </Reference>
-    <Reference Include="SQLitePCLRaw.provider.e_sqlite3">
-      <HintPath>..\\..\\restoran\\.codex-build\\bin\\SQLitePCLRaw.provider.e_sqlite3.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="..\\..\\restoran\\.codex-build\\bin\\runtimes\\**\\*">
-      <Link>runtimes\\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\\..\\restoran\\.codex-build\\bin\\runtimes\\win-x64\\native\\e_sqlite3.dll">
-      <Link>e_sqlite3.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <ProjectReference Include="..\..\restoran\Restoran.csproj" />
   </ItemGroup>
 
 </Project>

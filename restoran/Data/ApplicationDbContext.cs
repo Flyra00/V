@@ -80,6 +80,10 @@ namespace Restoran.Data
                 .HasIndex(t => t.TransactionNumber)
                 .IsUnique();
 
+            modelBuilder.Entity<Transaction>()
+                .HasIndex(t => t.TrackingToken)
+                .IsUnique();
+
             modelBuilder.Entity<TableSession>()
                 .HasIndex(session => new { session.TableId, session.Status });
 

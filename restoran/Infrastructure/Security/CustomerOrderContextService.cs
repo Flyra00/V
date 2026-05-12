@@ -6,12 +6,14 @@ namespace Restoran.Infrastructure.Security
     public class CustomerOrderContextService : ICustomerOrderContextService
     {
         private const string ActiveTableCookieName = "ActiveTableId";
-        private const string ActiveTransactionCookieName = "ActiveTransactionId";
+        private const string ActiveTrackingTokenCookieName = "ActiveTrackingToken";
+        private const string LegacyActiveTransactionCookieName = "ActiveTransactionId";
 
         private static readonly CookieOptions DefaultCookieOptions = new()
         {
             IsEssential = true,
-            SameSite = SameSiteMode.Lax
+            SameSite = SameSiteMode.Lax,
+            HttpOnly = true
         };
 
         public void SetActiveTableId(HttpResponse response, int tableId)
@@ -24,20 +26,34 @@ namespace Restoran.Infrastructure.Security
             return TryGetIntCookie(request, ActiveTableCookieName);
         }
 
-        public void SetActiveTransactionId(HttpResponse response, int transactionId)
+        public void SetActiveTrackingToken(HttpResponse response, string trackingToken)
         {
-            response.Cookies.Append(ActiveTransactionCookieName, transactionId.ToString(), DefaultCookieOptions);
+            if (string.IsNullOrWhiteSpace(trackingToken))
+            {
+                response.Cookies.Delete(ActiveTrackingTokenCookieName, DefaultCookieOptions);
+                response.Cookies.Delete(LegacyActiveTransactionCookieName, DefaultCookieOptions);
+                return;
+            }
+
+            response.Cookies.Append(ActiveTrackingTokenCookieName, trackingToken, DefaultCookieOptions);
+            response.Cookies.Delete(LegacyActiveTransactionCookieName, DefaultCookieOptions);
         }
 
-        public int? GetActiveTransactionId(HttpRequest request)
+        public string? GetActiveTrackingToken(HttpRequest request)
         {
-            return TryGetIntCookie(request, ActiveTransactionCookieName);
+            if (!request.Cookies.TryGetValue(ActiveTrackingTokenCookieName, out var value) || string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            return value.Trim();
         }
 
         public void Clear(HttpResponse response)
         {
-            response.Cookies.Delete(ActiveTableCookieName);
-            response.Cookies.Delete(ActiveTransactionCookieName);
+            response.Cookies.Delete(ActiveTableCookieName, DefaultCookieOptions);
+            response.Cookies.Delete(ActiveTrackingTokenCookieName, DefaultCookieOptions);
+            response.Cookies.Delete(LegacyActiveTransactionCookieName, DefaultCookieOptions);
         }
 
         private static int? TryGetIntCookie(HttpRequest request, string cookieName)

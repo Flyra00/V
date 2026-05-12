@@ -1,19 +1,4 @@
 (function () {
-    const memberDiscountMap = {
-        Silver: 5,
-        Gold: 10,
-        Platinum: 15
-    };
-
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) {
-            return parts.pop().split(";").shift();
-        }
-
-        return null;
-    }
 
     function formatCurrency(value) {
         return new Intl.NumberFormat("id-ID", {
@@ -140,20 +125,12 @@
             productModal = new bootstrap.Modal(productModalElement);
         }
 
-        function getMemberDiscountRate() {
-            if (getCookie("IsMember") !== "true") {
-                return 0;
-            }
-
-            const memberType = getCookie("MemberType");
-            return memberDiscountMap[memberType] || 0;
-        }
-
         function buildCartSummary() {
             const subtotal = cart.reduce(function (sum, item) {
                 return sum + (item.price * item.quantity);
             }, 0);
-            const memberDiscount = subtotal * (getMemberDiscountRate() / 100);
+            const memberDiscountRate = Number(config.memberDiscountRate || 0);
+            const memberDiscount = subtotal * (memberDiscountRate / 100);
             const discountedBase = Math.max(0, subtotal - memberDiscount);
             let promoName = "";
             let promoDiscount = 0;
@@ -529,12 +506,13 @@
             button.disabled = true;
             button.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Memproses...";
 
-            const memberIdValue = getCookie("IsMember") === "true" ? parseInt(getCookie("UserId"), 10) : NaN;
             const payload = {
                 tableId: Number(config.tableId),
-                customerName: getCookie("Username") || "Guest",
-                isMember: getCookie("IsMember") === "true",
-                memberId: Number.isInteger(memberIdValue) ? memberIdValue : null,
+                customerName: config.customerName || "Tamu",
+                isMember: Boolean(config.isMember),
+                memberId: config.memberId !== null && config.memberId !== undefined && Number.isInteger(Number(config.memberId))
+                    ? Number(config.memberId)
+                    : null,
                 paymentMethod: Number(selectedPaymentMethod),
                 items: cart.map(function (item) {
                     return {

@@ -6,12 +6,15 @@ namespace Restoran.Features.Tables.Services
 {
     public interface ITableService
     {
+        Task<bool> CanStartOrderAsync(int tableId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<CustomerTableOptionViewModel>> GetCustomerTableOptionsAsync(CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Table>> GetAvailableTablesAsync(CancellationToken cancellationToken = default);
         Task<TableManagementViewModel> GetManagementAsync(CancellationToken cancellationToken = default);
         Task<Table?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
         Task<OperationResult> CreateAsync(TableFormViewModel model, CancellationToken cancellationToken = default);
         Task<OperationResult> UpdateAsync(int id, TableFormViewModel model, CancellationToken cancellationToken = default);
+        Task<OperationResult> DeactivateAsync(int id, CancellationToken cancellationToken = default);
+        Task<OperationResult> ReactivateAsync(int id, CancellationToken cancellationToken = default);
         Task<OperationResult> DeleteAsync(int id, CancellationToken cancellationToken = default);
         Task<TableSession?> GetActiveSessionAsync(int tableId, CancellationToken cancellationToken = default);
         Task<TableSession> EnsureActiveSessionAsync(

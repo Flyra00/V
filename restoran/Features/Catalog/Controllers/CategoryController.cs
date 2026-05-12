@@ -5,7 +5,7 @@ using Restoran.Models;
 
 namespace Restoran.Controllers
 {
-    [RoleAuthorization(UserRole.Admin, UserRole.Supervisor)]
+    [RoleAuthorization(UserRole.Admin)]
     public class CategoryController : Controller
     {
         private readonly ICategoryService _categoryService;

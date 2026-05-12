@@ -6,6 +6,7 @@ namespace Restoran.ViewModels
     {
         public bool IsEmptyState { get; init; }
         public int TransactionId { get; init; }
+        public string TrackingToken { get; init; } = string.Empty;
         public string TransactionNumber { get; init; } = string.Empty;
         public int? TableId { get; init; }
         public string TableNumber { get; init; } = string.Empty;
@@ -41,6 +42,7 @@ namespace Restoran.ViewModels
     public class OrderTrackingStatusResponse
     {
         public int TransactionId { get; init; }
+        public string TrackingToken { get; init; } = string.Empty;
         public OrderStatus OrderStatus { get; init; }
         public PaymentStatus PaymentStatus { get; init; }
         public DateTime? PaidAt { get; init; }

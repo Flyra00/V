@@ -295,4 +295,111 @@ public static class OrderAndOperationsTests
         TestAssert.Equal(2, log.ApprovedBy);
         TestAssert.Equal(now, log.ApprovedAt);
     }
+
+    public static async Task GetMenuAsync_ReturnsNull_ForDisabledTable()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        var now = new DateTime(2026, 5, 12, 11, 0, 0, DateTimeKind.Utc);
+
+        await using (var arrangeContext = database.CreateContext())
+        {
+            arrangeContext.Categories.Add(new Category { Id = 1, Name = "Makanan" });
+            arrangeContext.Products.Add(new Product { Id = 1, Name = "Soto Ayam", CategoryId = 1, Price = 18000m, IsAvailable = true });
+            arrangeContext.Tables.Add(new Table { Id = 1, TableNumber = "9", Capacity = 4, Status = TableStatus.Disabled });
+            await TestPaymentData.SeedDefaultPaymentMethodsAsync(arrangeContext);
+            await arrangeContext.SaveChangesAsync();
+        }
+
+        await using var context = database.CreateContext();
+        var service = new OrderService(
+            context,
+            new FixedDateTimeProvider(now),
+            new StubTransactionNumberGenerator("TRX-DISABLED"),
+            new StubPaymentProofStorage(),
+            new StubChargeConfigurationProvider(),
+            new TableService(context, new FixedDateTimeProvider(now)),
+            TestPaymentData.CreatePaymentService(context));
+
+        var viewModel = await service.GetMenuAsync(1);
+
+        TestAssert.Null(viewModel);
+        TestAssert.Equal(0, await context.TableSessions.CountAsync());
+    }
+
+    public static async Task GetMenuAsync_DoesNotCreateTableSession_ForAvailableTable()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        var now = new DateTime(2026, 5, 12, 12, 0, 0, DateTimeKind.Utc);
+
+        await using (var arrangeContext = database.CreateContext())
+        {
+            arrangeContext.Categories.Add(new Category { Id = 1, Name = "Makanan" });
+            arrangeContext.Products.Add(new Product { Id = 1, Name = "Sate Ayam", CategoryId = 1, Price = 22000m, IsAvailable = true });
+            arrangeContext.Tables.Add(new Table { Id = 1, TableNumber = "10", Capacity = 4, Status = TableStatus.Available });
+            await TestPaymentData.SeedDefaultPaymentMethodsAsync(arrangeContext);
+            await arrangeContext.SaveChangesAsync();
+        }
+
+        await using var context = database.CreateContext();
+        var service = new OrderService(
+            context,
+            new FixedDateTimeProvider(now),
+            new StubTransactionNumberGenerator("TRX-AVAILABLE"),
+            new StubPaymentProofStorage(),
+            new StubChargeConfigurationProvider(),
+            new TableService(context, new FixedDateTimeProvider(now)),
+            TestPaymentData.CreatePaymentService(context));
+
+        var viewModel = await service.GetMenuAsync(1);
+
+        TestAssert.NotNull(viewModel);
+        TestAssert.Equal(0, await context.TableSessions.CountAsync());
+        TestAssert.Equal(TableStatus.Available, (await context.Tables.SingleAsync()).Status);
+    }
+
+    public static async Task CreateOrderAsync_RejectsReservedTable()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        var now = new DateTime(2026, 5, 12, 13, 0, 0, DateTimeKind.Utc);
+
+        await using (var arrangeContext = database.CreateContext())
+        {
+            arrangeContext.Categories.Add(new Category { Id = 1, Name = "Makanan" });
+            arrangeContext.Products.Add(new Product { Id = 1, Name = "Bakso", CategoryId = 1, Price = 18000m, IsAvailable = true });
+            arrangeContext.Tables.Add(new Table { Id = 1, TableNumber = "11", Capacity = 4, Status = TableStatus.Reserved });
+            await TestPaymentData.SeedDefaultPaymentMethodsAsync(arrangeContext);
+            await arrangeContext.SaveChangesAsync();
+        }
+
+        await using var context = database.CreateContext();
+        var service = new OrderService(
+            context,
+            new FixedDateTimeProvider(now),
+            new StubTransactionNumberGenerator("TRX-RESERVED"),
+            new StubPaymentProofStorage(),
+            new StubChargeConfigurationProvider(),
+            new TableService(context, new FixedDateTimeProvider(now)),
+            TestPaymentData.CreatePaymentService(context));
+
+        var result = await service.CreateOrderAsync(new CreateOrderRequest
+        {
+            TableId = 1,
+            CustomerName = "Tamu",
+            PaymentMethod = PaymentMethod.Transfer,
+            Items =
+            [
+                new OrderItemRequest
+                {
+                    ProductId = 1,
+                    Quantity = 1,
+                    Notes = string.Empty
+                }
+            ]
+        });
+
+        TestAssert.False(result.Succeeded);
+        TestAssert.Equal("Meja ini sedang tidak tersedia.", result.Message);
+        TestAssert.Equal(0, await context.TableSessions.CountAsync());
+        TestAssert.Equal(0, await context.Transactions.CountAsync());
+    }
 }

@@ -1,6 +1,6 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Restoran.Features.Auth.Services;
 using Restoran.Models;
 
 namespace Restoran.Filters
@@ -15,36 +15,27 @@ namespace Restoran.Filters
 
     public class RoleAuthorizationFilter : IAuthorizationFilter
     {
-        private readonly IAuthCookieService _authCookieService;
         private readonly UserRole[] _allowedRoles;
 
-        public RoleAuthorizationFilter(IAuthCookieService authCookieService, UserRole[] allowedRoles)
+        public RoleAuthorizationFilter(UserRole[] allowedRoles)
         {
-            _authCookieService = authCookieService;
             _allowedRoles = allowedRoles;
         }
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            var session = _authCookieService.GetAuthenticatedSession(context.HttpContext.Request);
-            var userRole = _authCookieService.GetUserRole(context.HttpContext.Request);
+            var user = context.HttpContext.User;
 
-            if (session == null || !userRole.HasValue)
+            if (user?.Identity?.IsAuthenticated != true)
             {
-                context.Result = new RedirectToActionResult("Login", "Home", null);
+                context.Result = new ChallengeResult(CookieAuthenticationDefaults.AuthenticationScheme);
                 return;
             }
 
-            if (!_allowedRoles.Contains(userRole.Value))
+            var hasAllowedRole = _allowedRoles.Any(role => user.IsInRole(role.ToString()));
+            if (!hasAllowedRole)
             {
-                if (userRole.Value == UserRole.Member)
-                {
-                    context.Result = new RedirectToActionResult("Index", "Customer", null);
-                }
-                else
-                {
-                    context.Result = new RedirectToActionResult("Login", "Home", null);
-                }
+                context.Result = new ForbidResult(CookieAuthenticationDefaults.AuthenticationScheme);
             }
         }
     }

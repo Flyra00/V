@@ -6,8 +6,8 @@ namespace Restoran.Features.Auth.Services
 {
     public interface IAuthCookieService
     {
-        void SignIn(HttpResponse response, AuthenticatedSession session);
-        void SignOut(HttpResponse response);
+        Task SignInAsync(HttpContext httpContext, AuthenticatedSession session);
+        Task SignOutAsync(HttpContext httpContext);
         int? GetUserId(HttpRequest request);
         AuthenticatedSession? GetAuthenticatedSession(HttpRequest request);
         UserRole? GetUserRole(HttpRequest request);

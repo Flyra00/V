@@ -256,7 +256,7 @@
 </head>
 <body>
     <!-- Theme Toggle -->
-    <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode"></button>
+    <button class="theme-toggle" id="themeToggle" title="Ganti mode terang atau gelap"></button>
 
     <div class="login-container">
         <div class="login-card">
@@ -279,13 +279,13 @@
 
                 <form method="post" id="loginForm">
                     <div class="form-floating">
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
-                        <label for="username"><i class="fas fa-user me-2"></i>Username</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Nama Pengguna" required>
+                        <label for="username"><i class="fas fa-user me-2"></i>Nama Pengguna</label>
                     </div>
                     
                     <div class="form-floating">
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
-                        <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Kata Sandi" required>
+                        <label for="password"><i class="fas fa-lock me-2"></i>Kata Sandi</label>
                     </div>
 
                     <button type="submit" class="btn btn-login">
@@ -299,24 +299,24 @@
 
                 <div class="default-users">
                     <h6>Akun Default</h6>
-                    <div class="user-row">
-                        <span>admin_V</span>
+                    <div class="user-row" data-username="admin_V" data-password="admin123">
+                        <span>Admin</span>
                         <span>admin123</span>
                     </div>
-                    <div class="user-row">
-                        <span>owner</span>
+                    <div class="user-row" data-username="owner" data-password="owner123">
+                        <span>Owner</span>
                         <span>owner123</span>
                     </div>
-                    <div class="user-row">
-                        <span>supervisor</span>
+                    <div class="user-row" data-username="supervisor" data-password="supervisor123">
+                        <span>Supervisor</span>
                         <span>supervisor123</span>
                     </div>
-                    <div class="user-row">
-                        <span>kasir</span>
+                    <div class="user-row" data-username="kasir" data-password="kasir123">
+                        <span>Kasir</span>
                         <span>kasir123</span>
                     </div>
-                    <div class="user-row">
-                        <span>kitchen</span>
+                    <div class="user-row" data-username="kitchen" data-password="kitchen123">
+                        <span>Dapur</span>
                         <span>kitchen123</span>
                     </div>
                 </div>
@@ -351,8 +351,8 @@
         document.querySelectorAll('.user-row').forEach(row => {
             row.style.cursor = 'pointer';
             row.addEventListener('click', function() {
-                const username = this.querySelector('span:first-child').textContent;
-                const password = this.querySelector('span:last-child').textContent;
+                const username = this.dataset.username || this.querySelector('span:first-child').textContent;
+                const password = this.dataset.password || this.querySelector('span:last-child').textContent;
                 document.getElementById('username').value = username;
                 document.getElementById('password').value = password;
             });

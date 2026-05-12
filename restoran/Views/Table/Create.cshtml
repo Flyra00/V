@@ -38,8 +38,9 @@
                         <div class="mb-4">
                             <label asp-for="Status" class="form-label fw-bold"></label>
                             <select asp-for="Status" class="form-select">
-                                <option value="@TableStatus.Available">Available</option>
-                                <option value="@TableStatus.Reserved">Reserved</option>
+                                <option value="@TableStatus.Available">Tersedia</option>
+                                <option value="@TableStatus.Reserved">Reservasi</option>
+                                <option value="@TableStatus.Disabled">Nonaktif</option>
                             </select>
                             <span asp-validation-for="Status" class="text-danger small"></span>
                         </div>

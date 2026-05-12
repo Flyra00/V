@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Restoran.Data;
@@ -41,13 +42,19 @@ namespace Restoran.Features.Orders.Services
 
         public async Task<OrderMenuViewModel?> GetMenuAsync(int tableId, CancellationToken cancellationToken = default)
         {
-            var table = await _context.Tables.FirstOrDefaultAsync(t => t.Id == tableId, cancellationToken);
-            if (table == null)
+            if (!await _tableService.CanStartOrderAsync(tableId, cancellationToken))
             {
                 return null;
             }
 
-            await _tableService.EnsureActiveSessionAsync(tableId, CustomerType.Guest, null, null, cancellationToken);
+            var table = await _context.Tables
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == tableId, cancellationToken);
+
+            if (table == null)
+            {
+                return null;
+            }
 
             var products = await _context.Products
                 .AsNoTracking()
@@ -108,6 +115,11 @@ namespace Restoran.Features.Orders.Services
                 return OperationResult<CreateOrderResponse>.Failure("Pesanan tidak boleh kosong");
             }
 
+            if (!await _tableService.CanStartOrderAsync(request.TableId, cancellationToken))
+            {
+                return OperationResult<CreateOrderResponse>.Failure("Meja ini sedang tidak tersedia.");
+            }
+
             var table = await _context.Tables.FirstOrDefaultAsync(t => t.Id == request.TableId, cancellationToken);
             if (table == null)
             {
@@ -141,6 +153,7 @@ namespace Restoran.Features.Orders.Services
                 var transaction = new Transaction
                 {
                     TransactionNumber = transactionNumber,
+                    TrackingToken = await GenerateTrackingTokenAsync(cancellationToken),
                     TableId = request.TableId,
                     TableSessionId = activeSession.Id,
                     CustomerName = string.IsNullOrWhiteSpace(request.CustomerName) ? "Guest" : request.CustomerName,
@@ -224,6 +237,7 @@ namespace Restoran.Features.Orders.Services
                 return OperationResult<CreateOrderResponse>.Success(new CreateOrderResponse
                 {
                     TransactionId = transaction.Id,
+                    TrackingToken = transaction.TrackingToken ?? string.Empty,
                     TransactionNumber = transaction.TransactionNumber,
                     AppliedPromoName = transaction.AppliedPromoName,
                     DiscountAmount = transaction.Discount
@@ -263,6 +277,28 @@ namespace Restoran.Features.Orders.Services
             }
         }
 
+        public async Task<OperationResult> UploadPaymentProofByTrackingTokenAsync(string trackingToken, IFormFile paymentProof, CancellationToken cancellationToken = default)
+        {
+            var normalizedTrackingToken = NormalizeTrackingToken(trackingToken);
+            if (string.IsNullOrWhiteSpace(normalizedTrackingToken))
+            {
+                return OperationResult.NotFound("Tracking pesanan tidak ditemukan");
+            }
+
+            var transactionId = await _context.Transactions
+                .AsNoTracking()
+                .Where(transaction => transaction.TrackingToken == normalizedTrackingToken)
+                .Select(transaction => (int?)transaction.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (!transactionId.HasValue)
+            {
+                return OperationResult.NotFound("Tracking pesanan tidak ditemukan");
+            }
+
+            return await UploadPaymentProofAsync(transactionId.Value, paymentProof, cancellationToken);
+        }
+
         public async Task<Transaction?> GetConfirmationAsync(int transactionId, CancellationToken cancellationToken = default)
         {
             return await _context.Transactions
@@ -300,10 +336,61 @@ namespace Restoran.Features.Orders.Services
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
+        public async Task<string?> ResolveTrackingTokenAsync(
+            string? trackingToken,
+            int? memberUserId,
+            CancellationToken cancellationToken = default)
+        {
+            var normalizedTrackingToken = NormalizeTrackingToken(trackingToken);
+            if (!string.IsNullOrWhiteSpace(normalizedTrackingToken))
+            {
+                var matchedToken = await _context.Transactions
+                    .AsNoTracking()
+                    .Where(transaction => transaction.TrackingToken == normalizedTrackingToken)
+                    .Select(transaction => transaction.TrackingToken)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (!string.IsNullOrWhiteSpace(matchedToken))
+                {
+                    return matchedToken;
+                }
+            }
+
+            if (!memberUserId.HasValue)
+            {
+                return null;
+            }
+
+            return await _context.Transactions
+                .AsNoTracking()
+                .Where(transaction =>
+                    !string.IsNullOrWhiteSpace(transaction.TrackingToken) &&
+                    transaction.TableSession != null &&
+                    transaction.TableSession.Member != null &&
+                    transaction.TableSession.Member.UserId == memberUserId.Value)
+                .OrderByDescending(transaction => transaction.CreatedAt)
+                .Select(transaction => transaction.TrackingToken)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         public async Task<OrderTrackingViewModel?> GetTrackingAsync(int transactionId, CancellationToken cancellationToken = default)
         {
             var transaction = await GetTrackingTransactionQuery()
                 .FirstOrDefaultAsync(entity => entity.Id == transactionId, cancellationToken);
+
+            return transaction == null ? null : MapToTrackingViewModel(transaction);
+        }
+
+        public async Task<OrderTrackingViewModel?> GetTrackingByTokenAsync(string trackingToken, CancellationToken cancellationToken = default)
+        {
+            var normalizedTrackingToken = NormalizeTrackingToken(trackingToken);
+            if (string.IsNullOrWhiteSpace(normalizedTrackingToken))
+            {
+                return null;
+            }
+
+            var transaction = await GetTrackingTransactionQuery()
+                .FirstOrDefaultAsync(entity => entity.TrackingToken == normalizedTrackingToken, cancellationToken);
 
             return transaction == null ? null : MapToTrackingViewModel(transaction);
         }
@@ -321,6 +408,46 @@ namespace Restoran.Features.Orders.Services
             return new OrderTrackingStatusResponse
             {
                 TransactionId = transaction.Id,
+                TrackingToken = transaction.TrackingToken ?? string.Empty,
+                OrderStatus = transaction.OrderStatus,
+                PaymentStatus = transaction.Payment!.PaymentStatus,
+                PaidAt = transaction.Payment.PaymentDate,
+                IsTrackingFinal = IsTrackingFinal(transaction.OrderStatus, transaction.Payment.PaymentStatus),
+                RefreshedAt = _dateTimeProvider.Now,
+                Items = transaction.TransactionDetails
+                    .OrderBy(detail => detail.Id)
+                    .Select(detail => new OrderTrackingItemViewModel
+                    {
+                        DetailId = detail.Id,
+                        ProductName = detail.Product.Name,
+                        Quantity = detail.Quantity,
+                        Notes = detail.Notes,
+                        Status = detail.Status
+                    })
+                    .ToList()
+            };
+        }
+
+        public async Task<OrderTrackingStatusResponse?> GetTrackingStatusByTokenAsync(string trackingToken, CancellationToken cancellationToken = default)
+        {
+            var normalizedTrackingToken = NormalizeTrackingToken(trackingToken);
+            if (string.IsNullOrWhiteSpace(normalizedTrackingToken))
+            {
+                return null;
+            }
+
+            var transaction = await GetTrackingTransactionQuery()
+                .FirstOrDefaultAsync(entity => entity.TrackingToken == normalizedTrackingToken, cancellationToken);
+
+            if (transaction == null)
+            {
+                return null;
+            }
+
+            return new OrderTrackingStatusResponse
+            {
+                TransactionId = transaction.Id,
+                TrackingToken = transaction.TrackingToken ?? string.Empty,
                 OrderStatus = transaction.OrderStatus,
                 PaymentStatus = transaction.Payment!.PaymentStatus,
                 PaidAt = transaction.Payment.PaymentDate,
@@ -420,6 +547,7 @@ namespace Restoran.Features.Orders.Services
             return new OrderTrackingViewModel
             {
                 TransactionId = transaction.Id,
+                TrackingToken = transaction.TrackingToken ?? string.Empty,
                 TransactionNumber = transaction.TransactionNumber,
                 TableId = transaction.TableId,
                 TableNumber = transaction.Table?.TableNumber ?? "Takeaway",
@@ -454,6 +582,29 @@ namespace Restoran.Features.Orders.Services
         {
             return orderStatus is OrderStatus.Completed or OrderStatus.Cancelled ||
                    (orderStatus == OrderStatus.Served && paymentStatus is PaymentStatus.Paid or PaymentStatus.Cancelled);
+        }
+
+        private async Task<string> GenerateTrackingTokenAsync(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(16)).ToLowerInvariant();
+                var exists = await _context.Transactions
+                    .AsNoTracking()
+                    .AnyAsync(transaction => transaction.TrackingToken == token, cancellationToken);
+
+                if (!exists)
+                {
+                    return token;
+                }
+            }
+        }
+
+        private static string? NormalizeTrackingToken(string? trackingToken)
+        {
+            return string.IsNullOrWhiteSpace(trackingToken)
+                ? null
+                : trackingToken.Trim().ToLowerInvariant();
         }
     }
 }

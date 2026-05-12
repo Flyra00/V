@@ -18,6 +18,26 @@ namespace Restoran.Features.Tables.Services
             _dateTimeProvider = dateTimeProvider;
         }
 
+        public async Task<bool> CanStartOrderAsync(int tableId, CancellationToken cancellationToken = default)
+        {
+            var tableState = await _context.Tables
+                .AsNoTracking()
+                .Where(table => table.Id == tableId)
+                .Select(table => new
+                {
+                    table.Status,
+                    HasActiveSession = _context.TableSessions.Any(session =>
+                        session.TableId == table.Id &&
+                        session.Status == TableSessionStatus.Active &&
+                        session.EndTime == null)
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return tableState != null &&
+                   tableState.Status == TableStatus.Available &&
+                   !tableState.HasActiveSession;
+        }
+
         public async Task<IReadOnlyList<CustomerTableOptionViewModel>> GetCustomerTableOptionsAsync(CancellationToken cancellationToken = default)
         {
             var activeSessionTableIds = await _context.TableSessions
@@ -37,9 +57,9 @@ namespace Restoran.Features.Tables.Services
                     Capacity = table.Capacity,
                     Status = activeSessionTableIds.Contains(table.Id) ? TableStatus.Occupied : table.Status,
                     StatusLabel = activeSessionTableIds.Contains(table.Id)
-                        ? "Sedang Dipakai"
-                        : table.Status == TableStatus.Reserved ? "Reservasi" : "Tersedia",
-                    CanStartOrder = !activeSessionTableIds.Contains(table.Id) && table.Status != TableStatus.Reserved
+                        ? GetStatusLabel(TableStatus.Occupied)
+                        : GetStatusLabel(table.Status),
+                    CanStartOrder = !activeSessionTableIds.Contains(table.Id) && table.Status == TableStatus.Available
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -84,9 +104,10 @@ namespace Restoran.Features.Tables.Services
                         TableNumber = table.TableNumber,
                         Capacity = table.Capacity,
                         Status = effectiveStatus,
-                        StatusLabel = activeSession != null
-                            ? "Occupied"
-                            : table.Status.ToString(),
+                        StatusLabel = GetStatusLabel(effectiveStatus),
+                        IsDisabled = table.Status == TableStatus.Disabled,
+                        CanDeactivate = activeSession == null && table.Status != TableStatus.Disabled,
+                        CanReactivate = table.Status == TableStatus.Disabled,
                         HasActiveSession = activeSession != null,
                         SessionStartedAt = activeSession?.StartTime,
                         SessionCustomerType = activeSession?.CustomerType.ToString() ?? string.Empty,
@@ -175,6 +196,51 @@ namespace Restoran.Features.Tables.Services
             return OperationResult.Success("Meja berhasil diupdate");
         }
 
+        public async Task<OperationResult> DeactivateAsync(int id, CancellationToken cancellationToken = default)
+        {
+            var table = await _context.Tables
+                .Include(entity => entity.TableSessions.Where(session => session.Status == TableSessionStatus.Active && session.EndTime == null))
+                .FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
+
+            if (table == null)
+            {
+                return OperationResult.NotFound("Meja tidak ditemukan");
+            }
+
+            if (table.TableSessions.Any())
+            {
+                return OperationResult.Failure("Meja yang sedang digunakan tidak dapat dinonaktifkan");
+            }
+
+            if (table.Status == TableStatus.Disabled)
+            {
+                return OperationResult.Success("Meja sudah nonaktif");
+            }
+
+            table.Status = TableStatus.Disabled;
+            await _context.SaveChangesAsync(cancellationToken);
+            return OperationResult.Success("Meja berhasil dinonaktifkan");
+        }
+
+        public async Task<OperationResult> ReactivateAsync(int id, CancellationToken cancellationToken = default)
+        {
+            var table = await _context.Tables.FirstOrDefaultAsync(entity => entity.Id == id, cancellationToken);
+
+            if (table == null)
+            {
+                return OperationResult.NotFound("Meja tidak ditemukan");
+            }
+
+            if (table.Status != TableStatus.Disabled)
+            {
+                return OperationResult.Failure("Meja tidak sedang nonaktif");
+            }
+
+            table.Status = TableStatus.Available;
+            await _context.SaveChangesAsync(cancellationToken);
+            return OperationResult.Success("Meja berhasil diaktifkan kembali");
+        }
+
         public async Task<OperationResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
             var table = await _context.Tables
@@ -218,6 +284,11 @@ namespace Restoran.Features.Tables.Services
             var table = await _context.Tables.FirstOrDefaultAsync(entity => entity.Id == tableId, cancellationToken)
                 ?? throw new InvalidOperationException("Meja tidak ditemukan");
 
+            if (table.Status != TableStatus.Available)
+            {
+                throw new InvalidOperationException("Meja ini sedang tidak tersedia");
+            }
+
             var session = await _context.TableSessions
                 .FirstOrDefaultAsync(
                     entity => entity.TableId == tableId &&
@@ -225,37 +296,22 @@ namespace Restoran.Features.Tables.Services
                               entity.EndTime == null,
                     cancellationToken);
 
-            if (session == null)
+            if (session != null)
             {
-                session = new TableSession
-                {
-                    TableId = tableId,
-                    CustomerType = customerType,
-                    MemberId = memberId,
-                    CustomerName = customerName?.Trim() ?? string.Empty,
-                    StartTime = _dateTimeProvider.Now,
-                    Status = TableSessionStatus.Active
-                };
-
-                _context.TableSessions.Add(session);
+                throw new InvalidOperationException("Meja ini sedang tidak tersedia");
             }
-            else
+
+            session = new TableSession
             {
-                if (customerType == CustomerType.Member)
-                {
-                    session.CustomerType = CustomerType.Member;
-                }
+                TableId = tableId,
+                CustomerType = customerType,
+                MemberId = memberId,
+                CustomerName = customerName?.Trim() ?? string.Empty,
+                StartTime = _dateTimeProvider.Now,
+                Status = TableSessionStatus.Active
+            };
 
-                if (memberId.HasValue && !session.MemberId.HasValue)
-                {
-                    session.MemberId = memberId;
-                }
-
-                if (!string.IsNullOrWhiteSpace(customerName) && string.IsNullOrWhiteSpace(session.CustomerName))
-                {
-                    session.CustomerName = customerName.Trim();
-                }
-            }
+            _context.TableSessions.Add(session);
 
             if (table.Status != TableStatus.Occupied)
             {
@@ -318,6 +374,14 @@ namespace Restoran.Features.Tables.Services
 
         private static TableStatus NormalizeStatus(TableStatus status)
             => status == TableStatus.Occupied ? TableStatus.Available : status;
+
+        private static string GetStatusLabel(TableStatus status) => status switch
+        {
+            TableStatus.Occupied => "Sedang Dipakai",
+            TableStatus.Reserved => "Reservasi",
+            TableStatus.Disabled => "Nonaktif",
+            _ => "Tersedia"
+        };
 
         private static bool IsSessionTerminal(Transaction transaction)
             => transaction.Payment is { PaymentStatus: PaymentStatus.Paid or PaymentStatus.Cancelled } &&

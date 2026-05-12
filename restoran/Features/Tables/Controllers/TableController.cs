@@ -97,6 +97,34 @@ namespace Restoran.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Deactivate(int id)
+        {
+            var result = await _tableService.DeactivateAsync(id);
+            if (result.IsNotFound)
+            {
+                return NotFound();
+            }
+
+            TempData[result.Succeeded ? "Success" : "Error"] = result.Message;
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reactivate(int id)
+        {
+            var result = await _tableService.ReactivateAsync(id);
+            if (result.IsNotFound)
+            {
+                return NotFound();
+            }
+
+            TempData[result.Succeeded ? "Success" : "Error"] = result.Message;
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _tableService.DeleteAsync(id);

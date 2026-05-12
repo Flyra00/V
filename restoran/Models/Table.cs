@@ -31,6 +31,7 @@ namespace Restoran.Models
     {
         Available,
         Occupied,
-        Reserved
+        Reserved,
+        Disabled
     }
 }

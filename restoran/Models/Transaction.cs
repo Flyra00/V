@@ -12,6 +12,9 @@ namespace Restoran.Models
         [StringLength(20)]
         public string TransactionNumber { get; set; } = string.Empty;
 
+        [StringLength(64)]
+        public string? TrackingToken { get; set; }
+
         public int? TableId { get; set; }
 
         public int? TableSessionId { get; set; }

@@ -6,8 +6,8 @@ namespace Restoran.Features.Customer.Services
     {
         void SetActiveTableId(HttpResponse response, int tableId);
         int? GetActiveTableId(HttpRequest request);
-        void SetActiveTransactionId(HttpResponse response, int transactionId);
-        int? GetActiveTransactionId(HttpRequest request);
+        void SetActiveTrackingToken(HttpResponse response, string trackingToken);
+        string? GetActiveTrackingToken(HttpRequest request);
         void Clear(HttpResponse response);
     }
 }

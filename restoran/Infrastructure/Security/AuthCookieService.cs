@@ -1,3 +1,6 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Restoran.Features.Auth.Dtos;
 using Restoran.Features.Auth.Services;
@@ -7,41 +10,60 @@ namespace Restoran.Infrastructure.Security
 {
     public class AuthCookieService : IAuthCookieService
     {
+        public const string MemberTypeClaimType = "member_type";
+
         private static readonly CookieOptions DefaultCookieOptions = new()
         {
             IsEssential = true,
-            SameSite = SameSiteMode.Lax
+            SameSite = SameSiteMode.Lax,
+            HttpOnly = true
         };
 
-        public void SignIn(HttpResponse response, AuthenticatedSession session)
+        public async Task SignInAsync(HttpContext httpContext, AuthenticatedSession session)
         {
-            response.Cookies.Append("UserId", session.UserId.ToString(), DefaultCookieOptions);
-            response.Cookies.Append("Username", session.Username, DefaultCookieOptions);
-            response.Cookies.Append("Role", session.Role, DefaultCookieOptions);
-            response.Cookies.Append("IsMember", session.IsMember ? "true" : "false", DefaultCookieOptions);
+            ClearLegacyCookies(httpContext.Response);
 
-            if (!string.IsNullOrWhiteSpace(session.MemberType))
+            if (session.UserId <= 0 || string.IsNullOrWhiteSpace(session.Role))
             {
-                response.Cookies.Append("MemberType", session.MemberType, DefaultCookieOptions);
+                return;
             }
-            else
+
+            var claims = new List<Claim>
             {
-                response.Cookies.Delete("MemberType");
+                new(ClaimTypes.NameIdentifier, session.UserId.ToString()),
+                new(ClaimTypes.Name, session.Username),
+                new(ClaimTypes.Role, session.Role)
+            };
+
+            if (session.IsMember && !string.IsNullOrWhiteSpace(session.MemberType))
+            {
+                claims.Add(new Claim(MemberTypeClaimType, session.MemberType));
             }
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await httpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    AllowRefresh = true
+                });
         }
 
-        public void SignOut(HttpResponse response)
+        public async Task SignOutAsync(HttpContext httpContext)
         {
-            response.Cookies.Delete("UserId");
-            response.Cookies.Delete("Username");
-            response.Cookies.Delete("Role");
-            response.Cookies.Delete("IsMember");
-            response.Cookies.Delete("MemberType");
+            await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            ClearLegacyCookies(httpContext.Response);
         }
 
         public int? GetUserId(HttpRequest request)
         {
-            if (!request.Cookies.TryGetValue("UserId", out var userIdValue))
+            var principal = request.HttpContext.User;
+            var userIdValue = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userIdValue))
             {
                 return null;
             }
@@ -51,7 +73,8 @@ namespace Restoran.Infrastructure.Security
 
         public AuthenticatedSession? GetAuthenticatedSession(HttpRequest request)
         {
-            if (!request.Cookies.TryGetValue("Role", out var role) || string.IsNullOrWhiteSpace(role))
+            var principal = request.HttpContext.User;
+            if (principal?.Identity?.IsAuthenticated != true)
             {
                 return null;
             }
@@ -62,16 +85,17 @@ namespace Restoran.Infrastructure.Security
                 return null;
             }
 
-            request.Cookies.TryGetValue("Username", out var username);
-            request.Cookies.TryGetValue("IsMember", out var isMemberValue);
-            request.Cookies.TryGetValue("MemberType", out var memberType);
+            var role = principal.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+            var username = principal.Identity?.Name ?? string.Empty;
+            var memberType = principal.FindFirstValue(MemberTypeClaimType);
+            var isMember = string.Equals(role, UserRole.Member.ToString(), StringComparison.OrdinalIgnoreCase);
 
             return new AuthenticatedSession
             {
                 UserId = userId.Value,
-                Username = username ?? string.Empty,
+                Username = username,
                 Role = role,
-                IsMember = string.Equals(isMemberValue, "true", StringComparison.OrdinalIgnoreCase),
+                IsMember = isMember,
                 MemberType = memberType
             };
         }
@@ -85,6 +109,18 @@ namespace Restoran.Infrastructure.Security
             }
 
             return Enum.TryParse<UserRole>(session.Role, out var role) ? role : null;
+        }
+
+        private static void ClearLegacyCookies(HttpResponse response)
+        {
+            response.Cookies.Delete("UserId", DefaultCookieOptions);
+            response.Cookies.Delete("Username", DefaultCookieOptions);
+            response.Cookies.Delete("Role", DefaultCookieOptions);
+            response.Cookies.Delete("IsMember", DefaultCookieOptions);
+            response.Cookies.Delete("MemberType", DefaultCookieOptions);
+            response.Cookies.Delete("ActiveTransactionId", DefaultCookieOptions);
+            response.Cookies.Delete("ActiveTableId", DefaultCookieOptions);
+            response.Cookies.Delete("ActiveTrackingToken", DefaultCookieOptions);
         }
     }
 }

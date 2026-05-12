@@ -109,8 +109,10 @@
                             var badgeClass = table.Status switch
                             {
                                 TableStatus.Available => "bg-success",
-                                TableStatus.Reserved => "bg-secondary",
-                                _ => "bg-warning text-dark"
+                                TableStatus.Occupied => "bg-primary",
+                                TableStatus.Reserved => "bg-warning text-dark",
+                                TableStatus.Disabled => "bg-secondary",
+                                _ => "bg-secondary"
                             };
 
                             <tr>
@@ -127,7 +129,7 @@
                                     {
                                         <div class="fw-semibold">@table.SessionCustomerType</div>
                                         <small class="text-muted">
-                                            @(string.IsNullOrWhiteSpace(table.SessionCustomerName) ? "Tanpa nama customer" : table.SessionCustomerName)
+                                            @(string.IsNullOrWhiteSpace(table.SessionCustomerName) ? "Tanpa nama pelanggan" : table.SessionCustomerName)
                                             sejak @table.SessionStartedAt?.ToString("dd/MM HH:mm")
                                         </small>
                                     }
@@ -145,10 +147,32 @@
                                     </div>
                                 </td>
                                 <td class="text-end">
-                                    <div class="btn-group">
+                                    <div class="btn-group flex-wrap justify-content-end">
                                         <a asp-action="Edit" asp-route-id="@table.Id" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        @if (table.CanReactivate)
+                                        {
+                                            <form id="reactivate-form-@table.Id" asp-action="Reactivate" asp-route-id="@table.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-success"
+                                                        onclick="confirmTableStatusAction('reactivate-form-@table.Id', 'Aktifkan Kembali Meja', 'Apakah Anda yakin ingin mengaktifkan kembali Meja @table.TableNumber?', 'Ya, aktifkan kembali', 'success')">
+                                                    <i class="fas fa-check me-1"></i>Aktifkan Kembali
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (table.CanDeactivate)
+                                        {
+                                            <form id="deactivate-form-@table.Id" asp-action="Deactivate" asp-route-id="@table.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        onclick="confirmTableStatusAction('deactivate-form-@table.Id', 'Nonaktifkan Meja', 'Apakah Anda yakin ingin menonaktifkan Meja @table.TableNumber?', 'Ya, nonaktifkan', 'danger')">
+                                                    <i class="fas fa-ban me-1"></i>Nonaktifkan
+                                                </button>
+                                            </form>
+                                        }
                                         <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(@table.Id, '@table.TableNumber')">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -179,6 +203,7 @@
             <div class="modal-footer border-0 justify-content-center">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                 <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-danger">Hapus</button>
                 </form>
             </div>
@@ -188,6 +213,19 @@
 
 @section Scripts {
     <script>
+        function confirmTableStatusAction(formId, title, message, confirmText, variant) {
+            showConfirmDialog({
+                title,
+                message,
+                confirmText,
+                cancelText: 'Batal',
+                variant,
+                onConfirm: () => {
+                    document.getElementById(formId)?.submit();
+                }
+            });
+        }
+
         function confirmDelete(id, tableNumber) {
             document.getElementById('deleteTableNumber').textContent = `Meja ${tableNumber}`;
             document.getElementById('deleteForm').action = '/Table/Delete/' + id;

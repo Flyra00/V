@@ -5,52 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - Restoran Ceria</title>
     @functions {
-        private static Restoran.Models.UserRole? ResolveRole(string? roleCookie)
+        private static bool HasRole(System.Security.Claims.ClaimsPrincipal principal, params Restoran.Models.UserRole[] allowedRoles)
         {
-            if (string.IsNullOrWhiteSpace(roleCookie))
-            {
-                return null;
-            }
-
-            roleCookie = roleCookie.Trim();
-
-            if (Enum.TryParse<Restoran.Models.UserRole>(roleCookie, ignoreCase: true, out var directRole))
-            {
-                return directRole;
-            }
-
-            var compactRole = roleCookie.Split('.', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
-            if (!string.IsNullOrWhiteSpace(compactRole) &&
-                Enum.TryParse<Restoran.Models.UserRole>(compactRole, ignoreCase: true, out var qualifiedRole))
-            {
-                return qualifiedRole;
-            }
-
-            if (string.Equals(roleCookie, "Administrator", StringComparison.OrdinalIgnoreCase))
-            {
-                return Restoran.Models.UserRole.Admin;
-            }
-
-            if (int.TryParse(roleCookie, out var roleValue) &&
-                Enum.IsDefined(typeof(Restoran.Models.UserRole), roleValue))
-            {
-                return (Restoran.Models.UserRole)roleValue;
-            }
-
-            return null;
-        }
-
-        private static bool HasRole(string? roleCookie, params Restoran.Models.UserRole[] allowedRoles)
-        {
-            var role = ResolveRole(roleCookie);
-            if (role == null)
+            if (principal?.Identity?.IsAuthenticated != true)
             {
                 return false;
             }
 
             foreach (var allowedRole in allowedRoles)
             {
-                if (allowedRole == role.Value)
+                if (principal.IsInRole(allowedRole.ToString()))
                 {
                     return true;
                 }
@@ -539,9 +503,9 @@
                     <button class="btn btn-link text-decoration-none dropdown-toggle d-flex align-items-center gap-2" 
                             type="button" data-bs-toggle="dropdown">
                         <div class="user-avatar">
-                            @(Context.Request.Cookies["Username"]?.ToString().Substring(0, 1).ToUpper() ?? "G")
+                            @((!string.IsNullOrWhiteSpace(User.Identity?.Name) ? User.Identity!.Name![0].ToString().ToUpperInvariant() : "G"))
                         </div>
-                        <span class="d-none d-md-block">@(Context.Request.Cookies["Username"] ?? "Tamu")</span>
+                        <span class="d-none d-md-block">@(User.Identity?.Name ?? "Tamu")</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profil</a></li>
@@ -561,18 +525,18 @@
 
     @{
         var currentPath = Context.Request.Path;
-        var currentRole = ResolveRole(Context.Request.Cookies["Role"]);
-        var isAdmin = currentRole == Restoran.Models.UserRole.Admin;
-        var isOwner = currentRole == Restoran.Models.UserRole.Owner;
-        var isSupervisor = currentRole == Restoran.Models.UserRole.Supervisor;
-        var isKasir = currentRole == Restoran.Models.UserRole.Kasir;
-        var isKitchen = currentRole == Restoran.Models.UserRole.BagianMasak;
+        var isAuthenticated = User.Identity?.IsAuthenticated == true;
+        var isAdmin = HasRole(User, Restoran.Models.UserRole.Admin);
+        var isOwner = HasRole(User, Restoran.Models.UserRole.Owner);
+        var isSupervisor = HasRole(User, Restoran.Models.UserRole.Supervisor);
+        var isKasir = HasRole(User, Restoran.Models.UserRole.Kasir);
+        var isKitchen = HasRole(User, Restoran.Models.UserRole.BagianMasak);
     }
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
         <ul class="nav flex-column sidebar-nav">
-            @if (!string.IsNullOrWhiteSpace(Context.Request.Cookies["Username"]))
+            @if (isAuthenticated)
             {
                 <li class="nav-section">
                     <span class="nav-section-title">Utama</span>
@@ -600,13 +564,13 @@
                 <li class="nav-item">
                     <a class="nav-link @(IsActivePath(currentPath, "/Admin") && !IsActivePath(currentPath, "/Admin/Roles", "/Admin/CreateRole", "/Admin/EditRole", "/Admin/Promos", "/Admin/CreatePromo", "/Admin/EditPromo", "/Admin/PaymentMethods", "/Admin/CreatePaymentMethod", "/Admin/EditPaymentMethod", "/Admin/ChargeSettings") ? "active" : "")" href="/Admin">
                         <i class="fas fa-users-cog"></i>
-                        <span class="nav-text">Manajemen User</span>
+                        <span class="nav-text">Manajemen Pengguna</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link @(IsActivePath(currentPath, "/Admin/Roles", "/Admin/CreateRole", "/Admin/EditRole") ? "active" : "")" href="/Admin/Roles">
                         <i class="fas fa-user-shield"></i>
-                        <span class="nav-text">Kelola Role</span>
+                        <span class="nav-text">Kelola Peran</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -624,7 +588,7 @@
                 <li class="nav-item">
                     <a class="nav-link @(IsActivePath(currentPath, "/Table") ? "active" : "")" href="/Table">
                         <i class="fas fa-table"></i>
-                        <span class="nav-text">Meja & Session</span>
+                        <span class="nav-text">Meja & Sesi</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -642,7 +606,7 @@
                 <li class="nav-item">
                     <a class="nav-link @(IsActivePath(currentPath, "/Admin/ChargeSettings") ? "active" : "")" href="/Admin/ChargeSettings">
                         <i class="fas fa-percent"></i>
-                        <span class="nav-text">PPN & Service</span>
+                        <span class="nav-text">PPN & Biaya Layanan</span>
                     </a>
                 </li>
 
@@ -763,19 +727,7 @@
                 <li class="nav-item">
                     <a class="nav-link @(IsActivePath(currentPath, "/Table") ? "active" : "")" href="/Table">
                         <i class="fas fa-table"></i>
-                        <span class="nav-text">Meja & Session</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @(IsActivePath(currentPath, "/Category") ? "active" : "")" href="/Category">
-                        <i class="fas fa-tags"></i>
-                        <span class="nav-text">Kategori Menu</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link @(IsActivePath(currentPath, "/Dashboard/ManageProducts", "/Dashboard/CreateProduct", "/Dashboard/EditProduct") ? "active" : "")" href="/Dashboard/ManageProducts">
-                        <i class="fas fa-utensils"></i>
-                        <span class="nav-text">Kelola Menu</span>
+                        <span class="nav-text">Meja & Sesi</span>
                     </a>
                 </li>
             }

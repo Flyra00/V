@@ -1,7 +1,7 @@
 @model IEnumerable<Restoran.Models.User>
 
 @{
-    ViewData["Title"] = "Manajemen User";
+    ViewData["Title"] = "Manajemen Pengguna";
 }
 
 <div class="container-fluid py-4">
@@ -10,11 +10,11 @@
         <div class="col-12">
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                 <div>
-                    <h2 class="mb-2">Manajemen User</h2>
-                    <p class="text-muted mb-0">Kelola akun staf, status aktif, dan assignment role dari satu halaman.</p>
+                    <h2 class="mb-2">Manajemen Pengguna</h2>
+                    <p class="text-muted mb-0">Kelola akun staf, status aktif, dan penetapan peran dari satu halaman.</p>
                 </div>
                 <a asp-action="Create" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Tambah User Baru
+                    <i class="fas fa-plus"></i> Tambah Pengguna Baru
                 </a>
             </div>
         </div>
@@ -30,7 +30,7 @@
 
     <div class="card shadow-sm">
         <div class="card-header bg-transparent border-0 pt-4 px-4">
-            <h5 class="fw-bold mb-1">Daftar User Internal</h5>
+            <h5 class="fw-bold mb-1">Daftar Pengguna Internal</h5>
             <p class="text-muted mb-0">Gunakan aksi pada tabel untuk edit profil, mengaktifkan, atau menonaktifkan akun.</p>
         </div>
         <div class="card-body">
@@ -44,7 +44,7 @@
                             <th>Role</th>
                             <th>Status</th>
                             <th>Dibuat Pada</th>
-                            <th>Last Login</th>
+                            <th>Login Terakhir</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -113,8 +113,8 @@
 
         function deleteUser(id) {
             showConfirmDialog({
-                title: 'Nonaktifkan User',
-                message: 'Apakah Anda yakin ingin menonaktifkan user ini?',
+                title: 'Nonaktifkan Pengguna',
+                message: 'Apakah Anda yakin ingin menonaktifkan pengguna ini?',
                 confirmText: 'Ya, nonaktifkan',
                 cancelText: 'Batal',
                 variant: 'danger',
@@ -128,12 +128,12 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            showToast(data.message || 'User berhasil dinonaktifkan.', 'success');
+                            showToast(data.message || 'Pengguna berhasil dinonaktifkan.', 'success');
                             location.reload();
                             return;
                         }
 
-                        showToast(data.message || 'Gagal menonaktifkan user.', 'error');
+                        showToast(data.message || 'Gagal menonaktifkan pengguna.', 'error');
                     })
                     .catch(error => {
                         showToast(`Terjadi kesalahan: ${error.message}`, 'error');
@@ -144,8 +144,8 @@
 
         function activateUser(id) {
             showConfirmDialog({
-                title: 'Aktifkan User',
-                message: 'Apakah Anda yakin ingin mengaktifkan user ini kembali?',
+                title: 'Aktifkan Pengguna',
+                message: 'Apakah Anda yakin ingin mengaktifkan pengguna ini kembali?',
                 confirmText: 'Ya, aktifkan',
                 cancelText: 'Batal',
                 variant: 'success',
@@ -159,12 +159,12 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            showToast(data.message || 'User berhasil diaktifkan.', 'success');
+                            showToast(data.message || 'Pengguna berhasil diaktifkan.', 'success');
                             location.reload();
                             return;
                         }
 
-                        showToast(data.message || 'Gagal mengaktifkan user.', 'error');
+                        showToast(data.message || 'Gagal mengaktifkan pengguna.', 'error');
                     })
                     .catch(error => {
                         showToast(`Terjadi kesalahan: ${error.message}`, 'error');

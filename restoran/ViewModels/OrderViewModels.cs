@@ -7,6 +7,10 @@ namespace Restoran.ViewModels
     {
         public int TableId { get; set; }
         public string TableNumber { get; set; } = string.Empty;
+        public bool IsMember { get; set; }
+        public int? MemberId { get; set; }
+        public decimal MemberDiscountRate { get; set; }
+        public string CustomerName { get; set; } = "Tamu";
         public string TaxName { get; set; } = string.Empty;
         public decimal TaxRate { get; set; }
         public string ServiceChargeName { get; set; } = string.Empty;

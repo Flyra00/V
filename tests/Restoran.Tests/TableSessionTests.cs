@@ -116,4 +116,122 @@ public static class TableSessionTests
         TestAssert.False(result.Succeeded);
         TestAssert.Equal("Nomor meja sudah digunakan", result.Message);
     }
+
+    public static async Task TableService_GetCustomerTableOptionsAsync_MarksDisabledAndOccupiedTablesAsUnavailable()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        var now = new DateTime(2026, 5, 12, 9, 0, 0, DateTimeKind.Utc);
+
+        await using (var arrangeContext = database.CreateContext())
+        {
+            arrangeContext.Tables.AddRange(
+                new Table { Id = 1, TableNumber = "1", Capacity = 4, Status = TableStatus.Available },
+                new Table { Id = 2, TableNumber = "2", Capacity = 4, Status = TableStatus.Reserved },
+                new Table { Id = 3, TableNumber = "3", Capacity = 4, Status = TableStatus.Disabled },
+                new Table { Id = 4, TableNumber = "4", Capacity = 4, Status = TableStatus.Available });
+            arrangeContext.TableSessions.Add(new TableSession
+            {
+                Id = 1,
+                TableId = 4,
+                CustomerType = CustomerType.Guest,
+                CustomerName = "Rina",
+                StartTime = now.AddMinutes(-10),
+                Status = TableSessionStatus.Active
+            });
+            await arrangeContext.SaveChangesAsync();
+        }
+
+        await using var context = database.CreateContext();
+        var service = new TableService(context, new FixedDateTimeProvider(now));
+
+        var options = await service.GetCustomerTableOptionsAsync();
+
+        var available = options.Single(option => option.Id == 1);
+        var reserved = options.Single(option => option.Id == 2);
+        var disabled = options.Single(option => option.Id == 3);
+        var occupied = options.Single(option => option.Id == 4);
+
+        TestAssert.True(available.CanStartOrder);
+        TestAssert.Equal("Tersedia", available.StatusLabel);
+
+        TestAssert.False(reserved.CanStartOrder);
+        TestAssert.Equal("Reservasi", reserved.StatusLabel);
+
+        TestAssert.False(disabled.CanStartOrder);
+        TestAssert.Equal("Nonaktif", disabled.StatusLabel);
+
+        TestAssert.False(occupied.CanStartOrder);
+        TestAssert.Equal("Sedang Dipakai", occupied.StatusLabel);
+        TestAssert.Equal(TableStatus.Occupied, occupied.Status);
+    }
+
+    public static async Task TableService_DeactivateAndReactivateAsync_TogglesDisabledStatus()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        await using var arrangeContext = database.CreateContext();
+        arrangeContext.Tables.Add(new Table
+        {
+            Id = 1,
+            TableNumber = "A1",
+            Capacity = 4,
+            Status = TableStatus.Available
+        });
+        await arrangeContext.SaveChangesAsync();
+
+        await using var context = database.CreateContext();
+        var service = new TableService(context, new FixedDateTimeProvider(DateTime.UtcNow));
+
+        var deactivateResult = await service.DeactivateAsync(1);
+        TestAssert.True(deactivateResult.Succeeded);
+        TestAssert.Equal("Meja berhasil dinonaktifkan", deactivateResult.Message);
+        TestAssert.Equal(TableStatus.Disabled, (await context.Tables.SingleAsync()).Status);
+
+        var reactivateResult = await service.ReactivateAsync(1);
+        TestAssert.True(reactivateResult.Succeeded);
+        TestAssert.Equal("Meja berhasil diaktifkan kembali", reactivateResult.Message);
+        TestAssert.Equal(TableStatus.Available, (await context.Tables.SingleAsync()).Status);
+    }
+
+    public static async Task TableService_DeactivateAsync_RejectsActiveSession_AndDisabledSessionCreation()
+    {
+        await using var database = await SqliteTestDatabase.CreateAsync();
+        var now = new DateTime(2026, 5, 12, 10, 0, 0, DateTimeKind.Utc);
+
+        await using (var arrangeContext = database.CreateContext())
+        {
+            arrangeContext.Tables.AddRange(
+                new Table { Id = 1, TableNumber = "1", Capacity = 4, Status = TableStatus.Occupied },
+                new Table { Id = 2, TableNumber = "2", Capacity = 4, Status = TableStatus.Disabled });
+            arrangeContext.TableSessions.Add(new TableSession
+            {
+                Id = 1,
+                TableId = 1,
+                CustomerType = CustomerType.Guest,
+                CustomerName = "Doni",
+                StartTime = now.AddMinutes(-20),
+                Status = TableSessionStatus.Active
+            });
+            await arrangeContext.SaveChangesAsync();
+        }
+
+        await using var context = database.CreateContext();
+        var service = new TableService(context, new FixedDateTimeProvider(now));
+
+        var deactivateResult = await service.DeactivateAsync(1);
+        TestAssert.False(deactivateResult.Succeeded);
+        TestAssert.Equal("Meja yang sedang digunakan tidak dapat dinonaktifkan", deactivateResult.Message);
+
+        var threw = false;
+        try
+        {
+            await service.EnsureActiveSessionAsync(2, CustomerType.Guest, null, "Dina");
+        }
+        catch (InvalidOperationException ex)
+        {
+            threw = true;
+            TestAssert.Equal("Meja ini sedang tidak tersedia", ex.Message);
+        }
+
+        TestAssert.True(threw, "Meja nonaktif seharusnya tidak dapat membuat sesi aktif.");
+    }
 }

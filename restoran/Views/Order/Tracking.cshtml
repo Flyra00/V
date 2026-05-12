@@ -4,6 +4,9 @@
     ViewData["Title"] = "Lacak Pesanan";
     ViewData["CustomerPage"] = "tracking";
     ViewData["CustomerActiveNav"] = "status";
+    ViewData["CustomerStatusHref"] = !string.IsNullOrWhiteSpace(Model.TrackingToken)
+        ? Url.Action("Tracking", "Order", new { token = Model.TrackingToken })
+        : "/Order/Tracking";
     ViewData["CustomerMenuHref"] = "/Customer/Index#menu-preview";
     ViewData["CustomerPromoHref"] = "/Customer/Index#promo-highlight";
     ViewData["CustomerHowHref"] = "/Customer/Index#how-it-works";
@@ -43,7 +46,7 @@
                     <i class="fas fa-bell-concierge"></i>
                     Status Pesanan
                 </span>
-                <h1 class="customer-section-title mt-3 mb-2">Pantau Pesanan Anda Secara Real-Time</h1>
+                <h1 class="customer-section-title mt-3 mb-2">Pantau Pesanan Anda Secara Langsung</h1>
                 <p class="customer-section-subtitle">
                     Tracking tetap memakai endpoint dan polling yang sama, tetapi sekarang tampil dalam layout desktop Ceria Resto
                     yang lebih rapi untuk memantau status dapur dan pembayaran.
@@ -102,7 +105,7 @@
                             <div>
                                 <span class="promo-chip mb-3"><i class="fas fa-plate-wheat"></i>Detail Item</span>
                                 <h2 class="customer-section-title mb-1">Rincian Pesanan</h2>
-                                <p class="customer-section-subtitle mb-0">Setiap item tetap menampilkan status proses yang dikirim dari kitchen.</p>
+                                <p class="customer-section-subtitle mb-0">Setiap item tetap menampilkan status proses yang dikirim dari dapur.</p>
                             </div>
                         </div>
 
@@ -154,7 +157,7 @@
                                 <strong>Rp @Model.Tax.ToString("N0")</strong>
                             </div>
                             <div class="tracking-summary-grid__row">
-                                <span>Service Charge</span>
+                                <span>Biaya Layanan</span>
                                 <strong>Rp @Model.ServiceCharge.ToString("N0")</strong>
                             </div>
                             @if (Model.Discount > 0)
@@ -185,7 +188,7 @@
                             <div>
                                 <span class="promo-chip mb-3"><i class="fas fa-cloud-arrow-up"></i>Upload Bukti</span>
                                 <h3>Konfirmasi Pembayaran</h3>
-                                <p class="customer-section-subtitle mb-0">Gunakan panel ini untuk mengunggah bukti bayar tanpa meninggalkan halaman tracking.</p>
+                                <p class="customer-section-subtitle mb-0">Gunakan panel ini untuk mengunggah bukti bayar tanpa meninggalkan halaman pelacakan.</p>
                             </div>
 
                             @if (Model.PaymentMethod == PaymentMethod.QRIS)
@@ -213,7 +216,7 @@
                                 <label class="customer-field-label" for="payment-proof">Unggah bukti pembayaran</label>
                                 <input type="file" id="payment-proof" class="tracking-file-input" accept="image/*">
                             </div>
-                            <button class="customer-primary-button w-100" type="button" onclick="uploadProof(@Model.TransactionId)">
+                            <button class="customer-primary-button w-100" type="button" onclick="uploadProof('@Model.TrackingToken')">
                                 <i class="fas fa-upload"></i>
                                 Unggah Bukti Bayar
                             </button>
@@ -284,12 +287,12 @@
     @if (!Model.IsEmptyState)
     {
         <script>
-            const trackingId = @Model.TransactionId;
+            const trackingToken = '@Model.TrackingToken';
             const refreshIntervalMs = @(Model.RefreshIntervalSeconds * 1000);
             let trackingTimer = null;
 
             function refreshTracking() {
-                fetch(`/Order/TrackingStatus/${trackingId}`)
+                fetch(`/Order/TrackingStatus?token=${encodeURIComponent(trackingToken)}`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Tracking tidak tersedia');
@@ -437,7 +440,7 @@
                 return document.querySelector('input[name="__RequestVerificationToken"]').value;
             }
 
-            function uploadProof(transactionId) {
+            function uploadProof(trackingTokenValue) {
                 const fileInput = document.getElementById('payment-proof');
                 if (!fileInput.files || fileInput.files.length === 0) {
                     showToast('Pilih file bukti pembayaran terlebih dahulu.', 'warning');
@@ -445,7 +448,7 @@
                 }
 
                 const formData = new FormData();
-                formData.append('transactionId', transactionId);
+                formData.append('token', trackingTokenValue);
                 formData.append('paymentProof', fileInput.files[0]);
 
                 fetch('/Order/UploadPaymentProof', {
@@ -470,7 +473,9 @@
             }
 
             updateTrackingSteps('@Model.OrderStatus');
-            trackingTimer = setInterval(refreshTracking, refreshIntervalMs);
+            if (trackingToken) {
+                trackingTimer = setInterval(refreshTracking, refreshIntervalMs);
+            }
         </script>
     }
 }

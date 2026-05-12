@@ -56,7 +56,7 @@
                                     <td class="text-end">Rp @Model.Tax.ToString("N0")</td>
                                 </tr>
                                 <tr>
-                                    <td colspan="3" class="text-end"><strong>Service Charge:</strong></td>
+                                    <td colspan="3" class="text-end"><strong>Biaya Layanan:</strong></td>
                                     <td class="text-end">Rp @Model.ServiceCharge.ToString("N0")</td>
                                 </tr>
                                 @if (Model.Discount > 0)
@@ -112,7 +112,7 @@
                                 <label class="form-label">Unggah Bukti Pembayaran</label>
                                 <input type="file" id="payment-proof" class="form-control" accept="image/*">
                             </div>
-                            <button class="btn btn-primary" onclick="uploadProof(@Model.Id)">
+                            <button class="btn btn-primary" onclick="uploadProof('@Model.TrackingToken')">
                                 <i class="fas fa-upload"></i> Unggah Bukti Bayar
                             </button>
                         </div>
@@ -141,7 +141,7 @@
             return document.querySelector('input[name="__RequestVerificationToken"]').value;
         }
 
-        function uploadProof(transactionId) {
+        function uploadProof(trackingToken) {
             const fileInput = document.getElementById('payment-proof');
             if (!fileInput.files || fileInput.files.length === 0) {
                 showToast('Pilih file bukti pembayaran terlebih dahulu.', 'warning');
@@ -149,7 +149,7 @@
             }
 
             const formData = new FormData();
-            formData.append('transactionId', transactionId);
+            formData.append('token', trackingToken);
             formData.append('paymentProof', fileInput.files[0]);
 
             fetch('/Order/UploadPaymentProof', {

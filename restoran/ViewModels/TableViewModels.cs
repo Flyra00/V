@@ -25,6 +25,9 @@ namespace Restoran.ViewModels
         public int Capacity { get; init; }
         public TableStatus Status { get; init; }
         public string StatusLabel { get; init; } = string.Empty;
+        public bool IsDisabled { get; init; }
+        public bool CanDeactivate { get; init; }
+        public bool CanReactivate { get; init; }
         public bool HasActiveSession { get; init; }
         public DateTime? SessionStartedAt { get; init; }
         public string SessionCustomerType { get; init; } = string.Empty;

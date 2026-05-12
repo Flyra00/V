@@ -35,8 +35,13 @@ namespace Restoran.Controllers
         {
             if (ModelState.IsValid)
             {
-                var userId = _authCookieService.GetAuthenticatedSession(Request)?.UserId ?? 1;
-                var result = await _assetLogService.CreateAsync(model, userId);
+                var userId = _authCookieService.GetAuthenticatedSession(Request)?.UserId;
+                if (!userId.HasValue)
+                {
+                    return Challenge();
+                }
+
+                var result = await _assetLogService.CreateAsync(model, userId.Value);
                 if (result.Succeeded)
                 {
                     TempData["Success"] = result.Message;
@@ -72,8 +77,13 @@ namespace Restoran.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Approve(int id)
         {
-            var approverUserId = _authCookieService.GetAuthenticatedSession(Request)?.UserId ?? 1;
-            var result = await _assetLogService.ApproveAsync(id, approverUserId);
+            var approverUserId = _authCookieService.GetAuthenticatedSession(Request)?.UserId;
+            if (!approverUserId.HasValue)
+            {
+                return Challenge();
+            }
+
+            var result = await _assetLogService.ApproveAsync(id, approverUserId.Value);
             if (result.IsNotFound)
             {
                 return NotFound();

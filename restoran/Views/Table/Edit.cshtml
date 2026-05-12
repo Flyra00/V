@@ -39,17 +39,18 @@
                         <div class="mb-3">
                             <label asp-for="Status" class="form-label fw-bold"></label>
                             <select asp-for="Status" class="form-select" disabled="@Model.HasActiveSession">
-                                <option value="@TableStatus.Available">Available</option>
-                                <option value="@TableStatus.Reserved">Reserved</option>
+                                <option value="@TableStatus.Available">Tersedia</option>
+                                <option value="@TableStatus.Reserved">Reservasi</option>
+                                <option value="@TableStatus.Disabled">Nonaktif</option>
                                 @if (Model.HasActiveSession)
                                 {
-                                    <option value="@TableStatus.Occupied">Occupied</option>
+                                    <option value="@TableStatus.Occupied">Sedang Dipakai</option>
                                 }
                             </select>
                             @if (Model.HasActiveSession)
                             {
                                 <input type="hidden" asp-for="Status" />
-                                <small class="text-muted">Status occupied dikendalikan otomatis oleh sesi meja aktif.</small>
+                                <small class="text-muted">Status sedang dipakai dikendalikan otomatis oleh sesi meja aktif.</small>
                             }
                             <span asp-validation-for="Status" class="text-danger small"></span>
                         </div>

@@ -19,6 +19,10 @@
     var orderConfig = new
     {
         tableId = Model.TableId,
+        isMember = Model.IsMember,
+        memberId = Model.MemberId,
+        memberDiscountRate = Model.MemberDiscountRate,
+        customerName = Model.CustomerName,
         taxRate = Model.TaxRate,
         taxName = Model.TaxName,
         serviceChargeRate = Model.ServiceChargeRate,
@@ -48,7 +52,7 @@
                 <h1>Menu Hangat untuk Meja <span class="text-nowrap">#@Model.TableNumber</span></h1>
                 <p>
                     Pilih hidangan favorit Anda, atur catatan pesanan, dan konfirmasi langsung dari halaman ini.
-                    Semua perhitungan subtotal, @Model.TaxName, service charge, dan promo otomatis tersinkron.
+                    Semua perhitungan subtotal, @Model.TaxName, biaya layanan, dan promo otomatis tersinkron.
                 </p>
                 <div class="d-flex flex-wrap gap-3 mt-4">
                     <a class="customer-primary-button" href="#order-catalog">
@@ -82,7 +86,7 @@
                     </span>
                     <div>
                         <strong>Siap Dimasak</strong>
-                        <div class="customer-section-subtitle">Pesanan masuk real-time ke kasir dan kitchen.</div>
+                        <div class="customer-section-subtitle">Pesanan masuk secara langsung ke kasir dan dapur.</div>
                     </div>
                 </div>
             </div>
@@ -236,14 +240,14 @@
                         Cara Pesan
                     </div>
                     <h2 class="customer-section-title">Pesan Lebih Cepat dari Desktop</h2>
-                    <div class="customer-section-subtitle">Alur order tetap sama, hanya tampilannya yang dibuat lebih nyaman untuk layar besar.</div>
+                    <div class="customer-section-subtitle">Alur pemesanan tetap sama, hanya tampilannya yang dibuat lebih nyaman untuk layar besar.</div>
                 </div>
 
                 <div class="landing-step-grid">
                     <article class="landing-step-card">
                         <div class="landing-step-card__icon"><i class="fas fa-table-cells-large"></i></div>
                         <h3>Pilih Menu</h3>
-                        <p>Gunakan search dan category chips untuk menyaring menu tanpa membuat halaman terasa penuh.</p>
+                        <p>Gunakan pencarian dan kategori untuk menyaring menu tanpa membuat halaman terasa penuh.</p>
                     </article>
                     <article class="landing-step-card">
                         <div class="landing-step-card__icon"><i class="fas fa-note-sticky"></i></div>
@@ -253,7 +257,7 @@
                     <article class="landing-step-card">
                         <div class="landing-step-card__icon"><i class="fas fa-credit-card"></i></div>
                         <h3>Konfirmasi</h3>
-                        <p>Pilih metode pembayaran, cek total, lalu kirim order ke backend yang sama seperti sebelumnya.</p>
+                        <p>Pilih metode pembayaran, cek total, lalu kirim pesanan ke sistem yang sama seperti sebelumnya.</p>
                     </article>
                 </div>
             </section>
@@ -329,12 +333,12 @@
 
             <div class="summary-meta">
                 <i class="fas fa-circle-info"></i>
-                <span>Promo dan diskon member dihitung otomatis sesuai rule backend saat ini.</span>
+                <span>Promo dan diskon member dihitung otomatis sesuai aturan sistem saat ini.</span>
             </div>
 
             <div class="summary-cta-group">
                 <button id="summary-confirm-order" class="drawer-primary-button" type="button">Konfirmasi Pesanan</button>
-                <button class="drawer-secondary-button" type="button" data-cart-toggle>Lihat Drawer Keranjang</button>
+                <button class="drawer-secondary-button" type="button" data-cart-toggle>Buka Panel Keranjang</button>
             </div>
         </aside>
     </section>

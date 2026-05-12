@@ -46,8 +46,8 @@
                             <i class="fas fa-chart-line fa-2x text-white"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold">Dashboard Owner</h5>
-                    <p class="text-muted small">Monitoring pendapatan real-time dan analitik bisnis lengkap</p>
+                    <h5 class="fw-bold">Dashboard Pemilik</h5>
+                    <p class="text-muted small">Monitoring pendapatan secara langsung dan analitik bisnis lengkap</p>
                     <a href="/Dashboard" class="btn btn-gradient-primary btn-sm">Buka Dashboard</a>
                 </div>
             </div>
@@ -115,8 +115,8 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                    <h5 class="fw-bold mb-2">Pembaruan Real-Time</h5>
-                            <p class="text-muted mb-0">Data transaksi dan stok diperbarui secara real-time untuk monitoring akurat.</p>
+                    <h5 class="fw-bold mb-2">Pembaruan Langsung</h5>
+                            <p class="text-muted mb-0">Data transaksi dan stok diperbarui secara langsung untuk monitoring akurat.</p>
                         </div>
                     </div>
                 </div>
@@ -170,7 +170,7 @@
                         <div class="col-md-3 col-sm-6">
                             <a href="/Admin" class="btn btn-outline-primary w-100 py-3">
                                 <i class="fas fa-users-cog fa-2x mb-2 d-block"></i>
-                                <span>Manajemen User</span>
+                                <span>Manajemen Pengguna</span>
                             </a>
                         </div>
                         <div class="col-md-3 col-sm-6">
@@ -252,7 +252,7 @@
         <div class="modal-content border-0">
             <div class="modal-header border-0">
                 <h5 class="modal-title fw-bold" id="memberAuthTitle">
-                    <i class="fas fa-crown text-warning me-2"></i>Login Member
+                    <i class="fas fa-crown text-warning me-2"></i>Masuk Member
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -264,11 +264,11 @@
                         <input type="email" class="form-control" id="memberEmail" placeholder="email@example.com">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Password</label>
+                        <label class="form-label fw-bold">Kata Sandi</label>
                         <input type="password" class="form-control" id="memberPassword" placeholder="********">
                     </div>
                     <button type="button" class="btn btn-gradient-primary w-100 py-3" onclick="memberLogin()">
-                        <i class="fas fa-sign-in-alt me-2"></i>LOGIN
+                        <i class="fas fa-sign-in-alt me-2"></i>MASUK
                     </button>
                     <div class="text-center mt-3">
                         <span class="text-muted">Belum punya akun? </span>
@@ -281,8 +281,8 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label fw-bold">Username</label>
-                                <input type="text" class="form-control" id="regUsername" placeholder="username">
+                                <label class="form-label fw-bold">Nama Pengguna</label>
+                                <input type="text" class="form-control" id="regUsername" placeholder="nama pengguna">
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -301,7 +301,7 @@
                         <input type="tel" class="form-control" id="regPhone" placeholder="08123456789">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Password</label>
+                        <label class="form-label fw-bold">Kata Sandi</label>
                         <input type="password" class="form-control" id="regPassword" placeholder="********">
                     </div>
                     <button type="button" class="btn btn-gradient-success w-100 py-3" onclick="memberRegister()">
@@ -309,7 +309,7 @@
                     </button>
                     <div class="text-center mt-3">
                         <span class="text-muted">Sudah punya akun? </span>
-                        <a href="#" class="text-decoration-none" onclick="showLoginForm()">Login</a>
+                        <a href="#" class="text-decoration-none" onclick="showLoginForm()">Masuk</a>
                     </div>
                 </div>
             </div>
@@ -393,7 +393,7 @@
         function showLoginForm() {
             document.getElementById('registerFormSection').style.display = 'none';
             document.getElementById('loginFormSection').style.display = 'block';
-            document.getElementById('memberAuthTitle').innerHTML = '<i class="fas fa-crown text-warning me-2"></i>Login Member';
+            document.getElementById('memberAuthTitle').innerHTML = '<i class="fas fa-crown text-warning me-2"></i>Masuk Member';
         }
 
         function memberLogin() {
@@ -422,7 +422,7 @@
             })
             .then(data => {
                 if (data && !data.success) {
-                    showToast(data.message || 'Login member gagal.', 'error');
+                    showToast(data.message || 'Masuk member gagal.', 'error');
                 }
             })
             .catch(error => {

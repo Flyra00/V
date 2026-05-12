@@ -15,6 +15,7 @@
     var products = (ViewBag.Products as IReadOnlyList<Product> ?? Array.Empty<Product>())
         .Take(6)
         .ToList();
+    var hasAvailableTable = tables.Any(table => table.CanStartOrder);
 }
 
 @Html.AntiForgeryToken()
@@ -28,8 +29,8 @@
             </span>
             <h1>Makan Enak, Suasana Hangat, Pesan Lebih Cepat</h1>
             <p>
-                Halaman customer kini difokuskan untuk desktop: pilih meja, lihat menu, dan kirim pesanan ke kasir serta kitchen
-                tanpa alur backend berubah.
+                Halaman pelanggan kini difokuskan untuk desktop: pilih meja, lihat menu, dan kirim pesanan ke kasir serta dapur
+                tanpa alur sistem berubah.
             </p>
             <div class="d-flex flex-wrap gap-3 mt-4">
                 <button class="customer-primary-button" type="button" onclick="showOrderTableModal()">
@@ -117,7 +118,7 @@
             <article class="landing-step-card">
                 <div class="landing-step-card__icon"><i class="fas fa-chair"></i></div>
                 <h3>Pilih Meja</h3>
-                <p>Mulai dari meja yang tersedia agar session customer langsung tercatat dengan benar.</p>
+                <p>Mulai dari meja yang tersedia agar sesi pelanggan langsung tercatat dengan benar.</p>
             </article>
             <article class="landing-step-card">
                 <div class="landing-step-card__icon"><i class="fas fa-list-check"></i></div>
@@ -127,7 +128,7 @@
             <article class="landing-step-card">
                 <div class="landing-step-card__icon"><i class="fas fa-bell-concierge"></i></div>
                 <h3>Pantau Status</h3>
-                <p>Setelah submit, status pesanan tetap dapat dilihat melalui tracking page yang aktif.</p>
+                <p>Setelah dikirim, status pesanan tetap dapat dilihat melalui halaman pelacakan yang aktif.</p>
             </article>
         </div>
     </section>
@@ -145,6 +146,14 @@
                     Pilih meja untuk tamu, atau login sebagai member supaya promo dan status pesanan tetap terikat ke session meja aktif.
                 </p>
 
+                @if (!hasAvailableTable)
+                {
+                    <div class="alert alert-warning border-0 mb-4" role="alert">
+                        <i class="fas fa-circle-info me-2"></i>
+                        Belum ada meja yang tersedia saat ini. Anda tetap bisa masuk atau daftar sebagai member, tetapi pemesanan baru dapat dibuat setelah meja tersedia.
+                    </div>
+                }
+
                 <label class="customer-field-label" for="tableSelect">Meja Tersedia</label>
                 <select class="customer-form-select" id="tableSelect">
                     <option value="">Pilih meja...</option>
@@ -155,15 +164,16 @@
                         </option>
                     }
                 </select>
+                <div class="customer-section-subtitle mt-2">Pilih meja berstatus Tersedia untuk memulai pesanan tamu.</div>
 
                 <div class="d-grid gap-3 mt-4">
-                    <button type="button" class="customer-primary-button" onclick="selectUserType('guest')">
+                    <button type="button" class="customer-primary-button" onclick="selectUserType('guest')" @(!hasAvailableTable ? "disabled" : null)>
                         <i class="fas fa-user"></i>
                         Lanjut sebagai Tamu
                     </button>
                     <button type="button" class="customer-secondary-button" onclick="selectUserType('login')">
                         <i class="fas fa-right-to-bracket"></i>
-                        Login / Daftar Member
+                        Masuk / Daftar Member
                     </button>
                 </div>
             </div>
@@ -184,6 +194,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
 
+                @if (!hasAvailableTable)
+                {
+                    <div class="alert alert-warning border-0 mt-4 mb-0" role="alert">
+                        <i class="fas fa-circle-info me-2"></i>
+                        Belum ada meja yang tersedia saat ini. Anda tetap bisa masuk atau daftar sebagai member.
+                    </div>
+                }
+
                 <div class="mt-4">
                     <label class="customer-field-label" for="modalTableSelect">Meja Tersedia</label>
                     <select class="customer-form-select" id="modalTableSelect">
@@ -195,16 +213,17 @@
                             </option>
                         }
                     </select>
+                    <div class="customer-section-subtitle mt-2">Pilih meja berstatus Tersedia untuk memulai pesanan tamu.</div>
                 </div>
 
                 <div class="d-grid gap-3 mt-4">
-                    <button type="button" class="customer-primary-button" onclick="selectUserType('guest')">
+                    <button type="button" class="customer-primary-button" onclick="selectUserType('guest')" @(!hasAvailableTable ? "disabled" : null)>
                         <i class="fas fa-user"></i>
                         Lanjut sebagai Tamu
                     </button>
                     <button type="button" class="customer-secondary-button" onclick="selectUserType('login')">
                         <i class="fas fa-user-plus"></i>
-                        Login atau Daftar
+                        Masuk atau Daftar
                     </button>
                 </div>
             </div>
@@ -220,7 +239,7 @@
                     <div>
                         <span class="promo-chip mb-3"><i class="fas fa-id-card"></i>Akses Member</span>
                         <h3 id="memberAuthTitle" class="mb-2">Masuk sebagai Pelanggan</h3>
-                        <p class="customer-section-subtitle mb-0">Masuk sebagai member untuk membawa promo dan status pesanan ke session meja aktif.</p>
+                        <p class="customer-section-subtitle mb-0">Masuk sebagai member untuk membawa promo dan status pesanan ke sesi meja aktif.</p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
@@ -228,12 +247,12 @@
                 <div id="loginFormSection" class="mt-4">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="customer-field-label" for="memberEmail">Email atau Username</label>
-                            <input class="customer-form-control" id="memberEmail" type="text" placeholder="Masukkan email atau username" />
+                            <label class="customer-field-label" for="memberEmail">Email atau Nama Pengguna</label>
+                            <input class="customer-form-control" id="memberEmail" type="text" placeholder="Masukkan email atau nama pengguna" />
                         </div>
                         <div class="col-12">
-                            <label class="customer-field-label" for="memberPassword">Password</label>
-                            <input class="customer-form-control" id="memberPassword" type="password" placeholder="Masukkan password" />
+                            <label class="customer-field-label" for="memberPassword">Kata Sandi</label>
+                            <input class="customer-form-control" id="memberPassword" type="password" placeholder="Masukkan kata sandi" />
                         </div>
                     </div>
                 <button type="button" class="customer-primary-button mt-4 w-100" onclick="memberLogin()">
@@ -248,8 +267,8 @@
                 <div id="registerFormSection" class="mt-4" style="display: none;">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="customer-field-label" for="regUsername">Username</label>
-                            <input class="customer-form-control" id="regUsername" type="text" placeholder="username" />
+                            <label class="customer-field-label" for="regUsername">Nama Pengguna</label>
+                            <input class="customer-form-control" id="regUsername" type="text" placeholder="nama pengguna" />
                         </div>
                         <div class="col-md-6">
                             <label class="customer-field-label" for="regEmail">Email</label>
@@ -264,8 +283,8 @@
                             <input class="customer-form-control" id="regPhone" type="tel" placeholder="08123456789" />
                         </div>
                         <div class="col-12">
-                            <label class="customer-field-label" for="regPassword">Password</label>
-                            <input class="customer-form-control" id="regPassword" type="password" placeholder="Masukkan password" />
+                            <label class="customer-field-label" for="regPassword">Kata Sandi</label>
+                            <input class="customer-form-control" id="regPassword" type="password" placeholder="Masukkan kata sandi" />
                         </div>
                     </div>
                     <button type="button" class="customer-primary-button mt-4 w-100" onclick="memberRegister()">
@@ -273,7 +292,7 @@
                         Daftar Member
                     </button>
                     <div class="text-center mt-3">
-                        Sudah punya akun? <a href="#" class="text-decoration-underline" onclick="showLoginForm(); return false;">Kembali ke login</a>
+                        Sudah punya akun? <a href="#" class="text-decoration-underline" onclick="showLoginForm(); return false;">Kembali ke halaman masuk</a>
                     </div>
                 </div>
             </div>
@@ -283,7 +302,10 @@
 
 @section Scripts {
     <script>
+        const landingErrorMessage = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["Error"]?.ToString()));
         let selectedTableId = null;
+        let lastToastMessage = '';
+        let lastToastAt = 0;
 
         function getRequestVerificationToken() {
             return document.querySelector('input[name="__RequestVerificationToken"]').value;
@@ -312,17 +334,29 @@
             new bootstrap.Modal(document.getElementById('orderTableModal')).show();
         }
 
-        function selectUserType(type) {
-            const tableValue = getSelectedTable();
-            if (!tableValue) {
-                showToast('Silakan pilih meja yang tersedia terlebih dahulu.', 'warning');
+        function showToastOnce(message, type = 'info') {
+            const now = Date.now();
+            if (message === lastToastMessage && now - lastToastAt < 2000) {
                 return;
             }
 
-            selectedTableId = tableValue;
-            syncTableSelectors(tableValue);
+            lastToastMessage = message;
+            lastToastAt = now;
+            showToast(message, type);
+        }
+
+        function selectUserType(type) {
+            const tableValue = getSelectedTable();
 
             if (type === 'guest') {
+                if (!tableValue) {
+                    showToastOnce('Silakan pilih meja yang tersedia terlebih dahulu.', 'warning');
+                    return;
+                }
+
+                selectedTableId = tableValue;
+                syncTableSelectors(tableValue);
+
                 fetch('/Home/GuestLogin', {
                     method: 'POST',
                     headers: {
@@ -345,20 +379,38 @@
                 return;
             }
 
-            bootstrap.Modal.getInstance(document.getElementById('orderTableModal'))?.hide();
-            new bootstrap.Modal(document.getElementById('memberAuthModal')).show();
+            if (type === 'login') {
+                selectedTableId = tableValue || null;
+
+                if (selectedTableId) {
+                    syncTableSelectors(selectedTableId);
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('orderTableModal'))?.hide();
+                new bootstrap.Modal(document.getElementById('memberAuthModal')).show();
+            }
         }
 
-        function showRegisterForm() {
-            document.getElementById('loginFormSection').style.display = 'none';
-            document.getElementById('registerFormSection').style.display = 'block';
-            document.getElementById('memberAuthTitle').textContent = 'Daftar Member';
+        function buildMemberLoginBody(email, password) {
+            const body = new URLSearchParams();
+            body.set('email', email);
+            body.set('password', password);
+
+            if (selectedTableId) {
+                body.set('tableId', selectedTableId);
+            }
+
+            return body.toString();
         }
 
-        function showLoginForm() {
-            document.getElementById('registerFormSection').style.display = 'none';
-            document.getElementById('loginFormSection').style.display = 'block';
-            document.getElementById('memberAuthTitle').textContent = 'Masuk sebagai Pelanggan';
+        function resolveMemberRedirect(data) {
+            if (selectedTableId && data.role === 'Member') {
+                window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
+                return true;
+            }
+
+            window.location.href = data.redirectUrl || '/Customer/Index';
+            return true;
         }
 
         function memberLogin() {
@@ -366,7 +418,7 @@
             const password = document.getElementById('memberPassword').value;
 
             if (!email || !password) {
-                showToast('Email/Username dan password wajib diisi.', 'warning');
+                showToast('Email atau nama pengguna dan kata sandi wajib diisi.', 'warning');
                 return;
             }
 
@@ -376,7 +428,7 @@
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'RequestVerificationToken': getRequestVerificationToken()
                 },
-                body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&tableId=${selectedTableId}`
+                body: buildMemberLoginBody(email, password)
             })
             .then(response => response.json())
             .then(data => {
@@ -385,12 +437,7 @@
                     return;
                 }
 
-                if (selectedTableId && data.role === 'Member') {
-                    window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
-                    return;
-                }
-
-                window.location.href = data.redirectUrl;
+                resolveMemberRedirect(data);
             })
             .catch(error => showToast(`Terjadi kesalahan: ${error.message}`, 'error'));
         }
@@ -402,7 +449,7 @@
                 password: document.getElementById('regPassword').value,
                 fullName: document.getElementById('regFullName').value,
                 phone: document.getElementById('regPhone').value,
-                tableId: selectedTableId
+                tableId: selectedTableId ? Number(selectedTableId) : null
             };
 
             if (!data.username || !data.email || !data.password || !data.fullName) {
@@ -425,9 +472,31 @@
                     return;
                 }
 
-                window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
+                if (selectedTableId) {
+                    window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
+                    return;
+                }
+
+                window.location.href = result.redirectUrl || '/Customer/Index';
             })
             .catch(error => showToast(`Terjadi kesalahan: ${error.message}`, 'error'));
         }
+
+        function showRegisterForm() {
+            document.getElementById('loginFormSection').style.display = 'none';
+            document.getElementById('registerFormSection').style.display = 'block';
+            document.getElementById('memberAuthTitle').textContent = 'Daftar Member';
+        }
+
+        function showLoginForm() {
+            document.getElementById('registerFormSection').style.display = 'none';
+            document.getElementById('loginFormSection').style.display = 'block';
+            document.getElementById('memberAuthTitle').textContent = 'Masuk sebagai Pelanggan';
+        }
+
+        if (landingErrorMessage) {
+            showToast(landingErrorMessage, 'warning');
+        }
+
     </script>
 }

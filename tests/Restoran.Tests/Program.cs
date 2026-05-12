@@ -35,8 +35,14 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Promo admin update persists changes", PromoTests.AdminService_UpdatePromoAsync_PersistsChanges),
     ("Table session closes after served and paid", TableSessionTests.TableSession_Closes_WhenOrderServedAndPaymentPaid),
     ("Table duplicate number validation", TableSessionTests.TableService_CreateAsync_RejectsDuplicateTableNumber),
+    ("Customer table options block disabled and occupied tables", TableSessionTests.TableService_GetCustomerTableOptionsAsync_MarksDisabledAndOccupiedTablesAsUnavailable),
+    ("Table deactivate and reactivate toggle status", TableSessionTests.TableService_DeactivateAndReactivateAsync_TogglesDisabledStatus),
+    ("Table deactivate rejects active session and disabled table blocks session", TableSessionTests.TableService_DeactivateAsync_RejectsActiveSession_AndDisabledSessionCreation),
     ("Cashier confirm payment", OrderAndOperationsTests.ConfirmPaymentAsync_MarksTransactionAsPaid),
     ("Kitchen status propagation", OrderAndOperationsTests.UpdateStatusAsync_PropagatesStatusToOrderDetails),
+    ("Order menu rejects disabled table", OrderAndOperationsTests.GetMenuAsync_ReturnsNull_ForDisabledTable),
+    ("Order menu keeps table available before submit", OrderAndOperationsTests.GetMenuAsync_DoesNotCreateTableSession_ForAvailableTable),
+    ("Order create rejects reserved table", OrderAndOperationsTests.CreateOrderAsync_RejectsReservedTable),
     ("Asset log create deducts stock", OrderAndOperationsTests.AssetLogService_CreateAsync_DeductsStockAndCreatesReportedLog),
     ("Asset log approve sets approval fields", OrderAndOperationsTests.AssetLogService_ApproveAsync_SetsApprovalFields)
 };

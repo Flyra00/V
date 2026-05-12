@@ -84,7 +84,7 @@
                 @if (!string.IsNullOrEmpty(item.Notes))
                 {
                     <div style="font-size: 10px; color: #666; margin-left: 15px; margin-bottom: 5px;">
-                        Note: @item.Notes
+                        Catatan: @item.Notes
                     </div>
                 }
             }
@@ -100,7 +100,7 @@
                 <span>Rp @Model.Tax.ToString("N0")</span>
             </div>
             <div class="item-row">
-                <span>Service Charge:</span>
+                <span>Biaya Layanan:</span>
                 <span>Rp @Model.ServiceCharge.ToString("N0")</span>
             </div>
             @if (Model.Discount > 0)
