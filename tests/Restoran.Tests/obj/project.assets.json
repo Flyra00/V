@@ -8,7 +8,7 @@
     "net8.0": []
   },
   "packageFolders": {
-    "C:\\Users\\ASUS\\.nuget\\packages\\": {},
+    "C:\\Users\\CodexSandboxOffline\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -17,7 +17,7 @@
       "projectUniqueName": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj",
       "projectName": "Restoran.Tests",
       "projectPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\tests\\Restoran.Tests\\Restoran.Tests.csproj",
-      "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\CodexSandboxOffline\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\tests\\Restoran.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [

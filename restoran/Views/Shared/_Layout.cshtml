@@ -12,9 +12,18 @@
                 return null;
             }
 
+            roleCookie = roleCookie.Trim();
+
             if (Enum.TryParse<Restoran.Models.UserRole>(roleCookie, ignoreCase: true, out var directRole))
             {
                 return directRole;
+            }
+
+            var compactRole = roleCookie.Split('.', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+            if (!string.IsNullOrWhiteSpace(compactRole) &&
+                Enum.TryParse<Restoran.Models.UserRole>(compactRole, ignoreCase: true, out var qualifiedRole))
+            {
+                return qualifiedRole;
             }
 
             if (string.Equals(roleCookie, "Administrator", StringComparison.OrdinalIgnoreCase))

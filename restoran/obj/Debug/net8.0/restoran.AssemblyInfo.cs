@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("restoran")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28e44ac564fac796c4db31c1a79faf8e134e0de9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b715f7a3b76dea48def6b983f5ccc1624fad2c4a")]
 [assembly: System.Reflection.AssemblyProductAttribute("restoran")]
 [assembly: System.Reflection.AssemblyTitleAttribute("restoran")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
