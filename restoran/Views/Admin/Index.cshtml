@@ -43,7 +43,7 @@
                             <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
-                            <th>Created At</th>
+                            <th>Dibuat Pada</th>
                             <th>Last Login</th>
                             <th>Aksi</th>
                         </tr>
@@ -81,7 +81,7 @@
                                 <td>@(user.LastLogin?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                                 <td>
                                     <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit"></i> Edit
+                                        <i class="fas fa-edit"></i> Ubah
                                     </a>
                                     @if (user.IsActive)
                                     {
@@ -112,39 +112,65 @@
         }
 
         function deleteUser(id) {
-            if (confirm('Apakah Anda yakin ingin menonaktifkan user ini?')) {
-                fetch(`/Admin/Delete/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': getRequestVerificationToken()
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        location.reload();
-                    }
-                });
-            }
+            showConfirmDialog({
+                title: 'Nonaktifkan User',
+                message: 'Apakah Anda yakin ingin menonaktifkan user ini?',
+                confirmText: 'Ya, nonaktifkan',
+                cancelText: 'Batal',
+                variant: 'danger',
+                onConfirm: () => {
+                    fetch(`/Admin/Delete/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': getRequestVerificationToken()
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message || 'User berhasil dinonaktifkan.', 'success');
+                            location.reload();
+                            return;
+                        }
+
+                        showToast(data.message || 'Gagal menonaktifkan user.', 'error');
+                    })
+                    .catch(error => {
+                        showToast(`Terjadi kesalahan: ${error.message}`, 'error');
+                    });
+                }
+            });
         }
 
         function activateUser(id) {
-            if (confirm('Apakah Anda yakin ingin mengaktifkan user ini?')) {
-                fetch(`/Admin/Activate/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': getRequestVerificationToken()
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        location.reload();
-                    }
-                });
-            }
+            showConfirmDialog({
+                title: 'Aktifkan User',
+                message: 'Apakah Anda yakin ingin mengaktifkan user ini kembali?',
+                confirmText: 'Ya, aktifkan',
+                cancelText: 'Batal',
+                variant: 'success',
+                onConfirm: () => {
+                    fetch(`/Admin/Activate/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': getRequestVerificationToken()
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message || 'User berhasil diaktifkan.', 'success');
+                            location.reload();
+                            return;
+                        }
+
+                        showToast(data.message || 'Gagal mengaktifkan user.', 'error');
+                    })
+                    .catch(error => {
+                        showToast(`Terjadi kesalahan: ${error.message}`, 'error');
+                    });
+                }
+            });
         }
     </script>
 }

@@ -68,21 +68,34 @@
         }
 
         function approve(id) {
-            if (confirm('Setujui laporan ini?')) {
-                fetch(`/AssetLog/Approve/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': getRequestVerificationToken()
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        location.reload();
-                    }
-                });
-            }
+            showConfirmDialog({
+                title: 'Setujui Laporan',
+                message: 'Apakah Anda yakin ingin menyetujui laporan ini?',
+                confirmText: 'Ya, setujui',
+                cancelText: 'Batal',
+                variant: 'success',
+                onConfirm: () => {
+                    fetch(`/AssetLog/Approve/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': getRequestVerificationToken()
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message || 'Laporan berhasil disetujui.', 'success');
+                            location.reload();
+                            return;
+                        }
+
+                        showToast(data.message || 'Gagal menyetujui laporan.', 'error');
+                    })
+                    .catch(error => {
+                        showToast(`Terjadi kesalahan: ${error.message}`, 'error');
+                    });
+                }
+            });
         }
     </script>
 }

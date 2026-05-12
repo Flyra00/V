@@ -19,13 +19,13 @@
                             <p class="lead text-white-50 mb-4">Sistem Manajemen Restoran Terintegrasi dengan fitur lengkap untuk mengelola operasional bisnis Anda.</p>
                             <div class="d-flex gap-3 flex-wrap">
                                 <a href="/Dashboard" class="btn btn-light btn-lg px-4">
-                                    <i class="fas fa-chart-line me-2"></i>Dashboard Owner
+                                    <i class="fas fa-chart-line me-2"></i>Dashboard Pemilik
                                 </a>
                                 <a href="/Home/Login" class="btn btn-outline-light btn-lg px-4">
                                     <i class="fas fa-sign-in-alt me-2"></i>Login
                                 </a>
                                 <button type="button" class="btn btn-warning btn-lg px-4" onclick="showOrderTableModal()">
-                                    <i class="fas fa-utensils me-2"></i>Order Table
+                                    <i class="fas fa-utensils me-2"></i>Pesan di Meja
                                 </button>
                             </div>
                         </div>
@@ -61,9 +61,9 @@
                             <i class="fas fa-fire fa-2x text-white"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold">Kitchen Display</h5>
+                    <h5 class="fw-bold">Layar Dapur</h5>
                     <p class="text-muted small">Kelola pesanan masuk secara efisien dengan antarmuka yang intuitif</p>
-                    <a href="/Kitchen/Display" class="btn btn-gradient-primary btn-sm">Buka Kitchen</a>
+                    <a href="/Kitchen/Display" class="btn btn-gradient-primary btn-sm">Buka Dapur</a>
                 </div>
             </div>
         </div>
@@ -76,7 +76,7 @@
                             <i class="fas fa-boxes fa-2x text-white"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold">Inventory</h5>
+                    <h5 class="fw-bold">Inventaris</h5>
                     <p class="text-muted small">Manajemen inventaris aset dan ketersediaan menu dengan notifikasi otomatis</p>
                     <a href="/Supervisor/Assets" class="btn btn-gradient-primary btn-sm">Kelola Inventaris</a>
                 </div>
@@ -115,7 +115,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h5 class="fw-bold mb-2">Real-time Updates</h5>
+                    <h5 class="fw-bold mb-2">Pembaruan Real-Time</h5>
                             <p class="text-muted mb-0">Data transaksi dan stok diperbarui secara real-time untuk monitoring akurat.</p>
                         </div>
                     </div>
@@ -133,7 +133,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h5 class="fw-bold mb-2">Role-based Access</h5>
+                    <h5 class="fw-bold mb-2">Akses Berbasis Role</h5>
                             <p class="text-muted mb-0">Sistem akses berbasis peran untuk keamanan dan kontrol yang lebih baik.</p>
                         </div>
                     </div>
@@ -151,7 +151,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h5 class="fw-bold mb-2">Mobile Friendly</h5>
+                    <h5 class="fw-bold mb-2">Ramah Perangkat Mobile</h5>
                             <p class="text-muted mb-0">Akses dari perangkat mobile dengan antarmuka yang responsif dan intuitif.</p>
                         </div>
                     </div>
@@ -221,7 +221,7 @@
                 <div class="mb-4">
                     <label class="form-label fw-bold">Nomor Meja</label>
                     <select class="form-select form-select-lg" id="tableSelect">
-                        <option value="">Pilih Meja...</option>
+                        <option value="">Pilih meja...</option>
                         <option value="1">Meja 1</option>
                         <option value="2">Meja 2</option>
                         <option value="3">Meja 3</option>
@@ -235,10 +235,10 @@
 
                 <div class="d-grid gap-2">
                     <button type="button" class="btn btn-outline-primary py-3" onclick="selectUserType('guest')">
-                        <i class="fas fa-user me-2"></i>LANJUT SEBAGAI TAMU
+                        <i class="fas fa-user me-2"></i>Lanjut sebagai Tamu
                     </button>
                     <button type="button" class="btn btn-gradient-primary py-3" onclick="selectUserType('member')">
-                        <i class="fas fa-crown me-2"></i>LANJUT SEBAGAI MEMBER
+                        <i class="fas fa-crown me-2"></i>Lanjut sebagai Member
                     </button>
                 </div>
             </div>
@@ -347,7 +347,7 @@
         function selectUserType(type) {
             const tableSelect = document.getElementById('tableSelect');
             if (!tableSelect.value) {
-                alert('Silakan pilih nomor meja terlebih dahulu');
+                showToast('Silakan pilih nomor meja terlebih dahulu.', 'warning');
                 return;
             }
 
@@ -370,7 +370,10 @@
                 .then(data => {
                     if (data.success) {
                         window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
+                        return;
                     }
+
+                    showToast(data.message || 'Gagal memulai sesi tamu.', 'error');
                 });
             } else {
                 // Show member auth modal
@@ -398,7 +401,7 @@
             const password = document.getElementById('memberPassword').value;
 
             if (!email || !password) {
-                alert('Email dan password wajib diisi');
+                showToast('Email dan password wajib diisi.', 'warning');
                 return;
             }
 
@@ -419,11 +422,12 @@
             })
             .then(data => {
                 if (data && !data.success) {
-                    alert(data.message);
+                    showToast(data.message || 'Login member gagal.', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
+                showToast(`Terjadi kesalahan: ${error.message}`, 'error');
             });
         }
 
@@ -438,7 +442,7 @@
             };
 
             if (!data.username || !data.email || !data.password || !data.fullName) {
-                alert('Semua field wajib diisi');
+                showToast('Semua field wajib diisi.', 'warning');
                 return;
             }
 
@@ -455,12 +459,12 @@
                 if (result.success) {
                     window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
                 } else {
-                    alert(result.message);
+                    showToast(result.message || 'Registrasi member gagal.', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan saat registrasi');
+                showToast(`Terjadi kesalahan saat registrasi: ${error.message}`, 'error');
             });
         }
 

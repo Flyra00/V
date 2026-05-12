@@ -9,7 +9,7 @@
     ViewData["CustomerPromoHref"] = "#promo-spotlight";
     ViewData["CustomerHowHref"] = "#how-it-works";
     ViewData["CustomerCtaHref"] = "#order-catalog";
-    ViewData["CustomerCtaText"] = "Order Now";
+    ViewData["CustomerCtaText"] = "Pesan Sekarang";
     Layout = "_OrderLayout";
 
     var allProducts = Model.ProductsByCategory
@@ -43,7 +43,7 @@
             <div class="customer-page-hero__content">
                 <span class="customer-page-hero__eyebrow">
                     <i class="fas fa-sparkles"></i>
-                    Desktop Ordering Ceria
+                    Pemesanan Desktop Ceria
                 </span>
                 <h1>Menu Hangat untuk Meja <span class="text-nowrap">#@Model.TableNumber</span></h1>
                 <p>
@@ -94,7 +94,7 @@
                 @if (Model.ActivePromos.Count > 0)
                 {
                     <p>
-                        Promo terbaik diterapkan otomatis saat checkout.
+                        Promo terbaik diterapkan otomatis saat konfirmasi pesanan.
                         @foreach (var promo in Model.ActivePromos.Take(2))
                         {
                             <span class="d-inline-block me-3"><strong>@promo.Name</strong> @promo.DiscountPercentage.ToString("N0")% mulai @promo.MinimumPurchase.ToString("C0", new System.Globalization.CultureInfo("id-ID"))</span>
@@ -248,7 +248,7 @@
                     <article class="landing-step-card">
                         <div class="landing-step-card__icon"><i class="fas fa-note-sticky"></i></div>
                         <h3>Isi Catatan</h3>
-                        <p>Tambahkan catatan per item lewat modal produk atau edit langsung dari cart drawer di sisi kanan.</p>
+                        <p>Tambahkan catatan per menu lewat modal produk atau edit langsung dari keranjang di sisi kanan.</p>
                     </article>
                     <article class="landing-step-card">
                         <div class="landing-step-card__icon"><i class="fas fa-credit-card"></i></div>
@@ -345,7 +345,7 @@
             <div>
                 <div class="cart-eyebrow">
                     <i class="fas fa-basket-shopping"></i>
-                    Cart Drawer
+                    Keranjang Pesanan
                 </div>
                 <h2>Keranjang Pesanan</h2>
                 <p id="drawer-item-count">Belum ada item</p>

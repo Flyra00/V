@@ -26,11 +26,11 @@
                 <h1 class="customer-section-title mb-3">Belum ada pesanan aktif</h1>
                 <p class="customer-section-subtitle mb-4">
                     Pesanan yang Anda buat dari meja ini akan muncul otomatis di halaman tracking.
-                    Setelah checkout, status kitchen dan pembayaran tetap dipantau dari sini.
+                    Setelah konfirmasi pesanan, status dapur dan pembayaran tetap dipantau dari sini.
                 </p>
                 <a href="/Customer/Index#table-cta" class="customer-primary-button mx-auto">
                     <i class="fas fa-utensils"></i>
-                    Kembali ke Flow Order
+                    Kembali ke Alur Pemesanan
                 </a>
             </article>
         </section>
@@ -41,12 +41,12 @@
             <div class="tracking-headline">
                 <span class="customer-page-hero__eyebrow">
                     <i class="fas fa-bell-concierge"></i>
-                    Status Pesanan Desktop
+                    Status Pesanan
                 </span>
                 <h1 class="customer-section-title mt-3 mb-2">Pantau Pesanan Anda Secara Real-Time</h1>
                 <p class="customer-section-subtitle">
                     Tracking tetap memakai endpoint dan polling yang sama, tetapi sekarang tampil dalam layout desktop Ceria Resto
-                    yang lebih rapi untuk memantau status kitchen dan pembayaran.
+                    yang lebih rapi untuk memantau status dapur dan pembayaran.
                 </p>
             </div>
 
@@ -185,7 +185,7 @@
                             <div>
                                 <span class="promo-chip mb-3"><i class="fas fa-cloud-arrow-up"></i>Upload Bukti</span>
                                 <h3>Konfirmasi Pembayaran</h3>
-                                <p class="customer-section-subtitle mb-0">Gunakan panel ini untuk mengirim bukti bayar tanpa meninggalkan halaman tracking.</p>
+                                <p class="customer-section-subtitle mb-0">Gunakan panel ini untuk mengunggah bukti bayar tanpa meninggalkan halaman tracking.</p>
                             </div>
 
                             @if (Model.PaymentMethod == PaymentMethod.QRIS)
@@ -210,12 +210,12 @@
                             }
 
                             <div>
-                                <label class="customer-field-label" for="payment-proof">Upload bukti pembayaran</label>
+                                <label class="customer-field-label" for="payment-proof">Unggah bukti pembayaran</label>
                                 <input type="file" id="payment-proof" class="tracking-file-input" accept="image/*">
                             </div>
                             <button class="customer-primary-button w-100" type="button" onclick="uploadProof(@Model.TransactionId)">
                                 <i class="fas fa-upload"></i>
-                                Upload Bukti Bayar
+                                Unggah Bukti Bayar
                             </button>
                         </article>
                     }
@@ -440,7 +440,7 @@
             function uploadProof(transactionId) {
                 const fileInput = document.getElementById('payment-proof');
                 if (!fileInput.files || fileInput.files.length === 0) {
-                    alert('Pilih file bukti pembayaran terlebih dahulu');
+                    showToast('Pilih file bukti pembayaran terlebih dahulu.', 'warning');
                     return;
                 }
 
@@ -458,10 +458,10 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showToast(data.message, 'success');
+                        showToast(data.message || 'Bukti pembayaran berhasil diunggah.', 'success');
                         refreshTracking();
                     } else {
-                        showToast(`Error: ${data.message}`, 'error');
+                        showToast(data.message || 'Gagal mengunggah bukti pembayaran.', 'error');
                     }
                 })
                 .catch(error => {

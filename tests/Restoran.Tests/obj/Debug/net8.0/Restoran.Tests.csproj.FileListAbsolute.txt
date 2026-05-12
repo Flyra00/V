@@ -51,6 +51,15 @@ C:\Users\ASUS\Downloads\restoran (1)\restoran\tests\Restoran.Tests\obj\Debug\net
 C:\Users\ASUS\Downloads\restoran (1)\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.pdb
 C:\Users\ASUS\Downloads\restoran (1)\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.genruntimeconfig.cache
 C:\Users\ASUS\Downloads\restoran (1)\restoran\tests\Restoran.Tests\obj\Debug\net8.0\ref\Restoran.Tests.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.csproj.AssemblyReference.cache
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.AssemblyInfoInputs.cache
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.AssemblyInfo.cs
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.csproj.CoreCompileInputs.cache
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.sourcelink.json
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\refint\Restoran.Tests.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.pdb
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\linux-arm64\native\libe_sqlite3.so
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\linux-armel\native\libe_sqlite3.so
@@ -93,15 +102,6 @@ C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\De
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\QRCoder.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Restoran.pdb
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.csproj.AssemblyReference.cache
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.AssemblyInfoInputs.cache
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.AssemblyInfo.cs
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.csproj.CoreCompileInputs.cache
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.sourcelink.json
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.3D06F747.Up2Date
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.dll
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\refint\Restoran.Tests.dll
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.pdb
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.genruntimeconfig.cache
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\ref\Restoran.Tests.dll

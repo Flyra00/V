@@ -331,7 +331,7 @@
                                 <strong class="cart-item-title">${escapeHtml(item.productName)}</strong>
                                 <strong class="cart-item-price">${formatCurrency(item.price * item.quantity)}</strong>
                             </div>
-                            <span class="cart-item-unit-price">${formatCurrency(item.price)} per item</span>
+                            <span class="cart-item-unit-price">${formatCurrency(item.price)} per porsi</span>
                             <textarea class="cart-item-note" data-note-input="${item.lineId}" placeholder="Catatan item...">${escapeHtml(item.notes)}</textarea>
                             <div class="cart-item-controls">
                                 <div class="cart-qty-control">

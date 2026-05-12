@@ -38,7 +38,7 @@
                 </button>
                 <a class="customer-secondary-button" href="#menu-preview">
                     <i class="fas fa-book-open"></i>
-                    Lihat Preview Menu
+                    Lihat Pratinjau Menu
                 </a>
             </div>
         </div>
@@ -51,7 +51,7 @@
                 </span>
                 <div>
                     <strong>Tema Ceria Resto</strong>
-                    <div class="customer-section-subtitle">Warm cream, orange primary, dan layout desktop yang bersih.</div>
+                    <div class="customer-section-subtitle">Tampilan hangat, ceria, dan rapi untuk pemesanan yang nyaman dari meja hingga dapur.</div>
                 </div>
             </div>
         </div>
@@ -63,16 +63,16 @@
             <p>Registrasi member, login, lalu nikmati promo otomatis dan status pesanan yang bisa dipantau langsung.</p>
         </div>
         <button class="customer-secondary-button" type="button" onclick="showOrderTableModal()">
-            Klaim lewat Order
+            Klaim lewat Pesanan
         </button>
     </section>
 
     <section id="menu-preview" class="landing-section">
         <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
             <div>
-                <span class="promo-chip mb-3"><i class="fas fa-utensils"></i>Preview Menu</span>
+                <span class="promo-chip mb-3"><i class="fas fa-utensils"></i>Pratinjau Menu</span>
                 <h2>Rekomendasi Ceria Resto</h2>
-                <p>Pilih salah satu menu favorit lalu lanjutkan ke meja untuk memulai order yang aktif.</p>
+                <p>Pilih salah satu menu favorit lalu lanjutkan ke meja untuk memulai pesanan yang aktif.</p>
             </div>
         </div>
 
@@ -109,8 +109,8 @@
     <section id="how-it-works" class="steps-panel p-4">
         <div class="mb-4">
             <span class="promo-chip mb-3"><i class="fas fa-circle-info"></i>Cara Pesan</span>
-            <h2 class="customer-section-title">Alur Pemesanan Customer</h2>
-            <div class="customer-section-subtitle">Desktop first untuk browsing menu, ringkasan order, dan konfirmasi meja.</div>
+            <h2 class="customer-section-title">Alur Pemesanan Pelanggan</h2>
+            <div class="customer-section-subtitle">Tampilan desktop diprioritaskan agar pelanggan mudah melihat menu, ringkasan pesanan, dan konfirmasi meja.</div>
         </div>
 
         <div class="landing-step-grid">
@@ -140,7 +140,7 @@
 
             <div>
                 <span class="promo-chip mb-3"><i class="fas fa-table-cells-large"></i>Mulai dari Meja</span>
-                <h2 class="customer-section-title mb-2">Pilih Meja dan Masuk ke Flow Order</h2>
+                <h2 class="customer-section-title mb-2">Pilih Meja dan Mulai Alur Pemesanan</h2>
                 <p class="customer-section-subtitle mb-4">
                     Pilih meja untuk tamu, atau login sebagai member supaya promo dan status pesanan tetap terikat ke session meja aktif.
                 </p>
@@ -178,7 +178,7 @@
                 <div class="d-flex justify-content-between align-items-start gap-3">
                     <div>
                         <span class="promo-chip mb-3"><i class="fas fa-chair"></i>Pilih Meja</span>
-                        <h3 class="mb-2">Mulai Order dari Meja Anda</h3>
+                        <h3 class="mb-2">Mulai Pesanan dari Meja Anda</h3>
                         <p class="customer-section-subtitle mb-0">Pastikan meja yang Anda pilih tersedia sebelum melanjutkan sebagai tamu atau member.</p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
@@ -218,8 +218,8 @@
             <div class="customer-product-modal__body">
                 <div class="d-flex justify-content-between align-items-start gap-3">
                     <div>
-                        <span class="promo-chip mb-3"><i class="fas fa-id-card"></i>Member Access</span>
-                        <h3 id="memberAuthTitle" class="mb-2">Login Customer</h3>
+                        <span class="promo-chip mb-3"><i class="fas fa-id-card"></i>Akses Member</span>
+                        <h3 id="memberAuthTitle" class="mb-2">Masuk sebagai Pelanggan</h3>
                         <p class="customer-section-subtitle mb-0">Masuk sebagai member untuk membawa promo dan status pesanan ke session meja aktif.</p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
@@ -236,10 +236,10 @@
                             <input class="customer-form-control" id="memberPassword" type="password" placeholder="Masukkan password" />
                         </div>
                     </div>
-                    <button type="button" class="customer-primary-button mt-4 w-100" onclick="memberLogin()">
-                        <i class="fas fa-right-to-bracket"></i>
-                        Login
-                    </button>
+                <button type="button" class="customer-primary-button mt-4 w-100" onclick="memberLogin()">
+                    <i class="fas fa-right-to-bracket"></i>
+                    Masuk
+                </button>
                     <div class="text-center mt-3">
                         Belum punya akun? <a href="#" class="text-decoration-underline" onclick="showRegisterForm(); return false;">Daftar member</a>
                     </div>
@@ -358,7 +358,7 @@
         function showLoginForm() {
             document.getElementById('registerFormSection').style.display = 'none';
             document.getElementById('loginFormSection').style.display = 'block';
-            document.getElementById('memberAuthTitle').textContent = 'Login Customer';
+            document.getElementById('memberAuthTitle').textContent = 'Masuk sebagai Pelanggan';
         }
 
         function memberLogin() {

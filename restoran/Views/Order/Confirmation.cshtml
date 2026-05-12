@@ -109,11 +109,11 @@
                             }
 
                             <div class="mb-3">
-                                <label class="form-label">Upload Bukti Pembayaran</label>
+                                <label class="form-label">Unggah Bukti Pembayaran</label>
                                 <input type="file" id="payment-proof" class="form-control" accept="image/*">
                             </div>
                             <button class="btn btn-primary" onclick="uploadProof(@Model.Id)">
-                                <i class="fas fa-upload"></i> Upload Bukti Bayar
+                                <i class="fas fa-upload"></i> Unggah Bukti Bayar
                             </button>
                         </div>
                     }
@@ -144,7 +144,7 @@
         function uploadProof(transactionId) {
             const fileInput = document.getElementById('payment-proof');
             if (!fileInput.files || fileInput.files.length === 0) {
-                alert('Pilih file bukti pembayaran terlebih dahulu');
+                showToast('Pilih file bukti pembayaran terlebih dahulu.', 'warning');
                 return;
             }
 
@@ -162,14 +162,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
+                    showToast(data.message || 'Bukti pembayaran berhasil diunggah.', 'success');
                     location.reload();
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast(data.message || 'Gagal mengunggah bukti pembayaran.', 'error');
                 }
             })
             .catch(error => {
-                alert('Terjadi kesalahan: ' + error.message);
+                showToast(`Terjadi kesalahan: ${error.message}`, 'error');
             });
         }
     </script>

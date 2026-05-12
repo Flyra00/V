@@ -23,7 +23,7 @@
                         <tr>
                             <th>No Transaksi</th>
                             <th>Meja</th>
-                            <th>Customer</th>
+                            <th>Pelanggan</th>
                             <th>Total</th>
                             <th>Status Bayar</th>
                             <th>Status Order</th>
@@ -41,7 +41,7 @@
                                 <td>Rp @item.Total.ToString("N0")</td>
                                 <td>
                                     <span class="badge bg-@(item.Payment?.PaymentStatus == PaymentStatus.Paid ? "success" : "warning")">
-                                        @(item.Payment?.PaymentStatus.ToString() ?? "Unknown")
+                                        @(item.Payment?.PaymentStatus.ToString() ?? "Tidak diketahui")
                                     </span>
                                 </td>
                                 <td>
@@ -74,25 +74,36 @@
         }
 
         function confirmPayment(transactionId) {
-            if (confirm('Konfirmasi pembayaran untuk transaksi ini?')) {
-                fetch('/Kasir/ConfirmPayment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'RequestVerificationToken': getRequestVerificationToken()
-                    },
-                    body: `transactionId=${transactionId}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        location.reload();
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                });
-            }
+            showConfirmDialog({
+                title: 'Konfirmasi Pembayaran',
+                message: 'Apakah Anda yakin pembayaran untuk transaksi ini sudah diterima?',
+                confirmText: 'Ya, konfirmasi',
+                cancelText: 'Batal',
+                variant: 'success',
+                onConfirm: () => {
+                    fetch('/Kasir/ConfirmPayment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': getRequestVerificationToken()
+                        },
+                        body: `transactionId=${transactionId}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message || 'Pembayaran berhasil dikonfirmasi.', 'success');
+                            location.reload();
+                            return;
+                        }
+
+                        showToast(data.message || 'Gagal mengonfirmasi pembayaran.', 'error');
+                    })
+                    .catch(error => {
+                        showToast(`Terjadi kesalahan: ${error.message}`, 'error');
+                    });
+                }
+            });
         }
     </script>
 }
