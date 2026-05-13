@@ -30,3 +30,8 @@ stitch_ceria_resto_digital_ordering/
 _nul
 *.user
 *.suo
+
+# Local machine config (do not commit)
+restoran/appsettings.Local.json
+restoran/appsettings.Development.Local.json
+restoran/appsettings.Production.Local.json

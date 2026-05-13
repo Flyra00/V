@@ -1,0 +1,98 @@
+@using Restoran.Models
+@model Transaction
+
+@{
+    Layout = null;
+    var paymentMethod = Model.Payment?.PaymentMethodOption?.DisplayName ?? "-";
+    var paymentDate = Model.Payment?.PaymentDate;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Struk - @Model.TransactionNumber</title>
+    <style>
+        body { font-family: 'Courier New', monospace; margin: 0; padding: 16px; background: #fff; }
+        .no-print { margin-bottom: 16px; text-align: center; }
+        .no-print button { margin: 0 4px; padding: 8px 12px; cursor: pointer; }
+        .receipt { max-width: 360px; margin: 0 auto; font-size: 12px; }
+        .center { text-align: center; }
+        .line { border-top: 1px dashed #000; margin: 8px 0; }
+        .row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+        .muted { color: #555; font-size: 11px; }
+        .bold { font-weight: bold; }
+        @@media print {
+            .no-print { display: none !important; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button onclick="window.print()">Cetak</button>
+        <button onclick="window.close()">Tutup</button>
+    </div>
+
+    <div class="receipt">
+        <div class="center">
+            <div class="bold" style="font-size:16px;">RESTORAN CERIA</div>
+            <div>No Transaksi: <span class="bold">@Model.TransactionNumber</span></div>
+            <div>Tanggal: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+            <div>Meja: @(Model.Table?.TableNumber ?? "-")</div>
+            <div>Pelanggan: @Model.CustomerName</div>
+            @if (!string.IsNullOrWhiteSpace(Model.CustomerPhone))
+            {
+                <div>Telepon: @Model.CustomerPhone</div>
+            }
+        </div>
+
+        <div class="line"></div>
+
+        @foreach (var item in Model.TransactionDetails)
+        {
+            <div class="row">
+                <span>@item.Quantity x @item.Product.Name</span>
+                <span>Rp @item.Subtotal.ToString("N0")</span>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(item.Notes))
+            {
+                <div class="muted">Catatan: @item.Notes</div>
+            }
+        }
+
+        <div class="line"></div>
+
+        <div class="row"><span>Subtotal</span><span>Rp @Model.Subtotal.ToString("N0")</span></div>
+        <div class="row"><span>PPN</span><span>Rp @Model.Tax.ToString("N0")</span></div>
+        <div class="row"><span>Biaya Layanan</span><span>Rp @Model.ServiceCharge.ToString("N0")</span></div>
+        @if (Model.Discount > 0)
+        {
+            <div class="row"><span>Diskon</span><span>-Rp @Model.Discount.ToString("N0")</span></div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.AppliedPromoName))
+        {
+            <div class="muted">Promo: @Model.AppliedPromoName</div>
+        }
+        <div class="row bold" style="font-size:14px;"><span>TOTAL</span><span>Rp @Model.Total.ToString("N0")</span></div>
+
+        <div class="line"></div>
+
+        <div class="row"><span>Metode</span><span>@paymentMethod</span></div>
+        <div class="row"><span>Status</span><span>@(Model.Payment?.PaymentStatus.ToString() ?? "-")</span></div>
+        @if (paymentDate.HasValue)
+        {
+            <div class="row"><span>Tgl Bayar</span><span>@paymentDate.Value.ToString("dd/MM/yyyy HH:mm")</span></div>
+        }
+        @if (Model.Payment != null && Model.Payment.AmountReceived > 0)
+        {
+            <div class="row"><span>Uang Diterima</span><span>Rp @Model.Payment.AmountReceived.ToString("N0")</span></div>
+            <div class="row"><span>Kembalian</span><span>Rp @Model.Payment.ChangeAmount.ToString("N0")</span></div>
+        }
+
+        <div class="line"></div>
+        <div class="center">Terima kasih atas kunjungan Anda</div>
+    </div>
+</body>
+</html>

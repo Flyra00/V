@@ -24,6 +24,9 @@ namespace Restoran.Models
         [StringLength(100)]
         public string CustomerName { get; set; } = string.Empty;
 
+        [StringLength(20)]
+        public string? CustomerPhone { get; set; }
+
         public CustomerType CustomerType { get; set; } = CustomerType.Guest;
 
         [Column(TypeName = "decimal(18,2)")]

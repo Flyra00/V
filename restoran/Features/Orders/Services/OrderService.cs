@@ -138,15 +138,22 @@ namespace Restoran.Features.Orders.Services
                 .Where(product => productIds.Contains(product.Id))
                 .ToDictionaryAsync(product => product.Id, cancellationToken);
 
-            await using var dbTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-            try
+            var executionStrategy = _context.Database.CreateExecutionStrategy();
+            OperationResult<CreateOrderResponse> operationResult = OperationResult<CreateOrderResponse>.Failure("Pesanan gagal diproses");
+
+            await executionStrategy.ExecuteAsync(async () =>
             {
-                var activeSession = await _tableService.EnsureActiveSessionAsync(
-                    request.TableId,
-                    request.IsMember ? CustomerType.Member : CustomerType.Guest,
-                    request.MemberId,
-                    request.CustomerName,
-                    cancellationToken);
+                await using var dbTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    var resolvedMember = await ResolveMemberForOrderAsync(request, cancellationToken);
+
+                    var activeSession = await _tableService.EnsureActiveSessionAsync(
+                        request.TableId,
+                        request.IsMember ? CustomerType.Member : CustomerType.Guest,
+                        resolvedMember?.Id,
+                        request.CustomerName,
+                        cancellationToken);
 
                 var transaction = new Transaction
                 {
@@ -185,18 +192,19 @@ namespace Restoran.Features.Orders.Services
                     subtotal += item.Quantity * product.Price;
                 }
 
-                if (subtotal <= 0)
-                {
-                    await dbTransaction.RollbackAsync(cancellationToken);
-                    return OperationResult<CreateOrderResponse>.Failure("Item pesanan tidak valid");
-                }
+                    if (subtotal <= 0)
+                    {
+                        operationResult = OperationResult<CreateOrderResponse>.Failure("Item pesanan tidak valid");
+                        await dbTransaction.RollbackAsync(cancellationToken);
+                        return;
+                    }
 
                 transaction.Subtotal = subtotal;
                 var chargeConfiguration = await _chargeConfigurationProvider.GetCurrentAsync(cancellationToken);
                 transaction.Tax = chargeConfiguration.CalculateTax(subtotal);
                 transaction.ServiceCharge = chargeConfiguration.CalculateServiceCharge(subtotal);
 
-                var memberDiscount = await CalculateMemberDiscountAsync(request, products, cancellationToken);
+                    var memberDiscount = CalculateMemberDiscountAsync(request, products, resolvedMember);
                 var promoSelection = await SelectBestPromoAsync(subtotal, memberDiscount, now, cancellationToken);
 
                 transaction.Discount = memberDiscount + promoSelection.DiscountAmount;
@@ -214,11 +222,12 @@ namespace Restoran.Features.Orders.Services
                     string.Empty,
                     cancellationToken);
 
-                if (!paymentResult.Succeeded)
-                {
-                    await dbTransaction.RollbackAsync(cancellationToken);
-                    return OperationResult<CreateOrderResponse>.Failure(paymentResult.Message);
-                }
+                    if (!paymentResult.Succeeded)
+                    {
+                        operationResult = OperationResult<CreateOrderResponse>.Failure(paymentResult.Message);
+                        await dbTransaction.RollbackAsync(cancellationToken);
+                        return;
+                    }
 
                 MidtransSnapResponse? snapResponse = null;
                 var isMidtransPayment = IsMidtransPaymentMethod(request.PaymentMethod);
@@ -229,11 +238,12 @@ namespace Restoran.Features.Orders.Services
 
                     transaction.Payment = paymentResult.Data;
                     snapResponse = await _midtransService.CreateSnapTransactionAsync(transaction, cancellationToken);
-                    if (!snapResponse.Succeeded)
-                    {
-                        await dbTransaction.RollbackAsync(cancellationToken);
-                        return OperationResult<CreateOrderResponse>.Failure(snapResponse.Message);
-                    }
+                        if (!snapResponse.Succeeded)
+                        {
+                            operationResult = OperationResult<CreateOrderResponse>.Failure(snapResponse.Message);
+                            await dbTransaction.RollbackAsync(cancellationToken);
+                            return;
+                        }
 
                     paymentResult.Data.SnapToken = snapResponse.Token;
                     paymentResult.Data.SnapRedirectUrl = snapResponse.RedirectUrl;
@@ -251,26 +261,29 @@ namespace Restoran.Features.Orders.Services
                     CreatedAt = now
                 });
 
-                await _context.SaveChangesAsync(cancellationToken);
-                await dbTransaction.CommitAsync(cancellationToken);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    await dbTransaction.CommitAsync(cancellationToken);
 
-                return OperationResult<CreateOrderResponse>.Success(new CreateOrderResponse
+                    operationResult = OperationResult<CreateOrderResponse>.Success(new CreateOrderResponse
+                    {
+                        TransactionId = transaction.Id,
+                        TrackingToken = transaction.TrackingToken ?? string.Empty,
+                        TransactionNumber = transaction.TransactionNumber,
+                        AppliedPromoName = transaction.AppliedPromoName,
+                        DiscountAmount = transaction.Discount,
+                        IsMidtransPayment = isMidtransPayment,
+                        PaymentRedirectUrl = snapResponse?.RedirectUrl ?? string.Empty,
+                        SnapToken = snapResponse?.Token ?? string.Empty
+                    });
+                }
+                catch (Exception ex)
                 {
-                    TransactionId = transaction.Id,
-                    TrackingToken = transaction.TrackingToken ?? string.Empty,
-                    TransactionNumber = transaction.TransactionNumber,
-                    AppliedPromoName = transaction.AppliedPromoName,
-                    DiscountAmount = transaction.Discount,
-                    IsMidtransPayment = isMidtransPayment,
-                    PaymentRedirectUrl = snapResponse?.RedirectUrl ?? string.Empty,
-                    SnapToken = snapResponse?.Token ?? string.Empty
-                });
-            }
-            catch (Exception ex)
-            {
-                await dbTransaction.RollbackAsync(cancellationToken);
-                return OperationResult<CreateOrderResponse>.Failure(ex.Message);
-            }
+                    await dbTransaction.RollbackAsync(cancellationToken);
+                    operationResult = OperationResult<CreateOrderResponse>.Failure(GetDetailedErrorMessage(ex));
+                }
+            });
+
+            return operationResult;
         }
 
         public async Task<OperationResult> UploadPaymentProofAsync(int transactionId, IFormFile paymentProof, CancellationToken cancellationToken = default)
@@ -296,8 +309,21 @@ namespace Restoran.Features.Orders.Services
             }
             catch (Exception ex)
             {
-                return OperationResult.Failure(ex.Message);
+                return OperationResult.Failure(GetDetailedErrorMessage(ex));
             }
+        }
+
+        private static string GetDetailedErrorMessage(Exception ex)
+        {
+            var root = ex;
+            while (root.InnerException != null)
+            {
+                root = root.InnerException;
+            }
+
+            return string.Equals(root.Message, ex.Message, StringComparison.Ordinal)
+                ? ex.Message
+                : $"{ex.Message} | Root cause: {root.Message}";
         }
 
         public async Task<OperationResult> UploadPaymentProofByTrackingTokenAsync(string trackingToken, IFormFile paymentProof, CancellationToken cancellationToken = default)
@@ -492,31 +518,17 @@ namespace Restoran.Features.Orders.Services
             };
         }
 
-        private async Task<decimal> CalculateMemberDiscountAsync(
+        private static decimal CalculateMemberDiscountAsync(
             CreateOrderRequest request,
             IReadOnlyDictionary<int, Product> products,
-            CancellationToken cancellationToken)
+            Member? resolvedMember)
         {
             if (!request.IsMember)
             {
                 return 0m;
             }
 
-            Member? member = null;
-
-            if (request.MemberId.HasValue)
-            {
-                member = await _context.Members.FindAsync([request.MemberId.Value], cancellationToken);
-            }
-
-            if (member == null && request.MemberId.HasValue)
-            {
-                member = await _context.Members.FirstOrDefaultAsync(
-                    m => m.UserId == request.MemberId.Value,
-                    cancellationToken);
-            }
-
-            if (member == null)
+            if (resolvedMember == null)
             {
                 return 0m;
             }
@@ -539,6 +551,26 @@ namespace Restoran.Features.Orders.Services
             }
 
             return totalMemberItemDiscount;
+        }
+
+        private async Task<Member?> ResolveMemberForOrderAsync(CreateOrderRequest request, CancellationToken cancellationToken)
+        {
+            if (!request.IsMember || !request.MemberId.HasValue)
+            {
+                return null;
+            }
+
+            var member = await _context.Members
+                .FirstOrDefaultAsync(m => m.Id == request.MemberId.Value, cancellationToken);
+
+            if (member != null)
+            {
+                return member;
+            }
+
+            // Backward compatibility: beberapa flow lama masih mengirim UserId.
+            return await _context.Members
+                .FirstOrDefaultAsync(m => m.UserId == request.MemberId.Value, cancellationToken);
         }
 
         private async Task<PromoSelection> SelectBestPromoAsync(

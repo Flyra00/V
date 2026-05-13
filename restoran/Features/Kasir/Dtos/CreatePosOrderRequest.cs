@@ -6,6 +6,8 @@ namespace Restoran.Features.Kasir.Dtos
     {
         public int? TableId { get; set; }
         public string CustomerName { get; set; } = string.Empty;
+        public string? CustomerPhone { get; set; }
+        public int? PromoId { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
         public List<PosOrderItemRequest> Items { get; set; } = new();
     }

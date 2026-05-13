@@ -1,4 +1,38 @@
-﻿Berikut struktur sistem restoran yang sudah diperbagus, dirapikan, dan disesuaikan dengan permintaan: manajemen bahan mentah dihapus, lalu ditambahkan kelola kategori, pengaturan pajak PPN, pajak service, serta beberapa improvisasi agar sistem lebih lengkap dan realistis.
+﻿# Setup Cepat Setelah Git Clone (Wajib)
+
+1. Copy file contoh config lokal:
+
+   - `appsettings.Local.example.json` -> `appsettings.Local.json`
+
+2. Isi koneksi database milik masing-masing developer di `appsettings.Local.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=RestoranDB;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true"
+  }
+}
+```
+
+3. Jalankan migrasi database:
+
+```bash
+dotnet ef database update --project restoran.csproj --startup-project restoran.csproj
+```
+
+4. Jalankan aplikasi:
+
+```bash
+dotnet run --project restoran.csproj
+```
+
+Catatan:
+- `appsettings.Local.json` sudah di-`gitignore`, jadi aman dan tidak ikut ke repository.
+- Bisa juga pakai environment variable: `ConnectionStrings__DefaultConnection`.
+
+---
+
+Berikut struktur sistem restoran yang sudah diperbagus, dirapikan, dan disesuaikan dengan permintaan: manajemen bahan mentah dihapus, lalu ditambahkan kelola kategori, pengaturan pajak PPN, pajak service, serta beberapa improvisasi agar sistem lebih lengkap dan realistis.
 
 Sistem Restoran
 

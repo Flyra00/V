@@ -251,19 +251,24 @@ namespace Restoran.Features.Kasir.Services
                 .Where(product => productIds.Contains(product.Id))
                 .ToDictionaryAsync(product => product.Id, cancellationToken);
 
-            await using var dbTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-            try
+            var executionStrategy = _context.Database.CreateExecutionStrategy();
+            OperationResult<PosOrderResponse> operationResult = OperationResult<PosOrderResponse>.Failure("Pesanan gagal diproses");
+
+            await executionStrategy.ExecuteAsync(async () =>
             {
-                TableSession? activeSession = null;
-                if (request.TableId.HasValue)
+                await using var dbTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+                try
                 {
-                    activeSession = await _tableService.EnsureActiveSessionAsync(
-                        request.TableId.Value,
-                        CustomerType.Guest,
-                        null,
-                        request.CustomerName,
-                        cancellationToken);
-                }
+                    TableSession? activeSession = null;
+                    if (request.TableId.HasValue)
+                    {
+                        activeSession = await _tableService.EnsureActiveSessionAsync(
+                            request.TableId.Value,
+                            CustomerType.Guest,
+                            null,
+                            request.CustomerName,
+                            cancellationToken);
+                    }
 
                 var transaction = new Transaction
                 {
@@ -272,6 +277,7 @@ namespace Restoran.Features.Kasir.Services
                     TableSessionId = activeSession?.Id,
                     UserId = userId,
                     CustomerName = request.CustomerName,
+                    CustomerPhone = string.IsNullOrWhiteSpace(request.CustomerPhone) ? null : request.CustomerPhone.Trim(),
                     CustomerType = CustomerType.Guest,
                     OrderStatus = OrderStatus.New,
                     CreatedAt = now
@@ -302,18 +308,61 @@ namespace Restoran.Features.Kasir.Services
                     subtotal += item.Quantity * product.Price;
                 }
 
-                if (subtotal <= 0)
-                {
-                    await dbTransaction.RollbackAsync(cancellationToken);
-                    return OperationResult<PosOrderResponse>.Failure("Item pesanan tidak valid");
-                }
+                    if (subtotal <= 0)
+                    {
+                        operationResult = OperationResult<PosOrderResponse>.Failure("Item pesanan tidak valid");
+                        await dbTransaction.RollbackAsync(cancellationToken);
+                        return;
+                    }
 
                 transaction.Subtotal = subtotal;
                 var chargeConfiguration = await _chargeConfigurationProvider.GetCurrentAsync(cancellationToken);
                 transaction.Tax = chargeConfiguration.CalculateTax(subtotal);
                 transaction.ServiceCharge = chargeConfiguration.CalculateServiceCharge(subtotal);
-                transaction.Total = transaction.Subtotal + transaction.Tax + transaction.ServiceCharge;
-                var initialPaymentStatus = request.PaymentMethod == PaymentMethod.Tunai ? PaymentStatus.Paid : PaymentStatus.Pending;
+
+                if (request.PromoId.HasValue)
+                {
+                    var promo = await _context.Promos
+                        .FirstOrDefaultAsync(entity =>
+                            entity.Id == request.PromoId.Value &&
+                            entity.IsActive &&
+                            entity.StartsAt <= now &&
+                            entity.EndsAt >= now,
+                            cancellationToken);
+
+                    if (promo == null)
+                    {
+                        operationResult = OperationResult<PosOrderResponse>.Failure("Promo tidak aktif atau sudah kedaluwarsa.");
+                        await dbTransaction.RollbackAsync(cancellationToken);
+                        return;
+                    }
+
+                    if (subtotal < promo.MinimumPurchase)
+                    {
+                        operationResult = OperationResult<PosOrderResponse>.Failure($"Minimum pembelian untuk promo {promo.Name} adalah Rp {promo.MinimumPurchase:N0}.");
+                        await dbTransaction.RollbackAsync(cancellationToken);
+                        return;
+                    }
+
+                    var discount = promo.PromoType switch
+                    {
+                        PromoType.Percentage => subtotal * (promo.DiscountValue / 100m),
+                        _ => 0m
+                    };
+
+                    transaction.PromoId = promo.Id;
+                    transaction.AppliedPromoName = promo.Name;
+                    transaction.Discount = Math.Clamp(decimal.Round(discount, 2, MidpointRounding.AwayFromZero), 0m, subtotal);
+                }
+                else
+                {
+                    transaction.PromoId = null;
+                    transaction.AppliedPromoName = string.Empty;
+                    transaction.Discount = 0m;
+                }
+
+                transaction.Total = Math.Max(0m, transaction.Subtotal + transaction.Tax + transaction.ServiceCharge - transaction.Discount);
+                var initialPaymentStatus = PaymentStatus.Pending;
                 var paymentResult = await _paymentService.CreateOrSyncPaymentAsync(
                     transaction,
                     transaction.Total,
@@ -323,26 +372,43 @@ namespace Restoran.Features.Kasir.Services
                     string.Empty,
                     cancellationToken);
 
-                if (!paymentResult.Succeeded)
+                    if (!paymentResult.Succeeded)
+                    {
+                        operationResult = OperationResult<PosOrderResponse>.Failure(paymentResult.Message);
+                        await dbTransaction.RollbackAsync(cancellationToken);
+                        return;
+                    }
+
+                    await _context.SaveChangesAsync(cancellationToken);
+                    await dbTransaction.CommitAsync(cancellationToken);
+
+                    operationResult = OperationResult<PosOrderResponse>.Success(new PosOrderResponse
+                    {
+                        TransactionId = transaction.Id,
+                        Total = transaction.Total
+                    });
+                }
+                catch (Exception ex)
                 {
                     await dbTransaction.RollbackAsync(cancellationToken);
-                    return OperationResult<PosOrderResponse>.Failure(paymentResult.Message);
+                    operationResult = OperationResult<PosOrderResponse>.Failure(GetDetailedErrorMessage(ex));
                 }
+            });
 
-                await _context.SaveChangesAsync(cancellationToken);
-                await dbTransaction.CommitAsync(cancellationToken);
+            return operationResult;
+        }
 
-                return OperationResult<PosOrderResponse>.Success(new PosOrderResponse
-                {
-                    TransactionId = transaction.Id,
-                    Total = transaction.Total
-                });
-            }
-            catch (Exception ex)
+        private static string GetDetailedErrorMessage(Exception ex)
+        {
+            var root = ex;
+            while (root.InnerException != null)
             {
-                await dbTransaction.RollbackAsync(cancellationToken);
-                return OperationResult<PosOrderResponse>.Failure(ex.Message);
+                root = root.InnerException;
             }
+
+            return string.Equals(root.Message, ex.Message, StringComparison.Ordinal)
+                ? ex.Message
+                : $"{ex.Message} | Root cause: {root.Message}";
         }
 
         private async Task RecalculateTransactionTotalsAsync(Transaction transaction, CancellationToken cancellationToken)

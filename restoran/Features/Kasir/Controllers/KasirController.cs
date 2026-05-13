@@ -160,7 +160,8 @@ namespace Restoran.Controllers
             {
                 Products = await _cashierService.GetAvailableProductsAsync(),
                 Tables = await _cashierService.GetAvailableTablesAsync(),
-                PaymentMethods = BuildCashierPaymentMethods(paymentMethods)
+                PaymentMethods = BuildCashierPaymentMethods(paymentMethods),
+                ActivePromos = await _cashierService.GetActivePromosAsync()
             });
         }
 

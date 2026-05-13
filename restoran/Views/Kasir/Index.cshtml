@@ -11,6 +11,7 @@
         transactionNumber = transaction.TransactionNumber,
         tableNumber = transaction.Table?.TableNumber ?? "-",
         customerName = transaction.CustomerName,
+        customerPhone = transaction.CustomerPhone,
         createdAt = transaction.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
         subtotal = transaction.Subtotal,
         tax = transaction.Tax,
@@ -103,7 +104,13 @@
                             <tr>
                                 <td class="fw-semibold">@item.TransactionNumber</td>
                                 <td>@(item.Table?.TableNumber ?? "-")</td>
-                                <td>@item.CustomerName</td>
+                                <td>
+                                    <div>@item.CustomerName</div>
+                                    @if (!string.IsNullOrWhiteSpace(item.CustomerPhone))
+                                    {
+                                        <small class="text-muted">@item.CustomerPhone</small>
+                                    }
+                                </td>
                                 <td>Rp @item.Total.ToString("N0")</td>
                                 <td>@(payment?.PaymentMethodOption.DisplayName ?? "-")</td>
                                 <td>

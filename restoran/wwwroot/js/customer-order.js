@@ -558,7 +558,11 @@
                         return;
                     }
 
-                    window.location.href = result.trackingUrl;
+                    const fallbackTrackingUrl = result.trackingToken
+                        ? `/Order/Tracking?token=${encodeURIComponent(result.trackingToken)}`
+                        : "/Order/Tracking";
+
+                    window.location.href = result.trackingUrl || fallbackTrackingUrl;
                 })
                 .catch(function (error) {
                     showToast(`Terjadi kesalahan: ${error.message}`, "error");

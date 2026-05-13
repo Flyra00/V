@@ -78,5 +78,6 @@ namespace Restoran.ViewModels
         public IReadOnlyList<Product> Products { get; init; } = Array.Empty<Product>();
         public IReadOnlyList<Table> Tables { get; init; } = Array.Empty<Table>();
         public IReadOnlyList<PaymentMethodSelectionViewModel> PaymentMethods { get; init; } = Array.Empty<PaymentMethodSelectionViewModel>();
+        public IReadOnlyList<Promo> ActivePromos { get; init; } = Array.Empty<Promo>();
     }
 }

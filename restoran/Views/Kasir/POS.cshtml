@@ -63,6 +63,47 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label fw-bold">Nomor Telepon</label>
+                        <input type="text" class="form-control" id="customerPhone" placeholder="08xxxxxxxxxx">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Promo</label>
+                        <select class="form-select" id="promoId">
+                            <option value="">Tanpa promo</option>
+                            @foreach (var promo in Model.ActivePromos)
+                            {
+                                <option value="@promo.Id"
+                                        data-name="@promo.Name"
+                                        data-discount="@promo.DiscountValue.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                        data-minimum="@promo.MinimumPurchase.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                    @promo.Name • Diskon @promo.DiscountValue.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("id-ID"))% • Min. Rp @promo.MinimumPurchase.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("id-ID"))
+                                </option>
+                            }
+                        </select>
+                        <div class="border rounded-3 p-3 mt-2 bg-light d-none" id="promoSummary">
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <div>
+                                    <div class="small text-muted text-uppercase fw-semibold">Promo terpilih</div>
+                                    <div class="fw-semibold" id="promoSummaryName">-</div>
+                                </div>
+                                <span class="badge" id="promoSummaryStatus">-</span>
+                            </div>
+                            <div class="row g-2 small">
+                                <div class="col-6">
+                                    <div class="text-muted">Diskon</div>
+                                    <div class="fw-semibold" id="promoSummaryDiscount">-</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted">Minimum pembelian</div>
+                                    <div class="fw-semibold" id="promoSummaryMinimum">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted">Diskon diterapkan otomatis bila syarat terpenuhi.</small>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label fw-bold">Meja</label>
                         <select class="form-select" id="tableId">
                             <option value="">Bawa pulang / tanpa meja</option>
@@ -92,6 +133,16 @@
                         <span class="fw-bold" id="subtotalText">Rp 0</span>
                     </div>
 
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold">Diskon</span>
+                        <span class="fw-bold text-danger" id="discountText">- Rp 0</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold">Estimasi Total</span>
+                        <span class="fw-bold text-success" id="estimatedTotalText">Rp 0</span>
+                    </div>
+
                     <button type="button" class="btn btn-success w-100" onclick="submitPosOrder()">
                         <i class="fas fa-cash-register me-2"></i>Buat Pesanan POS
                     </button>
@@ -104,6 +155,74 @@
 @section Scripts {
     <script>
         const cart = [];
+        const idLocale = 'id-ID';
+
+        function formatCurrency(value) {
+            return `Rp ${Number(value || 0).toLocaleString(idLocale)}`;
+        }
+
+        function formatPercent(value) {
+            return Number(value || 0).toLocaleString(idLocale, { maximumFractionDigits: 2 });
+        }
+
+        function getPromoComputation(subtotal) {
+            const promoSelect = document.getElementById('promoId');
+            const selectedOption = promoSelect?.selectedOptions?.[0];
+            const promoIdValue = selectedOption?.value || '';
+
+            if (!promoIdValue) {
+                return {
+                    hasPromo: false,
+                    promoId: null,
+                    promoName: '',
+                    discountPercent: 0,
+                    minimumPurchase: 0,
+                    eligible: false,
+                    discount: 0
+                };
+            }
+
+            const discountPercent = Number(selectedOption?.dataset?.discount || 0);
+            const minimumPurchase = Number(selectedOption?.dataset?.minimum || 0);
+            const promoName = selectedOption?.dataset?.name || selectedOption?.textContent?.split('•')?.[0]?.trim() || 'Promo';
+            const eligible = Number(subtotal || 0) >= minimumPurchase;
+            const discount = eligible ? Math.min(subtotal, subtotal * (discountPercent / 100)) : 0;
+
+            return {
+                hasPromo: true,
+                promoId: parseInt(promoIdValue, 10),
+                promoName,
+                discountPercent,
+                minimumPurchase,
+                eligible,
+                discount
+            };
+        }
+
+        function renderPromoSummary(promo) {
+            const summary = document.getElementById('promoSummary');
+            const summaryName = document.getElementById('promoSummaryName');
+            const summaryDiscount = document.getElementById('promoSummaryDiscount');
+            const summaryMinimum = document.getElementById('promoSummaryMinimum');
+            const summaryStatus = document.getElementById('promoSummaryStatus');
+
+            if (!summary || !summaryName || !summaryDiscount || !summaryMinimum || !summaryStatus) {
+                return;
+            }
+
+            if (!promo.hasPromo) {
+                summary.classList.add('d-none');
+                return;
+            }
+
+            summary.classList.remove('d-none');
+            summaryName.textContent = promo.promoName;
+            summaryDiscount.textContent = `${formatPercent(promo.discountPercent)}%`;
+            summaryMinimum.textContent = formatCurrency(promo.minimumPurchase);
+
+            summaryStatus.textContent = promo.eligible ? 'Memenuhi syarat' : 'Belum memenuhi minimum';
+            summaryStatus.className = `badge ${promo.eligible ? 'bg-success' : 'bg-warning text-dark'}`;
+        }
 
         function getRequestVerificationToken() {
             return document.querySelector('input[name="__RequestVerificationToken"]').value;
@@ -138,7 +257,12 @@
         function renderCart() {
             const container = document.getElementById('cartItems');
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            document.getElementById('subtotalText').textContent = 'Rp ' + subtotal.toLocaleString();
+            const promo = getPromoComputation(subtotal);
+
+            document.getElementById('subtotalText').textContent = formatCurrency(subtotal);
+            document.getElementById('discountText').textContent = `- ${formatCurrency(promo.discount)}`;
+            document.getElementById('estimatedTotalText').textContent = formatCurrency(Math.max(0, subtotal - promo.discount));
+            renderPromoSummary(promo);
 
             if (cart.length === 0) {
                 container.innerHTML = '<p class="text-muted mb-0 text-center">Belum ada item dipilih</p>';
@@ -149,7 +273,7 @@
                 <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                     <div>
                         <div class="fw-bold">${item.name}</div>
-                        <small class="text-muted">Rp ${item.price.toLocaleString()}</small>
+                        <small class="text-muted">${formatCurrency(item.price)}</small>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${item.productId}, -1)">-</button>
@@ -166,9 +290,19 @@
                 return;
             }
 
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const promo = getPromoComputation(subtotal);
+
+            if (promo.hasPromo && !promo.eligible) {
+                showToast(`Promo "${promo.promoName}" belum memenuhi minimum pembelian ${formatCurrency(promo.minimumPurchase)}.`, 'warning');
+                return;
+            }
+
             const payload = {
                 tableId: document.getElementById('tableId').value || null,
                 customerName: document.getElementById('customerName').value || 'Guest',
+                customerPhone: document.getElementById('customerPhone').value || null,
+                promoId: promo.promoId,
                 paymentMethod: parseInt(document.getElementById('paymentMethod').value, 10),
                 items: cart.map(item => ({
                     productId: item.productId,
@@ -188,7 +322,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast(`Pesanan berhasil dibuat. Total: Rp ${Number(data.total).toLocaleString('id-ID')}`, 'success');
+                    showToast(`Pesanan berhasil dibuat. Total: ${formatCurrency(Number(data.total))}`, 'success');
                     window.location.href = '/Kasir';
                     return;
                 }
@@ -199,5 +333,7 @@
                 showToast(`Terjadi kesalahan: ${error.message}`, 'error');
             });
         }
+
+        document.getElementById('promoId')?.addEventListener('change', renderCart);
     </script>
 }
