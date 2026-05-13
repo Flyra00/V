@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "ContainingType": "Restoran.Controllers.MidtransController",
+    "Method": "Notifications",
+    "RelativePath": "api/midtrans/notifications",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "notification",
+        "Type": "Restoran.Features.Payments.Services.MidtransNotificationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

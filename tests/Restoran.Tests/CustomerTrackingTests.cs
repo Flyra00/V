@@ -49,7 +49,8 @@ public static class CustomerTrackingTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(),
             new TableService(context, new FixedDateTimeProvider(now)),
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var resolvedId = await service.ResolveTrackingTransactionIdAsync(1, 1, null);
 
@@ -136,7 +137,8 @@ public static class CustomerTrackingTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(),
             new TableService(context, new FixedDateTimeProvider(now)),
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var resolvedId = await service.ResolveTrackingTransactionIdAsync(null, null, 5);
 
@@ -197,7 +199,8 @@ public static class CustomerTrackingTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(),
             tableService,
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var updateResult = await kitchenService.UpdateStatusAsync(1, OrderStatus.Processing);
         TestAssert.True(updateResult.Succeeded);
@@ -266,7 +269,8 @@ public static class CustomerTrackingTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(),
             new TableService(context, new FixedDateTimeProvider(now)),
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var tracking = await service.GetTrackingAsync(2);
         TestAssert.NotNull(tracking);

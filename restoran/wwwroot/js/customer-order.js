@@ -129,27 +129,35 @@
             const subtotal = cart.reduce(function (sum, item) {
                 return sum + (item.price * item.quantity);
             }, 0);
-            const memberDiscountRate = Number(config.memberDiscountRate || 0);
-            const memberDiscount = subtotal * (memberDiscountRate / 100);
-            const discountedBase = Math.max(0, subtotal - memberDiscount);
-            let promoName = "";
-            let promoDiscount = 0;
+
+            var memberDiscount = 0;
+            if (config.isMember) {
+                cart.forEach(function (item) {
+                    var discountRate = Number(item.memberDiscountPercentage || 0);
+                    if (discountRate > 0) {
+                        memberDiscount += (item.price * item.quantity) * (discountRate / 100);
+                    }
+                });
+            }
+
+            var promoDiscount = 0;
+            var promoName = "";
+            var discountedBase = Math.max(0, subtotal - memberDiscount);
 
             (config.promos || []).forEach(function (promo) {
                 if (subtotal < promo.minimumPurchase) {
                     return;
                 }
-
-                const currentDiscount = discountedBase * (promo.discountPercentage / 100);
+                var currentDiscount = discountedBase * (promo.discountPercentage / 100);
                 if (currentDiscount > promoDiscount) {
                     promoDiscount = currentDiscount;
                     promoName = promo.name;
                 }
             });
 
-            const discount = memberDiscount + promoDiscount;
-            const tax = subtotal * ((config.taxRate || 0) / 100);
-            const serviceCharge = subtotal * ((config.serviceChargeRate || 0) / 100);
+            var discount = memberDiscount + promoDiscount;
+            var tax = subtotal * ((config.taxRate || 0) / 100);
+            var serviceCharge = subtotal * ((config.serviceChargeRate || 0) / 100);
 
             return {
                 subtotal: subtotal,
@@ -197,7 +205,8 @@
                 imageUrl: product.imageUrl,
                 price: product.price,
                 quantity: quantity,
-                notes: notes || ""
+                notes: notes || "",
+                memberDiscountPercentage: product.memberDiscountPercentage || 0
             };
         }
 
@@ -390,7 +399,11 @@
                 drawerService.textContent = formatCurrency(summary.serviceCharge);
             }
             if (drawerDiscount) {
-                drawerDiscount.textContent = formatCurrency(summary.discount);
+                drawerDiscount.textContent = "-" + formatCurrency(summary.memberDiscount);
+            }
+            var drawerDiscountRow = document.getElementById("drawer-discount-row");
+            if (drawerDiscountRow) {
+                drawerDiscountRow.style.display = summary.memberDiscount > 0 ? "" : "none";
             }
             if (drawerTotal) {
                 drawerTotal.textContent = formatCurrency(summary.total);
@@ -405,10 +418,6 @@
             if (summaryNotes) {
                 summaryNotes.textContent = note;
             }
-            if (drawerNotes) {
-                drawerNotes.textContent = note;
-            }
-
             const discountLabel = summary.promoName
                 ? `Diskon (${summary.promoName})`
                 : "Diskon";
@@ -416,9 +425,7 @@
             if (summaryDiscountLabel) {
                 summaryDiscountLabel.textContent = discountLabel;
             }
-            if (drawerDiscountLabel) {
-                drawerDiscountLabel.textContent = discountLabel;
-            }
+            // Diskon di UI customer disembunyikan. Promo/diskon diterapkan manual di kasir.
 
             const disabled = cart.length === 0;
             if (summaryConfirm) {
@@ -492,7 +499,8 @@
                 description: card.dataset.productDescription || "",
                 imageUrl: card.dataset.productImage || "",
                 price: Number(card.dataset.productPrice),
-                isAvailable: String(card.dataset.productAvailable).toLowerCase() === "true"
+                isAvailable: String(card.dataset.productAvailable).toLowerCase() === "true",
+                memberDiscountPercentage: Number(card.dataset.productMemberDiscount || 0)
             };
         }
 
@@ -544,6 +552,12 @@
                     setDrawerState(false);
                     window.sessionStorage.removeItem(storageKey);
                     showToast(`Pesanan ${result.transactionNumber} berhasil dibuat.`, "success");
+
+                    if (result.isMidtransPayment && result.paymentRedirectUrl) {
+                        window.location.href = result.paymentRedirectUrl;
+                        return;
+                    }
+
                     window.location.href = result.trackingUrl;
                 })
                 .catch(function (error) {

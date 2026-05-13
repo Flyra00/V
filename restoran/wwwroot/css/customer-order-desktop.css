@@ -493,10 +493,7 @@ select {
 .catalog-shell {
     width: var(--ceria-container);
     margin: 34px auto 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 380px;
-    gap: 32px;
-    align-items: start;
+    display: block;
 }
 
 .catalog-main {

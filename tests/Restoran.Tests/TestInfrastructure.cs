@@ -1,14 +1,23 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Restoran.Features.Auth.Dtos;
+using Restoran.Features.Auth.Services;
 using Restoran.Data;
-using Restoran.Infrastructure.Security;
 using Restoran.Features.Payments.Services;
+using Restoran.Infrastructure.Security;
 using Restoran.Models;
 using Restoran.Shared.Abstractions;
 using Restoran.Shared.Options;
+using Restoran.Shared.Results;
+using System.Net;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Restoran.Tests;
 
@@ -192,6 +201,73 @@ internal static class TestPaymentData
     }
 }
 
+internal sealed class StubMidtransService : IMidtransService
+{
+    private readonly Func<Transaction, CancellationToken, Task<MidtransSnapResponse>> _createSnap;
+    private readonly Func<string, CancellationToken, Task<MidtransStatusResponse>> _getStatus;
+    private readonly Func<int, CancellationToken, Task<OperationResult>> _applyStatus;
+
+    public StubMidtransService(
+        Func<Transaction, CancellationToken, Task<MidtransSnapResponse>>? createSnap = null,
+        Func<string, CancellationToken, Task<MidtransStatusResponse>>? getStatus = null,
+        Func<int, CancellationToken, Task<OperationResult>>? applyStatus = null)
+    {
+        _createSnap = createSnap ?? ((_, _) => Task.FromResult(MidtransSnapResponse.Success("snap-token-test", "https://app.sandbox.midtrans.com/snap/v2/vtweb/test", "{}")));
+        _getStatus = getStatus ?? ((_, _) => Task.FromResult(MidtransStatusResponse.NotFound("Transaksi Midtrans belum dipilih/dibayar oleh pelanggan atau belum tersedia di Midtrans.")));
+        _applyStatus = applyStatus ?? ((_, _) => Task.FromResult(OperationResult.Failure("Transaksi Midtrans belum dipilih/dibayar oleh pelanggan atau belum tersedia di Midtrans.")));
+    }
+
+    public Task<MidtransSnapResponse> CreateSnapTransactionAsync(Transaction transaction, CancellationToken ct = default)
+        => _createSnap(transaction, ct);
+
+    public Task<MidtransStatusResponse> GetTransactionStatusAsync(string midtransOrderId, CancellationToken ct = default)
+        => _getStatus(midtransOrderId, ct);
+
+    public Task<OperationResult> ApplyStatusToPaymentAsync(int transactionId, CancellationToken ct = default)
+        => _applyStatus(transactionId, ct);
+
+    public Task<OperationResult<MidtransPaymentUpdateResult>> ProcessNotificationAsync(MidtransNotificationRequest notification, CancellationToken ct = default)
+        => Task.FromResult(OperationResult<MidtransPaymentUpdateResult>.Failure("Not implemented in stub."));
+}
+
+internal sealed class DelegatingHttpMessageHandler : HttpMessageHandler
+{
+    private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> _handler;
+
+    public DelegatingHttpMessageHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
+    {
+        _handler = handler;
+    }
+
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        => _handler(request, cancellationToken);
+}
+
+internal static class MidtransTestFactory
+{
+    public static MidtransService CreateService(
+        ApplicationDbContext context,
+        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler,
+        string serverKey = "SB-Mid-server-test")
+    {
+        var httpClient = new HttpClient(new DelegatingHttpMessageHandler(handler));
+        var options = Options.Create(new MidtransOptions
+        {
+            ServerKey = serverKey,
+            ClientKey = "SB-Mid-client-test"
+        });
+
+        return new MidtransService(httpClient, context, options, NullLogger<MidtransService>.Instance);
+    }
+
+    public static string CreateNotificationSignature(string orderId, string statusCode, string grossAmount, string serverKey)
+    {
+        var source = string.Concat(orderId, statusCode, grossAmount, serverKey);
+        var hash = SHA512.HashData(Encoding.UTF8.GetBytes(source));
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+}
+
 internal static class TestRoleData
 {
     public static async Task SeedDefaultRolesAsync(ApplicationDbContext context)
@@ -250,6 +326,15 @@ internal static class TestOptions
             ServiceChargeRate = 0.05m,
             PointsPerTransaction = 10
         });
+}
+
+internal sealed class StubAuthCookieService : IAuthCookieService
+{
+    public Task SignInAsync(HttpContext httpContext, AuthenticatedSession session) => Task.CompletedTask;
+    public Task SignOutAsync(HttpContext httpContext) => Task.CompletedTask;
+    public int? GetUserId(HttpRequest request) => null;
+    public AuthenticatedSession? GetAuthenticatedSession(HttpRequest request) => null;
+    public UserRole? GetUserRole(HttpRequest request) => null;
 }
 
 internal static class TestAssert

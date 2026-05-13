@@ -30,8 +30,8 @@
 
     <div class="card shadow-sm">
         <div class="card-header bg-transparent border-0 pt-4 px-4">
-            <h5 class="fw-bold mb-1">Daftar Pengguna Internal</h5>
-            <p class="text-muted mb-0">Gunakan aksi pada tabel untuk edit profil, mengaktifkan, atau menonaktifkan akun.</p>
+            <h5 class="fw-bold mb-1">Daftar Pengguna</h5>
+            <p class="text-muted mb-0">Kelola akun staf internal dan member/pelanggan dari satu halaman.</p>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -62,9 +62,10 @@
                                         UserRole.Supervisor => "info",
                                         UserRole.Kasir => "success",
                                         UserRole.BagianMasak => "secondary",
+                                        UserRole.Member => "info",
                                         _ => "primary"
                                     })">
-                                        @(user.RoleEntity?.Name ?? user.Role.ToString())
+                                        @(user.RoleEntity?.Name ?? (user.Role == UserRole.Member ? "Member" : user.Role.ToString()))
                                     </span>
                                 </td>
                                 <td>
@@ -80,20 +81,30 @@
                                 <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
                                 <td>@(user.LastLogin?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                                 <td>
-                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-edit"></i> Ubah
-                                    </a>
-                                    @if (user.IsActive)
+                                    @if (user.Role != UserRole.Member)
                                     {
-                                        <button class="btn btn-sm btn-danger" onclick="deleteUser(@user.Id)">
-                                            <i class="fas fa-ban"></i> Nonaktifkan
-                                        </button>
+                                        <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i> Ubah
+                                        </a>
                                     }
-                                    else
+                                    @if (user.Role == UserRole.Member)
                                     {
-                                        <button class="btn btn-sm btn-success" onclick="activateUser(@user.Id)">
-                                            <i class="fas fa-check"></i> Aktifkan
-                                        </button>
+                                        <span class="text-muted small">Kelola via halaman member</span>
+                                    }
+                                    @if (user.Role != UserRole.Member)
+                                    {
+                                        @if (user.IsActive)
+                                        {
+                                            <button class="btn btn-sm btn-danger" onclick="deleteUser(@user.Id)">
+                                                <i class="fas fa-ban"></i> Nonaktifkan
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-success" onclick="activateUser(@user.Id)">
+                                                <i class="fas fa-check"></i> Aktifkan
+                                            </button>
+                                        }
                                     }
                                 </td>
                             </tr>

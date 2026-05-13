@@ -18,7 +18,7 @@ namespace Restoran.Features.Payments.Services
         {
             return await _context.PaymentMethodOptions
                 .AsNoTracking()
-                .Where(option => option.IsActive && option.IsCustomerFacing)
+                .Where(option => option.IsActive && option.IsCustomerFacing && option.LegacyMethod == PaymentMethod.Tunai)
                 .OrderBy(option => option.SortOrder)
                 .ThenBy(option => option.DisplayName)
                 .ToListAsync(cancellationToken);
@@ -28,7 +28,7 @@ namespace Restoran.Features.Payments.Services
         {
             return await _context.PaymentMethodOptions
                 .AsNoTracking()
-                .Where(option => option.IsActive && option.IsCashierFacing)
+                .Where(option => option.IsActive && option.IsCashierFacing && option.LegacyMethod == PaymentMethod.Tunai)
                 .OrderBy(option => option.SortOrder)
                 .ThenBy(option => option.DisplayName)
                 .ToListAsync(cancellationToken);
@@ -68,6 +68,8 @@ namespace Restoran.Features.Payments.Services
             payment.Amount = amount;
             payment.PaymentStatus = paymentStatus;
             payment.PaymentDate = paymentStatus == PaymentStatus.Paid ? effectiveAt : null;
+            payment.AmountReceived = paymentStatus == PaymentStatus.Paid ? amount : payment.AmountReceived;
+            payment.ChangeAmount = paymentStatus == PaymentStatus.Paid ? 0 : payment.ChangeAmount;
             payment.ProofUrl = proofUrl;
             payment.UpdatedAt = effectiveAt;
 
@@ -100,7 +102,12 @@ namespace Restoran.Features.Payments.Services
             return OperationResult.Success("Bukti pembayaran berhasil diupload");
         }
 
-        public async Task<OperationResult> MarkPaymentPaidAsync(int transactionId, DateTime paidAt, CancellationToken cancellationToken = default)
+        public async Task<OperationResult> MarkPaymentPaidAsync(
+            int transactionId,
+            DateTime paidAt,
+            decimal? amountReceived = null,
+            decimal? changeAmount = null,
+            CancellationToken cancellationToken = default)
         {
             var transaction = await _context.Transactions
                 .Include(entity => entity.Payment)
@@ -119,6 +126,8 @@ namespace Restoran.Features.Payments.Services
             transaction.Payment.PaymentStatus = PaymentStatus.Paid;
             transaction.Payment.PaymentDate = paidAt;
             transaction.Payment.Amount = transaction.Total;
+            transaction.Payment.AmountReceived = amountReceived ?? transaction.Total;
+            transaction.Payment.ChangeAmount = changeAmount ?? 0;
             transaction.Payment.UpdatedAt = paidAt;
 
             await _context.SaveChangesAsync(cancellationToken);

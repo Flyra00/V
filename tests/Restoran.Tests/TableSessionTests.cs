@@ -59,7 +59,7 @@ public static class TableSessionTests
             });
             await TestPaymentData.SeedDefaultPaymentMethodsAsync(arrangeContext);
             await arrangeContext.SaveChangesAsync();
-            await TestPaymentData.SeedPaymentAsync(arrangeContext, 1, PaymentMethod.Transfer, PaymentStatus.Pending, 28750m);
+            await TestPaymentData.SeedPaymentAsync(arrangeContext, 1, PaymentMethod.Tunai, PaymentStatus.Pending, 28750m);
         }
 
         await using (var paymentContext = database.CreateContext())
@@ -70,9 +70,10 @@ public static class TableSessionTests
                 new StubTransactionNumberGenerator("IGNORED"),
                 new StubChargeConfigurationProvider(),
                 new TableService(paymentContext, new FixedDateTimeProvider(paidAt)),
-                TestPaymentData.CreatePaymentService(paymentContext));
+                TestPaymentData.CreatePaymentService(paymentContext),
+                new StubMidtransService());
 
-            var paymentResult = await paidService.ConfirmPaymentAsync(1);
+            var paymentResult = await paidService.ConfirmPaymentAsync(1, 28750m);
             TestAssert.True(paymentResult.Succeeded);
         }
 
@@ -192,7 +193,7 @@ public static class TableSessionTests
         TestAssert.Equal(TableStatus.Available, (await context.Tables.SingleAsync()).Status);
     }
 
-    public static async Task TableService_DeactivateAsync_RejectsActiveSession_AndDisabledSessionCreation()
+    public static async Task TableService_DeactivateAsync_CancelsActiveSession_AndDisabledSessionCreation()
     {
         await using var database = await SqliteTestDatabase.CreateAsync();
         var now = new DateTime(2026, 5, 12, 10, 0, 0, DateTimeKind.Utc);
@@ -218,8 +219,13 @@ public static class TableSessionTests
         var service = new TableService(context, new FixedDateTimeProvider(now));
 
         var deactivateResult = await service.DeactivateAsync(1);
-        TestAssert.False(deactivateResult.Succeeded);
-        TestAssert.Equal("Meja yang sedang digunakan tidak dapat dinonaktifkan", deactivateResult.Message);
+        TestAssert.True(deactivateResult.Succeeded);
+        TestAssert.Equal("Meja berhasil dinonaktifkan dan sesi aktif dibatalkan", deactivateResult.Message);
+
+        var session = await context.TableSessions.SingleAsync(entity => entity.Id == 1);
+        TestAssert.Equal(TableSessionStatus.Cancelled, session.Status);
+        TestAssert.Equal(now, session.EndTime);
+        TestAssert.Equal(TableStatus.Disabled, (await context.Tables.SingleAsync(entity => entity.Id == 1)).Status);
 
         var threw = false;
         try

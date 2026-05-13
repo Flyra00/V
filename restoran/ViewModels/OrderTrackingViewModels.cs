@@ -15,6 +15,10 @@ namespace Restoran.ViewModels
         public PaymentMethod PaymentMethod { get; init; }
         public string PaymentMethodDisplayName { get; init; } = string.Empty;
         public PaymentStatus PaymentStatus { get; init; }
+        public string MidtransTransactionStatus { get; init; } = string.Empty;
+        public string MidtransPaymentType { get; init; } = string.Empty;
+        public string MidtransTransactionId { get; init; } = string.Empty;
+        public string SnapRedirectUrl { get; init; } = string.Empty;
         public DateTime? PaidAt { get; init; }
         public decimal Subtotal { get; init; }
         public decimal Discount { get; init; }
@@ -28,6 +32,7 @@ namespace Restoran.ViewModels
         public bool IsTrackingFinal => OrderStatus is OrderStatus.Completed or OrderStatus.Cancelled ||
                                        (OrderStatus == OrderStatus.Served && PaymentStatus is PaymentStatus.Paid or PaymentStatus.Cancelled);
         public IReadOnlyList<OrderTrackingItemViewModel> Items { get; init; } = Array.Empty<OrderTrackingItemViewModel>();
+        public bool IsMidtransPayment => PaymentMethod is PaymentMethod.QRIS or PaymentMethod.Transfer;
     }
 
     public class OrderTrackingItemViewModel
@@ -45,6 +50,7 @@ namespace Restoran.ViewModels
         public string TrackingToken { get; init; } = string.Empty;
         public OrderStatus OrderStatus { get; init; }
         public PaymentStatus PaymentStatus { get; init; }
+        public string MidtransTransactionStatus { get; init; } = string.Empty;
         public DateTime? PaidAt { get; init; }
         public bool IsTrackingFinal { get; init; }
         public DateTime RefreshedAt { get; init; }

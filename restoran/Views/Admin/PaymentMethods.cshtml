@@ -2,20 +2,24 @@
 
 @{
     ViewData["Title"] = "Metode Pembayaran";
+
+    var tunaiMethod = Model.FirstOrDefault(method => method.LegacyMethod == Restoran.Models.PaymentMethod.Tunai);
+    var onlineMethods = Model
+        .Where(method => method.LegacyMethod is Restoran.Models.PaymentMethod.QRIS or Restoran.Models.PaymentMethod.Transfer)
+        .OrderBy(method => method.SortOrder)
+        .ToList();
+    var bayarDiKasirMethod = Model.FirstOrDefault(method => method.LegacyMethod == Restoran.Models.PaymentMethod.BayarDiKasir);
 }
 
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-1">Metode Pembayaran</h2>
-            <p class="text-muted mb-0">Kelola metode pembayaran yang tersedia untuk pelanggan dan kasir.</p>
+            <p class="text-muted mb-0">Tampilan admin disederhanakan menjadi Tunai, Bayar Online, dan Bayar di Kasir tanpa mengubah workflow backend yang sudah ada.</p>
         </div>
         <div class="d-flex gap-2">
             <a asp-action="Index" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Kembali
-            </a>
-            <a asp-action="CreatePaymentMethod" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Tambah Metode
             </a>
         </div>
     </div>
@@ -41,30 +45,98 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var method in Model)
+                        @if (tunaiMethod != null)
                         {
                             <tr>
-                                <td>@method.SortOrder</td>
-                                <td><code>@method.Code</code></td>
-                                <td>@method.DisplayName</td>
-                                <td>@method.LegacyMethod</td>
+                                <td>@tunaiMethod.SortOrder</td>
+                                <td><code>@tunaiMethod.Code</code></td>
+                                <td>Tunai</td>
+                                <td>@tunaiMethod.LegacyMethod</td>
                                 <td>
-                                    @if (method.IsCustomerFacing)
+                                    @if (tunaiMethod.IsCustomerFacing)
                                     {
                                         <span class="badge bg-info text-dark">Pelanggan</span>
                                     }
-                                    @if (method.IsCashierFacing)
+                                    @if (tunaiMethod.IsCashierFacing)
                                     {
                                         <span class="badge bg-secondary">Kasir</span>
                                     }
                                 </td>
                                 <td>
-                                    <span class="badge bg-@(method.IsActive ? "success" : "secondary")">
-                                        @(method.IsActive ? "Aktif" : "Nonaktif")
+                                    <span class="badge bg-@(tunaiMethod.IsActive ? "success" : "secondary")">
+                                        @(tunaiMethod.IsActive ? "Aktif" : "Nonaktif")
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    <a asp-action="EditPaymentMethod" asp-route-id="@method.Id" class="btn btn-sm btn-outline-primary">
+                                    <a asp-action="EditPaymentMethod" asp-route-id="@tunaiMethod.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-pen me-1"></i>Ubah
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (onlineMethods.Any())
+                        {
+                            var onlineRepresentative = onlineMethods.First();
+                            var isOnlineActive = onlineMethods.Any(method => method.IsActive);
+                            var isOnlineCustomerFacing = onlineMethods.Any(method => method.IsCustomerFacing);
+                            var isOnlineCashierFacing = onlineMethods.Any(method => method.IsCashierFacing);
+
+                            <tr>
+                                <td>@onlineRepresentative.SortOrder</td>
+                                <td><code>bayar-online</code></td>
+                                <td>
+                                    <div class="fw-semibold">Bayar Online</div>
+                                    <small class="text-muted">Mewakili QRIS dan Transfer di backend.</small>
+                                </td>
+                                <td>QRIS + Transfer</td>
+                                <td>
+                                    @if (isOnlineCustomerFacing)
+                                    {
+                                        <span class="badge bg-info text-dark">Pelanggan</span>
+                                    }
+                                    @if (isOnlineCashierFacing)
+                                    {
+                                        <span class="badge bg-secondary">Kasir</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-@(isOnlineActive ? "success" : "secondary")">
+                                        @(isOnlineActive ? "Aktif" : "Nonaktif")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="EditPaymentMethod" asp-route-id="@onlineRepresentative.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-pen me-1"></i>Ubah
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+
+                        @if (bayarDiKasirMethod != null)
+                        {
+                            <tr>
+                                <td>@bayarDiKasirMethod.SortOrder</td>
+                                <td><code>@bayarDiKasirMethod.Code</code></td>
+                                <td>Bayar di Kasir</td>
+                                <td>@bayarDiKasirMethod.LegacyMethod</td>
+                                <td>
+                                    @if (bayarDiKasirMethod.IsCustomerFacing)
+                                    {
+                                        <span class="badge bg-info text-dark">Pelanggan</span>
+                                    }
+                                    @if (bayarDiKasirMethod.IsCashierFacing)
+                                    {
+                                        <span class="badge bg-secondary">Kasir</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-@(bayarDiKasirMethod.IsActive ? "success" : "secondary")">
+                                        @(bayarDiKasirMethod.IsActive ? "Aktif" : "Nonaktif")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="EditPaymentMethod" asp-route-id="@bayarDiKasirMethod.Id" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-pen me-1"></i>Ubah
                                     </a>
                                 </td>

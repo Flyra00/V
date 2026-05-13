@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Restoran</RootNamespace>
+    <UserSecretsId>restoran-midtrans-sandbox-secrets</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

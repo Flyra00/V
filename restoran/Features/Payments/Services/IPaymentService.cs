@@ -16,6 +16,11 @@ namespace Restoran.Features.Payments.Services
             string proofUrl = "",
             CancellationToken cancellationToken = default);
         Task<OperationResult> UpdatePaymentProofAsync(int transactionId, string proofUrl, CancellationToken cancellationToken = default);
-        Task<OperationResult> MarkPaymentPaidAsync(int transactionId, DateTime paidAt, CancellationToken cancellationToken = default);
+        Task<OperationResult> MarkPaymentPaidAsync(
+            int transactionId,
+            DateTime paidAt,
+            decimal? amountReceived = null,
+            decimal? changeAmount = null,
+            CancellationToken cancellationToken = default);
     }
 }

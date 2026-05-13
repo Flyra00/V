@@ -51,6 +51,12 @@ C:\Users\ASUS\Downloads\restoran (1)\restoran\tests\Restoran.Tests\obj\Debug\net
 C:\Users\ASUS\Downloads\restoran (1)\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.pdb
 C:\Users\ASUS\Downloads\restoran (1)\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.genruntimeconfig.cache
 C:\Users\ASUS\Downloads\restoran (1)\restoran\tests\Restoran.Tests\obj\Debug\net8.0\ref\Restoran.Tests.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.csproj.AssemblyReference.cache
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.AssemblyInfoInputs.cache
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.AssemblyInfo.cs
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.csproj.CoreCompileInputs.cache
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.sourcelink.json
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\restoran.deps.json
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\restoran.runtimeconfig.json
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\appsettings.Development.json
@@ -63,6 +69,8 @@ C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\De
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Restoran.Tests.runtimeconfig.json
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Restoran.Tests.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Restoran.Tests.pdb
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Azure.Core.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Azure.Identity.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\BCrypt.Net-Next.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Humanizer.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.AspNetCore.Razor.Language.dll
@@ -79,6 +87,7 @@ C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\De
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.CodeAnalysis.Razor.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.CodeAnalysis.Scripting.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.Data.SqlClient.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.Data.Sqlite.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.DiaSymReader.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.DotNet.Scaffolding.Shared.dll
@@ -88,8 +97,18 @@ C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\De
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.InMemory.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Sqlite.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.Identity.Client.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.NET.StringTools.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.SqlServer.Server.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.VisualStudio.Web.CodeGeneration.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\Microsoft.VisualStudio.Web.CodeGeneration.Core.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\dotnet-aspnet-codegenerator-design.dll
@@ -121,7 +140,10 @@ C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\De
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.Composition.TypedParts.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.Drawing.Common.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.Memory.Data.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.Reflection.MetadataLoadContext.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.Runtime.Caching.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.Security.Permissions.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\System.Windows.Extensions.dll
@@ -264,6 +286,12 @@ C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\De
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\tr\Microsoft.CodeAnalysis.Workspaces.resources.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.resources.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.resources.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\unix\lib\net6.0\Microsoft.Data.SqlClient.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\browser-wasm\nativeassets\net8.0\e_sqlite3.a
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\linux-arm\native\libe_sqlite3.so
@@ -285,16 +313,11 @@ C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\De
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win-arm64\native\e_sqlite3.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win-x64\native\e_sqlite3.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win-x86\native\e_sqlite3.dll
+C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Runtime.Caching.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Security.Cryptography.ProtectedData.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Windows.Extensions.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\restoran.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\bin\Debug\net8.0\restoran.pdb
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.csproj.AssemblyReference.cache
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.AssemblyInfoInputs.cache
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.AssemblyInfo.cs
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.csproj.CoreCompileInputs.cache
-C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.sourcelink.json
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.3D06F747.Up2Date
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\Restoran.Tests.dll
 C:\Users\ASUS\Downloads\Compressed\restoran\restoran\tests\Restoran.Tests\obj\Debug\net8.0\refint\Restoran.Tests.dll

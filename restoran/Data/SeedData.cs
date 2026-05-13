@@ -98,10 +98,7 @@ namespace Restoran.Data
                 new UserSeed("supervisor", "supervisor@restoran.com", "supervisor123", UserRole.Supervisor, true),
                 new UserSeed("kasir", "kasir@restoran.com", "kasir123", UserRole.Kasir, true),
                 new UserSeed("kitchen", "kitchen@restoran.com", "kitchen123", UserRole.BagianMasak, true),
-                new UserSeed("member.regular", "member.regular@restoran.com", "member123", UserRole.Member, true),
-                new UserSeed("member.silver", "member.silver@restoran.com", "member123", UserRole.Member, true),
-                new UserSeed("member.gold", "member.gold@restoran.com", "member123", UserRole.Member, true),
-                new UserSeed("member.platinum", "member.platinum@restoran.com", "member123", UserRole.Member, true),
+                new UserSeed("member", "member@restoran.com", "member123", UserRole.Member, true),
                 new UserSeed("kasir.cadangan", "kasir.cadangan@restoran.com", "kasircad123", UserRole.Kasir, false)
             };
             var roleLookup = await context.Roles
@@ -376,10 +373,7 @@ namespace Restoran.Data
         {
             var memberSeeds = new[]
             {
-                new MemberSeed("member.regular", "Rani Regular", "081200000001", MemberType.Regular, 15, now.AddMonths(-1)),
-                new MemberSeed("member.silver", "Sinta Silver", "081200000002", MemberType.Silver, 90, now.AddMonths(-4)),
-                new MemberSeed("member.gold", "Gilang Gold", "081200000003", MemberType.Gold, 210, now.AddMonths(-7)),
-                new MemberSeed("member.platinum", "Putra Platinum", "081200000004", MemberType.Platinum, 480, now.AddYears(-1))
+                new MemberSeed("member", "Member Restoran", "081200000001", MemberType.Regular, 120, now.AddMonths(-6))
             };
 
             var userLookup = await context.Users
@@ -758,15 +752,9 @@ namespace Restoran.Data
             }
 
             var hasMemberChanges = false;
-            if (memberLookup.TryGetValue("member.gold", out var goldMember) && goldMember.Points < 250)
+            if (memberLookup.TryGetValue("member", out var member) && member.Points < 120)
             {
-                goldMember.Points = 250;
-                hasMemberChanges = true;
-            }
-
-            if (memberLookup.TryGetValue("member.platinum", out var platinumMember) && platinumMember.Points < 520)
-            {
-                platinumMember.Points = 520;
+                member.Points = 120;
                 hasMemberChanges = true;
             }
 
@@ -950,10 +938,10 @@ namespace Restoran.Data
                     "DEMO-ORD-1002",
                     "2",
                     null,
-                    "Sinta Silver",
+                    "Member Restoran",
                     CustomerType.Member,
                     40000m,
-                    2000m,
+                    1000m,
                     4000m,
                     2000m,
                     44000m,
@@ -1030,10 +1018,10 @@ namespace Restoran.Data
                     "DEMO-ORD-0901",
                     "4",
                     "kasir",
-                    "Gilang Gold",
+                    "Member Restoran",
                     CustomerType.Member,
                     80000m,
-                    8000m,
+                    7600m,
                     8000m,
                     4000m,
                     84000m,
@@ -1109,8 +1097,7 @@ namespace Restoran.Data
                 memberLookup.TryGetValue(
                     seed.CustomerName switch
                     {
-                        "Sinta Silver" => "member.silver",
-                        "Gilang Gold" => "member.gold",
+                        "Member Restoran" => "member",
                         _ => string.Empty
                     },
                     out member);

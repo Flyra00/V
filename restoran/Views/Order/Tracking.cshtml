@@ -67,6 +67,10 @@
                                 <span id="payment-status-badge" class="tracking-status-badge @GetPaymentBadgeClass(Model.PaymentStatus)">
                                     @Model.PaymentStatus
                                 </span>
+                                @if (Model.IsMidtransPayment)
+                                {
+                                    <div class="customer-section-subtitle mt-2">Midtrans: <span id="midtrans-status-text">@GetMidtransStatusLabel(Model.MidtransTransactionStatus)</span></div>
+                                }
                             </div>
                         </div>
 
@@ -180,46 +184,56 @@
                             <i class="fas fa-credit-card"></i>
                             <span>Metode pembayaran: @Model.PaymentMethodDisplayName</span>
                         </div>
+                        @if (Model.IsMidtransPayment)
+                        {
+                            <div class="summary-meta mt-3">
+                                <i class="fas fa-link"></i>
+                                <span>Status Midtrans: @GetMidtransStatusLabel(Model.MidtransTransactionStatus)</span>
+                            </div>
+                        }
                     </article>
 
-                    @if (Model.RequiresOnlinePaymentProof)
+                    @if (Model.IsMidtransPayment)
                     {
                         <article class="summary-card tracking-side-card tracking-action-card" id="payment-proof-card">
                             <div>
-                                <span class="promo-chip mb-3"><i class="fas fa-cloud-arrow-up"></i>Upload Bukti</span>
+                                <span class="promo-chip mb-3"><i class="fas fa-wallet"></i>Pembayaran Midtrans</span>
                                 <h3>Konfirmasi Pembayaran</h3>
-                                <p class="customer-section-subtitle mb-0">Gunakan panel ini untuk mengunggah bukti bayar tanpa meninggalkan halaman pelacakan.</p>
+                                <p class="customer-section-subtitle mb-0">Status pembayaran akan diverifikasi oleh kasir melalui Midtrans Sandbox.</p>
                             </div>
 
-                            @if (Model.PaymentMethod == PaymentMethod.QRIS)
-                            {
-                                <div class="summary-card p-4 text-center">
-                                    <div class="customer-section-subtitle mb-2">Scan QRIS berikut</div>
-                                    <div class="d-flex align-items-center justify-content-center bg-white rounded-4 border mx-auto" style="width: 180px; height: 180px;">
-                                        <span class="customer-section-subtitle">[QRIS Placeholder]</span>
+                            <div class="summary-card p-4">
+                                <div class="tracking-summary-grid">
+                                    <div class="tracking-summary-grid__row">
+                                        <span>Status Midtrans</span>
+                                        <strong id="midtrans-status-card">@GetMidtransStatusLabel(Model.MidtransTransactionStatus)</strong>
                                     </div>
-                                    <div class="fw-semibold mt-3">Total: Rp @Model.Total.ToString("N0")</div>
+                                    <div class="tracking-summary-grid__row">
+                                        <span>Tipe Pembayaran</span>
+                                        <strong>@(string.IsNullOrWhiteSpace(Model.MidtransPaymentType) ? Model.PaymentMethodDisplayName : Model.MidtransPaymentType)</strong>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(Model.MidtransTransactionId))
+                                    {
+                                        <div class="tracking-summary-grid__row">
+                                            <span>ID Midtrans</span>
+                                            <strong>@Model.MidtransTransactionId</strong>
+                                        </div>
+                                    }
                                 </div>
-                            }
-                            else
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.SnapRedirectUrl) && Model.PaymentStatus != PaymentStatus.Paid)
                             {
-                                <div class="summary-card p-4">
-                                    <div class="fw-semibold">Transfer ke rekening restoran</div>
-                                    <div class="customer-section-subtitle mt-2">Bank BCA</div>
-                                    <div class="customer-section-subtitle">No. Rekening: 123-456-7890</div>
-                                    <div class="customer-section-subtitle">Atas Nama: PT Restoran Ceria</div>
-                                    <div class="fw-semibold mt-3">Total: Rp @Model.Total.ToString("N0")</div>
-                                </div>
+                                <a class="customer-primary-button w-100" href="@Model.SnapRedirectUrl" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-up-right-from-square"></i>
+                                    Lanjutkan Pembayaran Midtrans
+                                </a>
                             }
 
-                            <div>
-                                <label class="customer-field-label" for="payment-proof">Unggah bukti pembayaran</label>
-                                <input type="file" id="payment-proof" class="tracking-file-input" accept="image/*">
+                            <div class="summary-meta">
+                                <i class="fas fa-circle-info"></i>
+                                <span>Setelah pembayaran sandbox selesai, tunggu kasir menekan tombol Cek Status Midtrans.</span>
                             </div>
-                            <button class="customer-primary-button w-100" type="button" onclick="uploadProof('@Model.TrackingToken')">
-                                <i class="fas fa-upload"></i>
-                                Unggah Bukti Bayar
-                            </button>
                         </article>
                     }
 
@@ -281,6 +295,17 @@
         DetailStatus.Preparing => "is-preparing",
         _ => "is-pending"
     };
+
+    private static string GetMidtransStatusLabel(string status) => status?.Trim().ToLowerInvariant() switch
+    {
+        "settlement" => "Lunas",
+        "capture" => "Capture",
+        "pending" => "Menunggu pembayaran Midtrans",
+        "deny" => "Pembayaran ditolak",
+        "cancel" => "Pembayaran dibatalkan",
+        "expire" => "Pembayaran kedaluwarsa",
+        _ => string.IsNullOrWhiteSpace(status) ? "Belum ada status Midtrans" : status
+    };
 }
 
 @section Scripts {
@@ -321,6 +346,8 @@
                 const orderStatusIcon = document.getElementById('order-status-icon');
                 const lastUpdated = document.getElementById('tracking-last-updated');
                 const paymentProofCard = document.getElementById('payment-proof-card');
+                const midtransStatusText = document.getElementById('midtrans-status-text');
+                const midtransStatusCard = document.getElementById('midtrans-status-card');
 
                 orderStatusText.textContent = data.orderStatus;
                 paymentStatusBadge.textContent = data.paymentStatus;
@@ -328,6 +355,14 @@
                 orderStatusAlert.className = `tracking-status-band ${getOrderAlertClass(data.orderStatus)}`;
                 orderStatusIcon.className = `fas ${getOrderIconClass(data.orderStatus)} fa-lg`;
                 lastUpdated.textContent = new Date(data.refreshedAt).toLocaleTimeString('id-ID');
+
+                if (midtransStatusText) {
+                    midtransStatusText.textContent = getMidtransStatusLabel(data.midtransStatus);
+                }
+
+                if (midtransStatusCard) {
+                    midtransStatusCard.textContent = getMidtransStatusLabel(data.midtransStatus);
+                }
 
                 if (paymentProofCard && data.paymentStatus === 'Paid') {
                     paymentProofCard.remove();
@@ -440,36 +475,23 @@
                 return document.querySelector('input[name="__RequestVerificationToken"]').value;
             }
 
-            function uploadProof(trackingTokenValue) {
-                const fileInput = document.getElementById('payment-proof');
-                if (!fileInput.files || fileInput.files.length === 0) {
-                    showToast('Pilih file bukti pembayaran terlebih dahulu.', 'warning');
-                    return;
+            function getMidtransStatusLabel(status) {
+                switch ((status || '').toLowerCase()) {
+                    case 'settlement':
+                        return 'Lunas';
+                    case 'capture':
+                        return 'Capture';
+                    case 'pending':
+                        return 'Menunggu pembayaran Midtrans';
+                    case 'deny':
+                        return 'Pembayaran ditolak';
+                    case 'cancel':
+                        return 'Pembayaran dibatalkan';
+                    case 'expire':
+                        return 'Pembayaran kedaluwarsa';
+                    default:
+                        return status || 'Belum ada status Midtrans';
                 }
-
-                const formData = new FormData();
-                formData.append('token', trackingTokenValue);
-                formData.append('paymentProof', fileInput.files[0]);
-
-                fetch('/Order/UploadPaymentProof', {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': getRequestVerificationToken()
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(data.message || 'Bukti pembayaran berhasil diunggah.', 'success');
-                        refreshTracking();
-                    } else {
-                        showToast(data.message || 'Gagal mengunggah bukti pembayaran.', 'error');
-                    }
-                })
-                .catch(error => {
-                    showToast(`Terjadi kesalahan: ${error.message}`, 'error');
-                });
             }
 
             updateTrackingSteps('@Model.OrderStatus');

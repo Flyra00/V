@@ -109,13 +109,14 @@ public static class PromoTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(taxRate: 10m, serviceChargeRate: 5m),
             new TableService(context, new FixedDateTimeProvider(now)),
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var result = await service.CreateOrderAsync(new CreateOrderRequest
         {
             TableId = 1,
             CustomerName = "Promo Guest",
-            PaymentMethod = PaymentMethod.BayarDiKasir,
+            PaymentMethod = PaymentMethod.Tunai,
             Items =
             [
                 new OrderItemRequest
@@ -141,7 +142,7 @@ public static class PromoTests
         await using (var arrangeContext = database.CreateContext())
         {
             arrangeContext.Categories.Add(new Category { Id = 1, Name = "Minuman" });
-            arrangeContext.Products.Add(new Product { Id = 1, Name = "Paket Teh", CategoryId = 1, Price = 50000m, IsAvailable = true });
+            arrangeContext.Products.Add(new Product { Id = 1, Name = "Paket Teh", CategoryId = 1, Price = 50000m, MemberDiscountPercentage = 10m, IsAvailable = true });
             arrangeContext.Tables.Add(new Table { Id = 1, TableNumber = "2", Capacity = 4, Status = TableStatus.Available });
             arrangeContext.Users.Add(new User
             {
@@ -181,7 +182,8 @@ public static class PromoTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(taxRate: 10m, serviceChargeRate: 5m),
             new TableService(context, new FixedDateTimeProvider(now)),
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var result = await service.CreateOrderAsync(new CreateOrderRequest
         {
@@ -189,7 +191,7 @@ public static class PromoTests
             CustomerName = "Member Gold",
             IsMember = true,
             MemberId = 1,
-            PaymentMethod = PaymentMethod.QRIS,
+            PaymentMethod = PaymentMethod.Tunai,
             Items =
             [
                 new OrderItemRequest

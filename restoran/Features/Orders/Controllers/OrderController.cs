@@ -78,7 +78,10 @@ namespace Restoran.Controllers
                     trackingToken = result.Data.TrackingToken,
                     appliedPromoName = result.Data.AppliedPromoName,
                     discountAmount = result.Data.DiscountAmount,
-                    trackingUrl = Url.Action(nameof(Tracking), new { token = result.Data.TrackingToken })
+                    trackingUrl = Url.Action(nameof(Tracking), new { token = result.Data.TrackingToken }),
+                    isMidtransPayment = result.Data.IsMidtransPayment,
+                    paymentRedirectUrl = result.Data.PaymentRedirectUrl,
+                    snapToken = result.Data.SnapToken
                 });
             }
 
@@ -177,6 +180,7 @@ namespace Restoran.Controllers
                 transactionId = status.TransactionId,
                 orderStatus = status.OrderStatus.ToString(),
                 paymentStatus = status.PaymentStatus.ToString(),
+                midtransStatus = status.MidtransTransactionStatus,
                 paidAt = status.PaidAt?.ToString("O"),
                 isTrackingFinal = status.IsTrackingFinal,
                 refreshedAt = status.RefreshedAt.ToString("O"),

@@ -21,6 +21,7 @@ namespace Restoran.Features.Orders.Services
         private readonly IChargeConfigurationProvider _chargeConfigurationProvider;
         private readonly ITableService _tableService;
         private readonly IPaymentService _paymentService;
+        private readonly IMidtransService _midtransService;
 
         public OrderService(
             ApplicationDbContext context,
@@ -29,7 +30,8 @@ namespace Restoran.Features.Orders.Services
             IPaymentProofStorage paymentProofStorage,
             IChargeConfigurationProvider chargeConfigurationProvider,
             ITableService tableService,
-            IPaymentService paymentService)
+            IPaymentService paymentService,
+            IMidtransService midtransService)
         {
             _context = context;
             _dateTimeProvider = dateTimeProvider;
@@ -38,6 +40,7 @@ namespace Restoran.Features.Orders.Services
             _chargeConfigurationProvider = chargeConfigurationProvider;
             _tableService = tableService;
             _paymentService = paymentService;
+            _midtransService = midtransService;
         }
 
         public async Task<OrderMenuViewModel?> GetMenuAsync(int tableId, CancellationToken cancellationToken = default)
@@ -91,17 +94,7 @@ namespace Restoran.Features.Orders.Services
                         EndsAt = promo.EndsAt
                     })
                     .ToList(),
-                PaymentMethods = paymentMethods
-                    .Select(method => new PaymentMethodSelectionViewModel
-                    {
-                        Id = method.Id,
-                        Code = method.Code,
-                        DisplayName = method.DisplayName,
-                        LegacyMethod = method.LegacyMethod,
-                        IsCustomerFacing = method.IsCustomerFacing,
-                        IsCashierFacing = method.IsCashierFacing
-                    })
-                    .ToList(),
+                PaymentMethods = BuildCustomerPaymentMethods(paymentMethods),
                 ProductsByCategory = products
                     .GroupBy(p => p.Category.Name)
                     .ToDictionary(group => group.Key, group => group.ToList())
@@ -128,6 +121,11 @@ namespace Restoran.Features.Orders.Services
 
             var now = _dateTimeProvider.Now;
             var transactionNumber = await _transactionNumberGenerator.GenerateAsync(cancellationToken);
+            if (request.PaymentMethod != PaymentMethod.Tunai)
+            {
+                return OperationResult<CreateOrderResponse>.Failure("Pembayaran online sedang dinonaktifkan sementara. Silakan gunakan pembayaran tunai.");
+            }
+
             var availablePaymentMethod = (await _paymentService.GetActiveCustomerMethodsAsync(cancellationToken))
                 .Any(method => method.LegacyMethod == request.PaymentMethod);
             if (!availablePaymentMethod)
@@ -198,7 +196,7 @@ namespace Restoran.Features.Orders.Services
                 transaction.Tax = chargeConfiguration.CalculateTax(subtotal);
                 transaction.ServiceCharge = chargeConfiguration.CalculateServiceCharge(subtotal);
 
-                var memberDiscount = await CalculateMemberDiscountAsync(request, subtotal, cancellationToken);
+                var memberDiscount = await CalculateMemberDiscountAsync(request, products, cancellationToken);
                 var promoSelection = await SelectBestPromoAsync(subtotal, memberDiscount, now, cancellationToken);
 
                 transaction.Discount = memberDiscount + promoSelection.DiscountAmount;
@@ -222,6 +220,28 @@ namespace Restoran.Features.Orders.Services
                     return OperationResult<CreateOrderResponse>.Failure(paymentResult.Message);
                 }
 
+                MidtransSnapResponse? snapResponse = null;
+                var isMidtransPayment = IsMidtransPaymentMethod(request.PaymentMethod);
+                if (isMidtransPayment)
+                {
+                    paymentResult.Data!.MidtransOrderId = $"RST-{transaction.TransactionNumber}-{transaction.Id}";
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    transaction.Payment = paymentResult.Data;
+                    snapResponse = await _midtransService.CreateSnapTransactionAsync(transaction, cancellationToken);
+                    if (!snapResponse.Succeeded)
+                    {
+                        await dbTransaction.RollbackAsync(cancellationToken);
+                        return OperationResult<CreateOrderResponse>.Failure(snapResponse.Message);
+                    }
+
+                    paymentResult.Data.SnapToken = snapResponse.Token;
+                    paymentResult.Data.SnapRedirectUrl = snapResponse.RedirectUrl;
+                    paymentResult.Data.ProviderResponseJson = snapResponse.RawJson;
+                    paymentResult.Data.MidtransTransactionStatus = "pending";
+                    paymentResult.Data.UpdatedAt = now;
+                }
+
                 _context.Notifications.Add(new Notification
                 {
                     TransactionId = transaction.Id,
@@ -240,7 +260,10 @@ namespace Restoran.Features.Orders.Services
                     TrackingToken = transaction.TrackingToken ?? string.Empty,
                     TransactionNumber = transaction.TransactionNumber,
                     AppliedPromoName = transaction.AppliedPromoName,
-                    DiscountAmount = transaction.Discount
+                    DiscountAmount = transaction.Discount,
+                    IsMidtransPayment = isMidtransPayment,
+                    PaymentRedirectUrl = snapResponse?.RedirectUrl ?? string.Empty,
+                    SnapToken = snapResponse?.Token ?? string.Empty
                 });
             }
             catch (Exception ex)
@@ -411,6 +434,7 @@ namespace Restoran.Features.Orders.Services
                 TrackingToken = transaction.TrackingToken ?? string.Empty,
                 OrderStatus = transaction.OrderStatus,
                 PaymentStatus = transaction.Payment!.PaymentStatus,
+                MidtransTransactionStatus = transaction.Payment.MidtransTransactionStatus,
                 PaidAt = transaction.Payment.PaymentDate,
                 IsTrackingFinal = IsTrackingFinal(transaction.OrderStatus, transaction.Payment.PaymentStatus),
                 RefreshedAt = _dateTimeProvider.Now,
@@ -450,6 +474,7 @@ namespace Restoran.Features.Orders.Services
                 TrackingToken = transaction.TrackingToken ?? string.Empty,
                 OrderStatus = transaction.OrderStatus,
                 PaymentStatus = transaction.Payment!.PaymentStatus,
+                MidtransTransactionStatus = transaction.Payment.MidtransTransactionStatus,
                 PaidAt = transaction.Payment.PaymentDate,
                 IsTrackingFinal = IsTrackingFinal(transaction.OrderStatus, transaction.Payment.PaymentStatus),
                 RefreshedAt = _dateTimeProvider.Now,
@@ -469,7 +494,7 @@ namespace Restoran.Features.Orders.Services
 
         private async Task<decimal> CalculateMemberDiscountAsync(
             CreateOrderRequest request,
-            decimal subtotal,
+            IReadOnlyDictionary<int, Product> products,
             CancellationToken cancellationToken)
         {
             if (!request.IsMember)
@@ -491,7 +516,29 @@ namespace Restoran.Features.Orders.Services
                     cancellationToken);
             }
 
-            return member == null ? 0m : subtotal * (member.DiscountPercentage / 100);
+            if (member == null)
+            {
+                return 0m;
+            }
+
+            decimal totalMemberItemDiscount = 0m;
+            foreach (var item in request.Items)
+            {
+                if (!products.TryGetValue(item.ProductId, out var product) || item.Quantity <= 0)
+                {
+                    continue;
+                }
+
+                if (product.MemberDiscountPercentage <= 0m)
+                {
+                    continue;
+                }
+
+                var lineSubtotal = product.Price * item.Quantity;
+                totalMemberItemDiscount += lineSubtotal * (product.MemberDiscountPercentage / 100m);
+            }
+
+            return totalMemberItemDiscount;
         }
 
         private async Task<PromoSelection> SelectBestPromoAsync(
@@ -554,8 +601,12 @@ namespace Restoran.Features.Orders.Services
                 CreatedAt = transaction.CreatedAt,
                 OrderStatus = transaction.OrderStatus,
                 PaymentMethod = transaction.Payment!.PaymentMethodOption.LegacyMethod,
-                PaymentMethodDisplayName = transaction.Payment.PaymentMethodOption.DisplayName,
+                PaymentMethodDisplayName = GetPaymentDisplayName(transaction.Payment.PaymentMethodOption.LegacyMethod, transaction.Payment.PaymentMethodOption.DisplayName),
                 PaymentStatus = transaction.Payment.PaymentStatus,
+                MidtransTransactionStatus = transaction.Payment.MidtransTransactionStatus,
+                MidtransPaymentType = transaction.Payment.MidtransPaymentType,
+                MidtransTransactionId = transaction.Payment.MidtransTransactionId,
+                SnapRedirectUrl = transaction.Payment.SnapRedirectUrl,
                 PaidAt = transaction.Payment.PaymentDate,
                 Subtotal = transaction.Subtotal,
                 Discount = transaction.Discount,
@@ -582,6 +633,39 @@ namespace Restoran.Features.Orders.Services
         {
             return orderStatus is OrderStatus.Completed or OrderStatus.Cancelled ||
                    (orderStatus == OrderStatus.Served && paymentStatus is PaymentStatus.Paid or PaymentStatus.Cancelled);
+        }
+
+        private static bool IsMidtransPaymentMethod(PaymentMethod paymentMethod)
+            => paymentMethod is PaymentMethod.QRIS or PaymentMethod.Transfer;
+
+        private static string GetPaymentDisplayName(PaymentMethod paymentMethod, string currentDisplayName)
+            => IsMidtransPaymentMethod(paymentMethod)
+                ? "Bayar Online"
+                : currentDisplayName;
+
+        private static IReadOnlyList<PaymentMethodSelectionViewModel> BuildCustomerPaymentMethods(IReadOnlyList<PaymentMethodOption> paymentMethods)
+        {
+            var result = new List<PaymentMethodSelectionViewModel>();
+            
+            foreach (var method in paymentMethods)
+            {
+                if (method.LegacyMethod != PaymentMethod.Tunai)
+                {
+                    continue;
+                }
+
+                result.Add(new PaymentMethodSelectionViewModel
+                {
+                    Id = method.Id,
+                    Code = method.Code,
+                    DisplayName = method.DisplayName,
+                    LegacyMethod = method.LegacyMethod,
+                    IsCustomerFacing = method.IsCustomerFacing,
+                    IsCashierFacing = method.IsCashierFacing
+                });
+            }
+
+            return result;
         }
 
         private async Task<string> GenerateTrackingTokenAsync(CancellationToken cancellationToken)

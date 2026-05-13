@@ -8,6 +8,20 @@
     var activeNav = (ViewData["CustomerActiveNav"] as string ?? (page == "tracking" ? "status" : "menu")).ToLowerInvariant();
     var ctaHref = ViewData["CustomerCtaHref"] as string ?? (page == "menu" ? "#order-catalog" : "/Customer/Index#table-cta");
     var ctaText = ViewData["CustomerCtaText"] as string ?? "Pesan Sekarang";
+    var isAdmin = User.IsInRole(nameof(Restoran.Models.UserRole.Admin));
+    var isOwner = User.IsInRole(nameof(Restoran.Models.UserRole.Owner));
+    var isSupervisor = User.IsInRole(nameof(Restoran.Models.UserRole.Supervisor));
+    var isKasir = User.IsInRole(nameof(Restoran.Models.UserRole.Kasir));
+    var isKitchen = User.IsInRole(nameof(Restoran.Models.UserRole.BagianMasak));
+    var internalHomeHref = isAdmin || isOwner
+        ? "/Dashboard"
+        : isSupervisor
+            ? "/Supervisor/Assets"
+            : isKasir
+                ? "/Kasir"
+                : isKitchen
+                    ? "/Kitchen/Display"
+                    : string.Empty;
 }
 
 <header class="customer-navbar-wrap">
@@ -52,12 +66,20 @@
 
             @if (page == "landing")
             {
+                @if (!string.IsNullOrWhiteSpace(internalHomeHref))
+                {
+                    <a class="customer-secondary-button" href="@internalHomeHref">Kembali ke Dashboard</a>
+                }
                 <button class="customer-navbar-cta" type="button" onclick="if (typeof showOrderTableModal === 'function') { showOrderTableModal(); } else { window.location.href='@ctaHref'; }">
                     @ctaText
                 </button>
             }
             else
             {
+                @if (!string.IsNullOrWhiteSpace(internalHomeHref))
+                {
+                    <a class="customer-secondary-button" href="@internalHomeHref">Kembali ke Dashboard</a>
+                }
                 <a class="customer-navbar-cta" href="@ctaHref">@ctaText</a>
             }
         </div>

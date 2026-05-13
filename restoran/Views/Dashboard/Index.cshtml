@@ -1,118 +1,89 @@
 @model DashboardViewModel
 
 @{
-    ViewData["Title"] = "Dashboard Owner";
+    ViewData["Title"] = "Dashboard Restoran";
 }
 
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="fw-bold mb-1">Dashboard Owner</h2>
-                    <p class="text-muted mb-0">Ringkasan performa bisnis hari ini</p>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary" onclick="refreshDashboard()">
-                        <i class="fas fa-sync-alt me-2"></i>Refresh
+<div class="container-fluid ceria-page ceria-dashboard">
+    <section class="ceria-hero-card p-4 p-lg-5 mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4">
+            <div>
+                <span class="badge rounded-pill text-bg-light border px-3 py-2 mb-3" style="color: var(--ceria-primary); border-color: var(--ceria-outline) !important; background: rgba(255,255,255,0.78);">
+                    <i class="fas fa-chart-line me-2"></i>Dashboard Restoran
+                </span>
+                <h2 class="fw-bold mb-2" style="color: var(--ceria-text);">Dashboard Restoran</h2>
+                <p class="mb-0" style="color: var(--ceria-text-soft);">Ringkasan performa restoran hari ini</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-ceria-soft px-4" onclick="refreshDashboard()">
+                    <i class="fas fa-rotate-right me-2"></i>Perbarui
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-ceria-primary px-4 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-download me-2"></i>Unduh Laporan
                     </button>
-                    <div class="dropdown">
-                        <button class="btn btn-gradient-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-download me-2"></i>Export
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/Dashboard/RevenueReport"><i class="fas fa-file-invoice-dollar me-2"></i>Laporan Pendapatan</a></li>
-                            <li><a class="dropdown-item" href="/Dashboard/StockReport"><i class="fas fa-box me-2"></i>Laporan Stok</a></li>
-                        </ul>
-                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/Dashboard/RevenueReport"><i class="fas fa-file-invoice-dollar me-2"></i>Laporan Pendapatan</a></li>
+                        <li><a class="dropdown-item" href="/Dashboard/StockReport"><i class="fas fa-box me-2"></i>Laporan Stok</a></li>
+                    </ul>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Stats Cards -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card border-0 h-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                <div class="card-body text-white p-4">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card ceria-stat-card ceria-stat-card--today border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
                         <div>
-                            <p class="text-white-50 mb-1">Pendapatan Hari Ini</p>
-                            <h3 class="fw-bold mb-2">Rp @Model.TodayRevenue.ToString("N0")</h3>
-                            <small class="text-white-75">
-                                <i class="fas fa-receipt me-1"></i>@Model.TodayTransactionCount transaksi
-                            </small>
+                            <p class="mb-1">Pendapatan Hari Ini</p>
+                            <h3 class="fw-bold mb-2" style="color: var(--ceria-text);">Rp @Model.TodayRevenue.ToString("N0")</h3>
+                            <small><i class="fas fa-receipt me-1"></i>@Model.TodayTransactionCount transaksi</small>
                         </div>
-                        <div class="bg-white bg-opacity-25 rounded p-2">
-                            <i class="fas fa-money-bill-wave fa-2x text-white"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3 pt-3 border-top border-white border-opacity-25">
-                        <small class="text-white-75">+12% dari kemarin</small>
+                        <div class="ceria-stat-icon"><i class="fas fa-wallet fa-lg"></i></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card border-0 h-100" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
-                <div class="card-body text-white p-4">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card ceria-stat-card ceria-stat-card--month border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
                         <div>
-                            <p class="text-white-50 mb-1">Pendapatan Bulan Ini</p>
-                            <h3 class="fw-bold mb-2">Rp @Model.MonthlyRevenue.ToString("N0")</h3>
-                            <small class="text-white-75">
-                                <i class="fas fa-receipt me-1"></i>@Model.MonthlyTransactionCount transaksi
-                            </small>
+                            <p class="mb-1">Pendapatan Bulan Ini</p>
+                            <h3 class="fw-bold mb-2" style="color: var(--ceria-text);">Rp @Model.MonthlyRevenue.ToString("N0")</h3>
+                            <small><i class="fas fa-chart-column me-1"></i>@Model.MonthlyTransactionCount transaksi</small>
                         </div>
-                        <div class="bg-white bg-opacity-25 rounded p-2">
-                            <i class="fas fa-chart-line fa-2x text-white"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3 pt-3 border-top border-white border-opacity-25">
-                        <small class="text-white-75">+8% dari bulan lalu</small>
+                        <div class="ceria-stat-icon"><i class="fas fa-coins fa-lg"></i></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card border-0 h-100" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
-                <div class="card-body text-white p-4">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card ceria-stat-card ceria-stat-card--menu border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
                         <div>
-                            <p class="text-white-50 mb-1">Menu Tersedia</p>
-                            <h3 class="fw-bold mb-2">@Model.AvailableProductsCount</h3>
-                            <small class="text-white-75">
-                                <i class="fas fa-times-circle me-1"></i>@Model.UnavailableProductsCount menu habis
-                            </small>
+                            <p class="mb-1">Menu Tersedia</p>
+                            <h3 class="fw-bold mb-2" style="color: var(--ceria-text);">@Model.AvailableProductsCount</h3>
+                            <small><i class="fas fa-circle-xmark me-1"></i>@Model.UnavailableProductsCount menu tidak tersedia</small>
                         </div>
-                        <div class="bg-white bg-opacity-25 rounded p-2">
-                            <i class="fas fa-utensils fa-2x text-white"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3 pt-3 border-top border-white border-opacity-25">
-                        <small class="text-white-75">@((Model.AvailableProductsCount + Model.UnavailableProductsCount) > 0 ? (Model.AvailableProductsCount * 100 / (Model.AvailableProductsCount + Model.UnavailableProductsCount)) : 0)% tersedia</small>
+                        <div class="ceria-stat-icon"><i class="fas fa-utensils fa-lg"></i></div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card border-0 h-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                <div class="card-body text-white p-4">
-                    <div class="d-flex justify-content-between align-items-start">
+            <div class="card ceria-stat-card ceria-stat-card--active border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
                         <div>
-                            <p class="text-white-50 mb-1">Transaksi Aktif</p>
-                            <h3 class="fw-bold mb-2">@Model.ActiveTransactions.Count</h3>
-                            <small class="text-white-75">
-                                <i class="fas fa-clock me-1"></i>Sedang diproses
-                            </small>
+                            <p class="mb-1">Transaksi Aktif</p>
+                            <h3 class="fw-bold mb-2" style="color: var(--ceria-text);">@Model.ActiveTransactions.Count</h3>
+                            <small><i class="fas fa-fire me-1"></i>Sedang diproses di operasional</small>
                         </div>
-                        <div class="bg-white bg-opacity-25 rounded p-2">
-                            <i class="fas fa-fire fa-2x text-white"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3 pt-3 border-top border-white border-opacity-25">
-                        <small class="text-white-75">Rata-rata 15 menit</small>
+                        <div class="ceria-stat-icon"><i class="fas fa-bell-concierge fa-lg"></i></div>
                     </div>
                 </div>
             </div>
@@ -120,23 +91,14 @@
     </div>
 
     <div class="row">
-        <!-- Chart Section -->
         <div class="col-lg-8 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold mb-0">Grafik Pendapatan 7 Hari Terakhir</h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                7 Hari
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">7 Hari</a></li>
-                                <li><a class="dropdown-item" href="#">30 Hari</a></li>
-                                <li><a class="dropdown-item" href="#">3 Bulan</a></li>
-                            </ul>
-                        </div>
+            <div class="card ceria-chart-card border-0 h-100">
+                <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1" style="color: var(--ceria-text);">Grafik Pendapatan 7 Hari Terakhir</h5>
+                        <small>Tren penjualan harian dalam nuansa Ceria Resto.</small>
                     </div>
+                    <span class="badge rounded-pill px-3 py-2" style="background: var(--ceria-secondary-soft); color: var(--ceria-primary);">7 Hari</span>
                 </div>
                 <div class="card-body p-4">
                     <canvas id="revenueChart" height="280"></canvas>
@@ -144,39 +106,33 @@
             </div>
         </div>
 
-        <!-- Top Products -->
         <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-bold mb-0">Menu Terlaris Hari Ini</h5>
+            <div class="card ceria-panel border-0 h-100">
+                <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0">
+                    <h5 class="fw-bold mb-1" style="color: var(--ceria-text);">Menu Terlaris Hari Ini</h5>
+                    <small>Pantau menu yang paling banyak bergerak hari ini.</small>
                 </div>
                 <div class="card-body p-4">
                     @if (Model.TopProductsToday.Any())
                     {
                         @foreach (var product in Model.TopProductsToday.Take(5))
                         {
-                            <div class="d-flex align-items-center mb-3 p-3 rounded" style="background: var(--bs-body-bg);">
-                                <div class="flex-shrink-0">
-                                    <div class="d-flex align-items-center justify-content-center rounded" 
-                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                        <i class="fas fa-utensils text-white"></i>
-                                    </div>
+                            <div class="ceria-list-item d-flex align-items-center gap-3 p-3 mb-3">
+                                <div class="ceria-stat-icon" style="width: 48px; height: 48px; flex-shrink: 0;"><i class="fas fa-bowl-food"></i></div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="fw-bold text-truncate" style="color: var(--ceria-text);">@product.ProductName</div>
+                                    <small>@product.QuantitySold terjual</small>
                                 </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <h6 class="fw-bold mb-1">@product.ProductName</h6>
-                                    <small class="text-muted">@product.QuantitySold terjual</small>
-                                </div>
-                                <div class="text-end">
-                                    <h6 class="fw-bold text-primary mb-0">Rp @product.Revenue.ToString("N0")</h6>
-                                </div>
+                                <div class="text-end fw-bold" style="color: var(--ceria-primary);">Rp @product.Revenue.ToString("N0")</div>
                             </div>
                         }
                     }
                     else
                     {
-                        <div class="text-center py-5">
-                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Belum ada data penjualan hari ini</p>
+                        <div class="ceria-empty-state text-center py-5 px-4">
+                            <i class="fas fa-chart-bar fa-3x mb-3" style="color: var(--ceria-primary-soft);"></i>
+                            <h6 class="fw-bold mb-2" style="color: var(--ceria-text);">Belum ada data penjualan</h6>
+                            <p class="mb-0">Menu terlaris akan tampil otomatis setelah transaksi masuk.</p>
                         </div>
                     }
                 </div>
@@ -185,161 +141,121 @@
     </div>
 
     <div class="row">
-        <!-- Inventory Alert -->
         <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold mb-0">
-                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>Inventaris Perlu Perhatian
-                        </h5>
-                        @if (Model.InventoryAlerts.Any())
-                        {
-                            <span class="badge bg-danger">@Model.InventoryAlerts.Count</span>
-                        }
+            <div class="card ceria-panel border-0 h-100">
+                <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1" style="color: var(--ceria-text);">Inventaris Perlu Perhatian</h5>
+                        <small>Stok dan kondisi aset yang perlu tindakan.</small>
                     </div>
+                    @if (Model.InventoryAlerts.Any())
+                    {
+                        <span class="badge rounded-pill px-3 py-2" style="background: var(--ceria-secondary-soft); color: var(--ceria-primary);">@Model.InventoryAlerts.Count</span>
+                    }
                 </div>
                 <div class="card-body p-4">
                     @if (Model.InventoryAlerts.Any())
                     {
                         @foreach (var asset in Model.InventoryAlerts.Take(5))
                         {
-                            <div class="alert alert-warning border-0 mb-2" style="background: rgba(245, 158, 11, 0.1);">
-                                <div class="d-flex justify-content-between align-items-center">
+                            <div class="ceria-list-item p-3 mb-3" style="background: #fff8de; border-color: rgba(240, 180, 25, 0.25);">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
                                     <div>
-                                        <strong>@asset.Name</strong>
-                                        <div class="small text-muted">
-                                            Jumlah: @asset.CurrentQuantity @asset.Unit (Patokan minimum: @asset.AlertThreshold) • Kondisi: @asset.Condition
-                                        </div>
+                                        <div class="fw-bold" style="color: var(--ceria-text);">@asset.Name</div>
+                                        <small>Jumlah: @asset.CurrentQuantity @asset.Unit • Minimum: @asset.AlertThreshold</small><br />
+                                        <small>Kondisi: @asset.Condition</small>
                                     </div>
-                                    <a href="/Supervisor/Assets" class="btn btn-sm btn-warning">
-                                        <i class="fas fa-plus"></i>
-                                    </a>
-                                </div>
-                                <div class="progress mt-2" style="height: 4px;">
-                                    <div class="progress-bar bg-warning" 
-                                         style="width: @(Math.Min((asset.CurrentQuantity * 100) / asset.AlertThreshold, 100))%"></div>
+                                    <a href="/Supervisor/Assets" class="btn btn-sm btn-ceria-soft"><i class="fas fa-arrow-right"></i></a>
                                 </div>
                             </div>
                         }
                     }
                     else
                     {
-                        <div class="text-center py-5">
-                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
-                                 style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                                <i class="fas fa-check fa-2x text-white"></i>
-                            </div>
-                            <h6 class="fw-bold">Inventaris Dalam Kondisi Baik</h6>
-                            <p class="text-muted small">Tidak ada aset yang perlu ditinjau saat ini</p>
+                        <div class="ceria-empty-state text-center py-5 px-4">
+                            <i class="fas fa-boxes-stacked fa-3x mb-3" style="color: var(--ceria-success);"></i>
+                            <h6 class="fw-bold mb-2" style="color: var(--ceria-text);">Inventaris Aman</h6>
+                            <p class="mb-0">Belum ada aset yang membutuhkan perhatian.</p>
                         </div>
                     }
                 </div>
             </div>
         </div>
 
-        <!-- Asset Damage Reports -->
         <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-tools text-danger me-2"></i>Laporan Kerusakan
-                    </h5>
+            <div class="card ceria-panel border-0 h-100">
+                <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0">
+                    <h5 class="fw-bold mb-1" style="color: var(--ceria-text);">Laporan Kerusakan</h5>
+                    <small>Riwayat kerusakan aset terbaru.</small>
                 </div>
                 <div class="card-body p-4">
                     @if (Model.RecentAssetDamages.Any())
                     {
                         @foreach (var damage in Model.RecentAssetDamages.Take(5))
                         {
-                            <div class="d-flex align-items-center p-3 rounded mb-2" style="background: rgba(239, 68, 68, 0.1);">
-                                <div class="flex-shrink-0">
-                                    <div class="d-flex align-items-center justify-content-center rounded-circle" 
-                                         style="width: 40px; height: 40px; background: #ef4444;">
-                                        <i class="fas fa-exclamation text-white"></i>
-                                    </div>
+                            <div class="ceria-list-item d-flex align-items-center gap-3 p-3 mb-3" style="background: var(--ceria-tertiary-soft); border-color: rgba(187, 23, 28, 0.14);">
+                                <div class="d-inline-flex align-items-center justify-content-center rounded-circle text-white" style="width: 42px; height: 42px; background: var(--ceria-tertiary); flex-shrink: 0;">
+                                    <i class="fas fa-triangle-exclamation"></i>
                                 </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <h6 class="fw-bold mb-0">@damage.AssetName</h6>
-                                    <small class="text-muted">@damage.DamageType • @damage.ReportedAt.ToString("dd/MM/yyyy")</small>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="fw-bold text-truncate" style="color: var(--ceria-text);">@damage.AssetName</div>
+                                    <small>@damage.DamageType • @damage.ReportedAt.ToString("dd/MM/yyyy")</small>
                                 </div>
-                                <span class="badge bg-danger">@damage.Quantity pcs</span>
+                                <span class="badge rounded-pill px-3 py-2" style="background: rgba(187, 23, 28, 0.12); color: var(--ceria-tertiary);">@damage.Quantity pcs</span>
                             </div>
                         }
-                        <a href="/AssetLog/Report" class="btn btn-outline-danger w-100 mt-3">
-                            <i class="fas fa-eye me-2"></i>Lihat Semua
-                        </a>
+                        <a href="/AssetLog/Report" class="btn btn-ceria-soft w-100">Lihat Semua</a>
                     }
                     else
                     {
-                        <div class="text-center py-5">
-                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
-                                 style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                                <i class="fas fa-check fa-2x text-white"></i>
-                            </div>
-                            <h6 class="fw-bold">Tidak Ada Kerusakan</h6>
-                            <p class="text-muted small">Semua aset dalam kondisi baik</p>
+                        <div class="ceria-empty-state text-center py-5 px-4">
+                            <i class="fas fa-shield-heart fa-3x mb-3" style="color: var(--ceria-success);"></i>
+                            <h6 class="fw-bold mb-2" style="color: var(--ceria-text);">Tidak Ada Kerusakan</h6>
+                            <p class="mb-0">Semua aset dalam kondisi baik.</p>
                         </div>
                     }
                 </div>
             </div>
         </div>
 
-        <!-- Active Transactions -->
         <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-list text-info me-2"></i>Transaksi Aktif
-                    </h5>
+            <div class="card ceria-panel border-0 h-100">
+                <div class="card-header bg-transparent border-0 px-4 pt-4 pb-0">
+                    <h5 class="fw-bold mb-1" style="color: var(--ceria-text);">Transaksi Aktif</h5>
+                    <small>Pesanan yang masih berjalan saat ini.</small>
                 </div>
                 <div class="card-body p-4">
                     @if (Model.ActiveTransactions.Any())
                     {
                         @foreach (var transaction in Model.ActiveTransactions.Take(5))
                         {
-                            var statusClass = transaction.OrderStatus switch
+                            var statusPillClass = transaction.OrderStatus switch
                             {
-                                "New" => "bg-danger",
-                                "Processing" => "bg-warning",
-                                "Ready" => "bg-success",
-                                _ => "bg-secondary"
-                            };
-                            
-                            var statusIcon = transaction.OrderStatus switch
-                            {
-                                "New" => "fa-clock",
-                                "Processing" => "fa-fire",
-                                "Ready" => "fa-check",
-                                _ => "fa-question"
+                                "New" => "background: var(--ceria-tertiary-soft); color: var(--ceria-tertiary);",
+                                "Processing" => "background: var(--ceria-secondary-soft); color: var(--ceria-primary);",
+                                "Ready" => "background: var(--ceria-success-soft); color: var(--ceria-success);",
+                                _ => "background: rgba(230,205,194,0.45); color: var(--ceria-text-soft);"
                             };
 
-                            <div class="d-flex align-items-center p-3 rounded mb-2" style="background: var(--bs-body-bg);">
-                                <div class="flex-shrink-0">
-                                    <div class="d-flex align-items-center justify-content-center rounded" 
-                                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
-                                        <i class="fas @statusIcon text-white"></i>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <h6 class="fw-bold mb-0">@transaction.TransactionNumber</h6>
-                                    <small class="text-muted">Meja @transaction.TableNumber</small>
+                            <div class="ceria-list-item d-flex align-items-center gap-3 p-3 mb-3">
+                                <div class="ceria-stat-icon" style="width: 48px; height: 48px; flex-shrink: 0;"><i class="fas fa-receipt"></i></div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="fw-bold text-truncate" style="color: var(--ceria-text);">@transaction.TransactionNumber</div>
+                                    <small>Meja @transaction.TableNumber</small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="badge @statusClass mb-1">@transaction.OrderStatus</span>
-                                    <div class="small fw-bold">Rp @transaction.Total.ToString("N0")</div>
+                                    <span class="badge rounded-pill px-3 py-2 mb-1" style="@statusPillClass">@transaction.OrderStatus</span>
+                                    <div class="fw-bold" style="color: var(--ceria-primary);">Rp @transaction.Total.ToString("N0")</div>
                                 </div>
                             </div>
                         }
                     }
                     else
                     {
-                        <div class="text-center py-5">
-                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" 
-                                 style="width: 80px; height: 80px; background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
-                                <i class="fas fa-inbox fa-2x text-white"></i>
-                            </div>
-                            <h6 class="fw-bold">Tidak Ada Transaksi Aktif</h6>
-                            <p class="text-muted small">Semua pesanan telah selesai</p>
+                        <div class="ceria-empty-state text-center py-5 px-4">
+                            <i class="fas fa-inbox fa-3x mb-3" style="color: var(--ceria-primary-soft);"></i>
+                            <h6 class="fw-bold mb-2" style="color: var(--ceria-text);">Tidak Ada Transaksi Aktif</h6>
+                            <p class="mb-0">Semua pesanan sudah selesai diproses.</p>
                         </div>
                     }
                 </div>
@@ -351,10 +267,8 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Revenue Chart
         const ctx = document.getElementById('revenueChart').getContext('2d');
-        const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-        
+
         const revenueChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -362,12 +276,12 @@
                 datasets: [{
                     label: 'Pendapatan (Rp)',
                     data: @Html.Raw(Json.Serialize(Model.RevenueChartData.Select(x => x.Value))),
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderColor: '#994700',
+                    backgroundColor: 'rgba(255, 122, 0, 0.12)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#667eea',
+                    pointBackgroundColor: '#ff7a00',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 5,
@@ -378,18 +292,16 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
-                        backgroundColor: isDarkMode ? '#1e293b' : '#fff',
-                        titleColor: isDarkMode ? '#e2e8f0' : '#1e293b',
-                        bodyColor: isDarkMode ? '#e2e8f0' : '#1e293b',
-                        borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+                        backgroundColor: '#fffaf8',
+                        titleColor: '#2b1613',
+                        bodyColor: '#2b1613',
+                        borderColor: '#e6cdc2',
                         borderWidth: 1,
                         padding: 12,
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 return 'Rp ' + context.parsed.y.toLocaleString();
                             }
                         }
@@ -397,21 +309,15 @@
                 },
                 scales: {
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: isDarkMode ? '#94a3b8' : '#64748b'
-                        }
+                        grid: { display: false },
+                        ticks: { color: '#6e5248' }
                     },
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
-                        },
+                        grid: { color: 'rgba(153, 71, 0, 0.08)' },
                         ticks: {
-                            color: isDarkMode ? '#94a3b8' : '#64748b',
-                            callback: function(value) {
+                            color: '#6e5248',
+                            callback: function (value) {
                                 return 'Rp ' + (value / 1000000).toFixed(1) + 'M';
                             }
                         }
@@ -420,38 +326,14 @@
             }
         });
 
-        // Update chart on theme change
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            setTimeout(() => {
-                const newIsDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-                revenueChart.options.plugins.tooltip.backgroundColor = newIsDarkMode ? '#1e293b' : '#fff';
-                revenueChart.options.plugins.tooltip.titleColor = newIsDarkMode ? '#e2e8f0' : '#1e293b';
-                revenueChart.options.plugins.tooltip.bodyColor = newIsDarkMode ? '#e2e8f0' : '#1e293b';
-                revenueChart.options.plugins.tooltip.borderColor = newIsDarkMode ? '#334155' : '#e2e8f0';
-                revenueChart.options.scales.x.ticks.color = newIsDarkMode ? '#94a3b8' : '#64748b';
-                revenueChart.options.scales.y.ticks.color = newIsDarkMode ? '#94a3b8' : '#64748b';
-                revenueChart.options.scales.y.grid.color = newIsDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-                revenueChart.update();
-            }, 100);
-        });
-
-        // Refresh Dashboard Function
         function refreshDashboard() {
-            const btn = document.querySelector('.fa-sync-alt');
-            btn.classList.add('fa-spin');
-            
-            // Show toast
-            showToast('Memperbarui data dashboard...', 'info');
-            
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        }
+            const icon = document.querySelector('.ceria-dashboard .fa-rotate-right');
+            if (icon) {
+                icon.classList.add('fa-spin');
+            }
 
-        // Real-time update simulation
-        setInterval(() => {
-            // This would typically fetch new data from the server
-            // For now, just a placeholder for real-time functionality
-        }, 30000); // Check every 30 seconds
+            showToast('Memperbarui data dashboard...', 'info');
+            setTimeout(() => location.reload(), 1000);
+        }
     </script>
 }

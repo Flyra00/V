@@ -11,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
 builder.Services.Configure<AppSettingsOptions>(builder.Configuration.GetSection("AppSettings"));
+builder.Services.Configure<MidtransOptions>(builder.Configuration.GetSection("Midtrans"));
+builder.Services.AddHttpClient<Restoran.Features.Payments.Services.IMidtransService, Restoran.Features.Payments.Services.MidtransService>();
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

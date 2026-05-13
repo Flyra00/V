@@ -83,38 +83,18 @@
                     @if (Model.Payment?.PaymentMethodOption.LegacyMethod == PaymentMethod.QRIS || Model.Payment?.PaymentMethodOption.LegacyMethod == PaymentMethod.Transfer)
                     {
                         <div class="text-center mb-4">
-                            <h5>Silakan Lakukan Pembayaran</h5>
-                            
-                            @if (Model.Payment?.PaymentMethodOption.LegacyMethod == PaymentMethod.QRIS)
-                            {
-                                <div class="p-4 bg-light rounded mb-3">
-                                    <p class="mb-2">Scan QRIS berikut:</p>
-                                    <div style="width: 200px; height: 200px; background: #ddd; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
-                                        <span class="text-muted">[QRIS Placeholder]</span>
-                                    </div>
-                                    <p class="mt-2 mb-0"><strong>Restoran Ceria</strong></p>
-                                    <p class="mb-0">Total: Rp @Model.Total.ToString("N0")</p>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="p-4 bg-light rounded mb-3 text-start">
-                                    <p><strong>Transfer ke:</strong></p>
-                                    <p class="mb-1">Bank BCA</p>
-                                    <p class="mb-1">No. Rekening: 123-456-7890</p>
-                                    <p class="mb-1">Atas Nama: PT Restoran Ceria</p>
-                                    <hr>
-                                    <p class="mb-0"><strong>Total Transfer: Rp @Model.Total.ToString("N0")</strong></p>
-                                </div>
-                            }
-
-                            <div class="mb-3">
-                                <label class="form-label">Unggah Bukti Pembayaran</label>
-                                <input type="file" id="payment-proof" class="form-control" accept="image/*">
+                            <h5>Lanjutkan Pembayaran Midtrans</h5>
+                            <div class="p-4 bg-light rounded mb-3 text-start">
+                                <p class="mb-2"><strong>Status Midtrans:</strong> @(string.IsNullOrWhiteSpace(Model.Payment?.MidtransTransactionStatus) ? "Menunggu pembayaran Midtrans" : Model.Payment?.MidtransTransactionStatus)</p>
+                                <p class="mb-2"><strong>Metode:</strong> @(string.IsNullOrWhiteSpace(Model.Payment?.MidtransPaymentType) ? Model.Payment?.PaymentMethodOption.DisplayName : Model.Payment?.MidtransPaymentType)</p>
+                                <p class="mb-0 text-muted">Status pembayaran akan diverifikasi oleh kasir melalui Midtrans Sandbox.</p>
                             </div>
-                            <button class="btn btn-primary" onclick="uploadProof('@Model.TrackingToken')">
-                                <i class="fas fa-upload"></i> Unggah Bukti Bayar
-                            </button>
+                            @if (!string.IsNullOrWhiteSpace(Model.Payment?.SnapRedirectUrl) && Model.Payment?.PaymentStatus != PaymentStatus.Paid)
+                            {
+                                <a class="btn btn-primary" href="@(Model.Payment?.SnapRedirectUrl ?? string.Empty)" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-up-right-from-square"></i> Lanjutkan Pembayaran Midtrans
+                                </a>
+                            }
                         </div>
                     }
                     else
@@ -134,43 +114,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        function getRequestVerificationToken() {
-            return document.querySelector('input[name="__RequestVerificationToken"]').value;
-        }
-
-        function uploadProof(trackingToken) {
-            const fileInput = document.getElementById('payment-proof');
-            if (!fileInput.files || fileInput.files.length === 0) {
-                showToast('Pilih file bukti pembayaran terlebih dahulu.', 'warning');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('token', trackingToken);
-            formData.append('paymentProof', fileInput.files[0]);
-
-            fetch('/Order/UploadPaymentProof', {
-                method: 'POST',
-                headers: {
-                    'RequestVerificationToken': getRequestVerificationToken()
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message || 'Bukti pembayaran berhasil diunggah.', 'success');
-                    location.reload();
-                } else {
-                    showToast(data.message || 'Gagal mengunggah bukti pembayaran.', 'error');
-                }
-            })
-            .catch(error => {
-                showToast(`Terjadi kesalahan: ${error.message}`, 'error');
-            });
-        }
-    </script>
-}

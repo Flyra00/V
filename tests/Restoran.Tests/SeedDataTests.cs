@@ -75,8 +75,8 @@ public static class SeedDataTests
     {
         await using var context = database.CreateContext();
 
-        TestAssert.Equal(10, await context.Users.CountAsync());
-        TestAssert.Equal(4, await context.Members.CountAsync());
+        TestAssert.Equal(7, await context.Users.CountAsync());
+        TestAssert.Equal(1, await context.Members.CountAsync());
         TestAssert.Equal(6, await context.Transactions.CountAsync());
         TestAssert.Equal(6, await context.Payments.CountAsync());
         TestAssert.Equal(4, await context.PaymentMethodOptions.CountAsync());
@@ -91,7 +91,7 @@ public static class SeedDataTests
         TestAssert.True(await context.AssetLogs.AnyAsync(assetLog => assetLog.Status == LogStatus.Reported));
         TestAssert.True(await context.AssetLogs.AnyAsync(assetLog => assetLog.Status == LogStatus.Approved));
         TestAssert.True(await context.Tables.AnyAsync(table => table.Status == TableStatus.Occupied));
-        TestAssert.True(await context.Users.AnyAsync(user => user.Role == UserRole.Member && user.Username == "member.gold"));
+        TestAssert.True(await context.Users.AnyAsync(user => user.Role == UserRole.Member && user.Username == "member"));
     }
 
     private static async Task<SeedCounts> CaptureCountsAsync(ApplicationDbContext context)

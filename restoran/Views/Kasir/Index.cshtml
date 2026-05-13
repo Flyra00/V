@@ -1,61 +1,156 @@
-@model IEnumerable<Restoran.Models.Transaction>
+@using System.Text.Json
+@using Restoran.Models
+@model Restoran.ViewModels.KasirIndexViewModel
 
 @{
-    ViewData["Title"] = "Daftar Transaksi";
+    ViewData["Title"] = "Daftar Transaksi Kasir";
+
+    var transactionData = Model.Transactions.Select(transaction => new
+    {
+        id = transaction.Id,
+        transactionNumber = transaction.TransactionNumber,
+        tableNumber = transaction.Table?.TableNumber ?? "-",
+        customerName = transaction.CustomerName,
+        createdAt = transaction.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+        subtotal = transaction.Subtotal,
+        tax = transaction.Tax,
+        serviceCharge = transaction.ServiceCharge,
+        discount = transaction.Discount,
+        promoId = transaction.PromoId,
+        appliedPromoName = transaction.AppliedPromoName,
+        total = transaction.Total,
+        orderStatus = transaction.OrderStatus.ToString(),
+        payment = transaction.Payment == null
+            ? null
+            : new
+            {
+                paymentStatus = transaction.Payment.PaymentStatus.ToString(),
+                paymentMethod = transaction.Payment.PaymentMethodOption.LegacyMethod is PaymentMethod.QRIS or PaymentMethod.Transfer
+                    ? "Bayar Online"
+                    : transaction.Payment.PaymentMethodOption.DisplayName,
+                paymentLegacyMethod = transaction.Payment.PaymentMethodOption.LegacyMethod.ToString(),
+                amount = transaction.Payment.Amount,
+                amountReceived = transaction.Payment.AmountReceived,
+                changeAmount = transaction.Payment.ChangeAmount,
+                midtransOrderId = transaction.Payment.MidtransOrderId,
+                midtransTransactionId = transaction.Payment.MidtransTransactionId,
+                midtransPaymentType = transaction.Payment.MidtransPaymentType,
+                midtransTransactionStatus = transaction.Payment.MidtransTransactionStatus,
+                midtransFraudStatus = transaction.Payment.MidtransFraudStatus,
+                snapToken = transaction.Payment.SnapToken,
+                snapRedirectUrl = transaction.Payment.SnapRedirectUrl,
+                paymentDate = transaction.Payment.PaymentDate?.ToString("dd/MM/yyyy HH:mm") ?? string.Empty
+            },
+        items = transaction.TransactionDetails.Select(detail => new
+        {
+            imageUrl = detail.Product.ImageUrl,
+            productName = detail.Product.Name,
+            unitPrice = detail.UnitPrice,
+            quantity = detail.Quantity,
+            notes = detail.Notes,
+            subtotal = detail.Subtotal
+        }).ToList()
+    }).ToList();
+
+    var activePromos = Model.ActivePromos.Select(promo => new
+    {
+        id = promo.Id,
+        name = promo.Name,
+        discountValue = promo.DiscountValue,
+        minimumPurchase = promo.MinimumPurchase,
+        startsAt = promo.StartsAt.ToString("dd/MM/yyyy HH:mm"),
+        endsAt = promo.EndsAt.ToString("dd/MM/yyyy HH:mm")
+    }).ToList();
 }
 
 <div class="container-fluid py-4">
     @Html.AntiForgeryToken()
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="mb-3">Daftar Transaksi</h2>
-            <a asp-action="POS" class="btn btn-success">
-                <i class="fas fa-cash-register"></i> Buka POS
-            </a>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="mb-1">Daftar Transaksi Kasir</h2>
+            <p class="text-muted mb-0">Pantau pesanan, pembayaran tunai, dan verifikasi status Midtrans Sandbox dari satu halaman.</p>
         </div>
+        <a asp-action="POS" class="btn btn-gradient-primary">
+            <i class="fas fa-cash-register me-2"></i>Buka POS
+        </a>
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover align-middle">
                     <thead class="table-dark">
                         <tr>
                             <th>No Transaksi</th>
                             <th>Meja</th>
                             <th>Pelanggan</th>
                             <th>Total</th>
+                            <th>Metode Pembayaran</th>
                             <th>Status Bayar</th>
                             <th>Status Order</th>
+                            <th>Status Midtrans</th>
                             <th>Tanggal</th>
-                            <th>Aksi</th>
+                            <th class="text-end">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model)
+                        @foreach (var item in Model.Transactions)
                         {
+                            var payment = item.Payment;
+                            var isCash = payment?.PaymentMethodOption.LegacyMethod == PaymentMethod.Tunai;
+                            var isPaid = payment?.PaymentStatus == PaymentStatus.Paid;
                             <tr>
-                                <td>@item.TransactionNumber</td>
-                                <td>@item.Table?.TableNumber</td>
+                                <td class="fw-semibold">@item.TransactionNumber</td>
+                                <td>@(item.Table?.TableNumber ?? "-")</td>
                                 <td>@item.CustomerName</td>
                                 <td>Rp @item.Total.ToString("N0")</td>
+                                <td>@(payment?.PaymentMethodOption.DisplayName ?? "-")</td>
                                 <td>
-                                    <span class="badge bg-@(item.Payment?.PaymentStatus == PaymentStatus.Paid ? "success" : "warning")">
-                                        @(item.Payment?.PaymentStatus.ToString() ?? "Tidak diketahui")
+                                    <span class="badge bg-@(isPaid ? "success" : payment?.PaymentStatus == PaymentStatus.Cancelled ? "secondary" : payment?.PaymentStatus == PaymentStatus.Failed ? "danger" : "warning")">
+                                        @(payment?.PaymentStatus.ToString() ?? "Tidak diketahui")
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-@(item.OrderStatus == OrderStatus.Completed ? "success" : item.OrderStatus == OrderStatus.New ? "danger" : "info")">
+                                    <span class="badge bg-@(item.OrderStatus == OrderStatus.Completed ? "success" : item.OrderStatus == OrderStatus.New ? "danger" : item.OrderStatus == OrderStatus.Cancelled ? "secondary" : "info")">
                                         @item.OrderStatus
                                     </span>
                                 </td>
-                                <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                                 <td>
-                                    @if (item.Payment?.PaymentStatus != PaymentStatus.Paid)
+                                    @if (payment != null && payment.PaymentMethodOption.LegacyMethod != PaymentMethod.Tunai)
                                     {
-                                        <button class="btn btn-sm btn-success" onclick="confirmPayment(@item.Id)">
-                                            <i class="fas fa-check"></i> Konfirmasi
-                                        </button>
+                                        <span class="badge bg-light text-dark border">@GetMidtransStatusLabel(payment.MidtransTransactionStatus)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-end">
+                                    @if (payment != null)
+                                    {
+                                        if (isPaid)
+                                        {
+                                            <button class="btn btn-sm btn-outline-secondary me-1" type="button" onclick="openPaymentModal(@item.Id)">
+                                                <i class="fas fa-eye me-1"></i>Lihat Detail
+                                            </button>
+                                            <a class="btn btn-sm btn-dark" href="@Url.Action("PrintReceipt", "Kasir", new { id = item.Id })" target="_blank" rel="noopener noreferrer">
+                                                <i class="fas fa-print me-1"></i>Cetak Struk
+                                            </a>
+                                        }
+                                        else if (isCash)
+                                        {
+                                            <button class="btn btn-sm btn-success" type="button" onclick="openPaymentModal(@item.Id)">
+                                                <i class="fas fa-money-bill-wave me-1"></i>Bayar Tunai
+                                            </button>
+                                        }
+                                        else if (!isCash && item.CreatedAt < new DateTime(2026, 5, 13)) // Hanya tampilkan untuk transaksi lama sebelum penonaktifan
+                                        {
+                                            <button class="btn btn-sm btn-primary" type="button" onclick="openPaymentModal(@item.Id)">
+                                                <i class="fas fa-rotate-right me-1"></i>Cek Status Midtrans
+                                            </button>
+                                        }
                                     }
                                 </td>
                             </tr>
@@ -67,21 +162,443 @@
     </div>
 </div>
 
+<div class="modal fade" id="paymentDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold" id="paymentDetailTitle">Detail Pembayaran</h5>
+                    <p class="text-muted mb-0" id="paymentDetailSubtitle"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body">
+                                <div class="d-flex flex-wrap gap-2 mb-3" id="paymentMetaBadges"></div>
+                                <div id="paymentItemsContainer" class="d-flex flex-column gap-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-3">Ringkasan Pembayaran</h6>
+                                <div class="d-flex justify-content-between mb-2"><span>Subtotal</span><strong id="summarySubtotal">Rp 0</strong></div>
+                                <div class="d-flex justify-content-between mb-2"><span>PPN</span><strong id="summaryTax">Rp 0</strong></div>
+                                <div class="d-flex justify-content-between mb-2"><span>Biaya Layanan</span><strong id="summaryService">Rp 0</strong></div>
+                                <div class="d-flex justify-content-between mb-2"><span>Diskon</span><strong id="summaryDiscount">Rp 0</strong></div>
+                                <hr />
+                                <div class="d-flex justify-content-between"><span class="fw-bold">Total</span><strong id="summaryTotal">Rp 0</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="card shadow-sm border-0" id="paymentActionCard">
+                            <div class="card-body" id="paymentActionBody"></div>
+                        </div>
+                        <div class="card shadow-sm border-0 mt-4" id="promoActionCard">
+                            <div class="card-body" id="promoActionBody"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private static string GetMidtransStatusLabel(string status)
+    {
+        return status?.Trim().ToLowerInvariant() switch
+        {
+            "settlement" => "Lunas",
+            "capture" => "Capture",
+            "pending" => "Menunggu",
+            "deny" => "Ditolak",
+            "cancel" => "Dibatalkan",
+            "expire" => "Kedaluwarsa",
+            _ => string.IsNullOrWhiteSpace(status) ? "-" : status
+        };
+    }
+}
+
 @section Scripts {
     <script>
+        const cashierTransactions = @Html.Raw(JsonSerializer.Serialize(transactionData));
+        const cashierPromos = @Html.Raw(JsonSerializer.Serialize(activePromos));
+        let activeTransaction = null;
+        let paymentModal = null;
+
         function getRequestVerificationToken() {
             return document.querySelector('input[name="__RequestVerificationToken"]').value;
         }
 
-        function confirmPayment(transactionId) {
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                maximumFractionDigits: 0
+            }).format(Number(value || 0));
+        }
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getMidtransStatusLabel(status) {
+            switch ((status || '').toLowerCase()) {
+                case 'settlement': return 'Lunas';
+                case 'capture': return 'Capture';
+                case 'pending': return 'Menunggu';
+                case 'deny': return 'Ditolak';
+                case 'cancel': return 'Dibatalkan';
+                case 'expire': return 'Kedaluwarsa';
+                default: return status || '-';
+            }
+        }
+
+        function getPaymentBadgeClass(status) {
+            switch (status) {
+                case 'Paid': return 'bg-success';
+                case 'Cancelled': return 'bg-secondary';
+                case 'Failed': return 'bg-danger';
+                default: return 'bg-warning text-dark';
+            }
+        }
+
+        function openPaymentModal(transactionId) {
+            activeTransaction = cashierTransactions.find(item => item.id === transactionId) || null;
+            if (!activeTransaction) {
+                showToast('Detail transaksi tidak ditemukan.', 'error');
+                return;
+            }
+
+            if (!paymentModal) {
+                paymentModal = new bootstrap.Modal(document.getElementById('paymentDetailModal'));
+            }
+
+            renderPaymentModal(activeTransaction);
+            paymentModal.show();
+        }
+
+        function renderPaymentModal(transaction) {
+            const payment = transaction.payment || {};
+            const isCash = payment.paymentLegacyMethod === 'Tunai';
+            const isPaid = payment.paymentStatus === 'Paid';
+
+            document.getElementById('paymentDetailTitle').textContent = `Transaksi ${transaction.transactionNumber}`;
+            document.getElementById('paymentDetailSubtitle').textContent = `Meja ${transaction.tableNumber} • ${transaction.customerName} • ${transaction.createdAt}`;
+
+            document.getElementById('paymentMetaBadges').innerHTML = `
+                <span class="badge ${getPaymentBadgeClass(payment.paymentStatus)}">Pembayaran: ${escapeHtml(payment.paymentStatus || '-')}</span>
+                <span class="badge bg-info">Order: ${escapeHtml(transaction.orderStatus)}</span>
+                <span class="badge bg-light text-dark border">Metode: ${escapeHtml(payment.paymentMethod || '-')}</span>
+                ${!isCash ? `<span class="badge bg-light text-dark border">Midtrans: ${escapeHtml(getMidtransStatusLabel(payment.midtransTransactionStatus))}</span>` : ''}
+            `;
+
+            document.getElementById('paymentItemsContainer').innerHTML = transaction.items.map(item => `
+                <div class="border rounded-4 p-3 bg-white">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div style="width: 72px; height: 72px; border-radius: 16px; overflow: hidden; background: #fff0ee; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                            ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.productName)}" style="width:100%;height:100%;object-fit:cover;">` : `<i class="fas fa-bowl-food text-secondary"></i>`}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">${escapeHtml(item.productName)}</div>
+                            <div class="text-muted small">Harga satuan: ${formatCurrency(item.unitPrice)}</div>
+                            <div class="text-muted small">Quantity: ${escapeHtml(item.quantity)}</div>
+                            <div class="text-muted small">Catatan: ${item.notes ? escapeHtml(item.notes) : '-'}</div>
+                        </div>
+                        <div class="text-end fw-bold">${formatCurrency(item.subtotal)}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('summarySubtotal').textContent = formatCurrency(transaction.subtotal);
+            document.getElementById('summaryTax').textContent = formatCurrency(transaction.tax);
+            document.getElementById('summaryService').textContent = formatCurrency(transaction.serviceCharge);
+            document.getElementById('summaryDiscount').textContent = `- ${formatCurrency(transaction.discount)}`;
+            document.getElementById('summaryTotal').textContent = formatCurrency(transaction.total);
+
+            renderPromoAction(transaction, isPaid);
+
+            const actionBody = document.getElementById('paymentActionBody');
+
+            if (isPaid) {
+                actionBody.innerHTML = `
+                    <h6 class="fw-bold mb-3">Pembayaran Lunas</h6>
+                    <div class="small text-muted mb-2">Metode: ${escapeHtml(payment.paymentMethod || '-')}</div>
+                    <div class="small text-muted mb-2">Tanggal Bayar: ${escapeHtml(payment.paymentDate || '-')}</div>
+                    ${isCash ? `
+                        <div class="small text-muted mb-2">Uang Diterima: ${formatCurrency(payment.amountReceived)}</div>
+                        <div class="small text-muted">Kembalian: ${formatCurrency(payment.changeAmount)}</div>
+                    ` : `
+                        <div class="small text-muted mb-2">Midtrans Order ID: ${escapeHtml(payment.midtransOrderId || '-')}</div>
+                        <div class="small text-muted mb-2">Midtrans Transaction ID: ${escapeHtml(payment.midtransTransactionId || '-')}</div>
+                        <div class="small text-muted">Midtrans Payment Type: ${escapeHtml(payment.midtransPaymentType || '-')}</div>
+                    `}
+                    <div class="mt-3">
+                        <a class="btn btn-dark w-100" href="/Kasir/PrintReceipt/${transaction.id}" target="_blank" rel="noopener noreferrer">
+                            <i class="fas fa-print me-2"></i>Cetak Struk
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            if (isCash) {
+                actionBody.innerHTML = `
+                    <h6 class="fw-bold mb-3">Pembayaran Tunai</h6>
+                    <div class="mb-3">
+                        <label for="amountReceivedInput" class="form-label fw-semibold">Uang Diterima</label>
+                        <input id="amountReceivedInput" type="number" class="form-control" min="0" step="0.01" placeholder="Masukkan uang diterima" oninput="updateCashSummary()">
+                    </div>
+                    <div class="small text-muted mb-2">Total Tagihan: ${formatCurrency(transaction.total)}</div>
+                    <div class="small text-muted mb-2">Kembalian: <span id="changeAmountPreview">${formatCurrency(0)}</span></div>
+                    <div class="small text-danger mb-3" id="cashValidationMessage"></div>
+                    <button id="confirmCashButton" class="btn btn-success w-100" type="button" onclick="submitCashPayment()" disabled>
+                        <i class="fas fa-check me-2"></i>Konfirmasi Pembayaran Tunai
+                    </button>
+                `;
+                updateCashSummary();
+                return;
+            }
+
+            if (!isCash && transaction.createdAt < "2026-05-13") {
+                actionBody.innerHTML = `
+                    <h6 class="fw-bold mb-3">Pembayaran Online / Midtrans</h6>
+                    <div class="small text-muted mb-2">Midtrans Order ID: ${escapeHtml(payment.midtransOrderId || '-')}</div>
+                    <div class="small text-muted mb-2">Status Midtrans: ${escapeHtml(getMidtransStatusLabel(payment.midtransTransactionStatus))}</div>
+                    <div class="small text-muted mb-2">Midtrans Payment Type: ${escapeHtml(payment.midtransPaymentType || '-')}</div>
+                    <div class="small text-muted mb-3">Gunakan tombol Cek Status Midtrans setelah pelanggan menyelesaikan pembayaran sandbox.</div>
+                    ${payment.snapRedirectUrl ? `<a class="btn btn-outline-primary w-100 mb-2" href="${escapeHtml(payment.snapRedirectUrl)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-up-right-from-square me-2"></i>Buka Pembayaran Midtrans</a>` : ''}
+                    <button class="btn btn-primary w-100" type="button" onclick="checkMidtransStatus(${transaction.id})">
+                        <i class="fas fa-rotate-right me-2"></i>Cek Status Midtrans
+                    </button>
+                `;
+            } else if (!isCash) {
+                actionBody.innerHTML = `
+                    <h6 class="fw-bold mb-3 text-danger">Pembayaran Online Dinonaktifkan</h6>
+                    <p class="small text-muted">Fitur pembayaran online sedang dinonaktifkan sementara. Transaksi ini tidak dapat diproses via Midtrans.</p>
+                `;
+            }
+        }
+
+        function renderPromoAction(transaction, isPaid) {
+            const promoBody = document.getElementById('promoActionBody');
+            if (!promoBody) {
+                return;
+            }
+
+            const currentPromoLabel = transaction.appliedPromoName
+                ? `<div class="small text-success mb-2">Promo aktif: <strong>${escapeHtml(transaction.appliedPromoName)}</strong></div>`
+                : '<div class="small text-muted mb-2">Belum ada promo diterapkan.</div>';
+
+            if (isPaid) {
+                promoBody.innerHTML = `
+                    <h6 class="fw-bold mb-3">Promo Transaksi</h6>
+                    ${currentPromoLabel}
+                    <div class="small text-muted">Promo tidak dapat diubah karena transaksi sudah lunas.</div>
+                `;
+                return;
+            }
+
+            const options = ['<option value="">Tanpa Promo</option>']
+                .concat(cashierPromos.map(promo => `
+                    <option value="${promo.id}" ${Number(transaction.promoId || 0) === Number(promo.id) ? 'selected' : ''}>
+                        ${escapeHtml(promo.name)} (${Number(promo.discountValue || 0)}%) • ${escapeHtml(promo.startsAt)} - ${escapeHtml(promo.endsAt)}
+                    </option>
+                `));
+
+            promoBody.innerHTML = `
+                <h6 class="fw-bold mb-3">Promo Manual Kasir</h6>
+                ${currentPromoLabel}
+                <label for="promoSelect" class="form-label fw-semibold">Pilih Promo Aktif</label>
+                <select id="promoSelect" class="form-select mb-3">
+                    ${options.join('')}
+                </select>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary flex-grow-1" type="button" onclick="applyPromo()">
+                        <i class="fas fa-ticket me-1"></i>Terapkan Promo
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button" onclick="removePromo()" ${transaction.promoId ? '' : 'disabled'}>
+                        <i class="fas fa-xmark me-1"></i>Hapus Promo
+                    </button>
+                </div>
+                <div class="small text-muted mt-2">Promo kasir bersifat manual dan tidak bergantung minimum pembelian customer.</div>
+            `;
+        }
+
+        function applyPromo() {
+            if (!activeTransaction) {
+                return;
+            }
+
+            const select = document.getElementById('promoSelect');
+            if (!select || !select.value) {
+                showToast('Pilih promo terlebih dahulu.', 'warning');
+                return;
+            }
+
+            fetch('/Kasir/ApplyPromo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': getRequestVerificationToken()
+                },
+                body: `transactionId=${activeTransaction.id}&promoId=${encodeURIComponent(select.value)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Gagal menerapkan promo.', 'error');
+                    return;
+                }
+
+                activeTransaction.discount = Number(data.discount || 0);
+                activeTransaction.tax = Number(data.tax || 0);
+                activeTransaction.serviceCharge = Number(data.serviceCharge || 0);
+                activeTransaction.total = Number(data.total || 0);
+                activeTransaction.appliedPromoName = data.promoName || '';
+                activeTransaction.promoId = Number(select.value);
+
+                document.getElementById('summaryTax').textContent = formatCurrency(activeTransaction.tax);
+                document.getElementById('summaryService').textContent = formatCurrency(activeTransaction.serviceCharge);
+                document.getElementById('summaryDiscount').textContent = `- ${formatCurrency(activeTransaction.discount)}`;
+                document.getElementById('summaryTotal').textContent = formatCurrency(activeTransaction.total);
+
+                renderPromoAction(activeTransaction, false);
+                updateCashSummary();
+                showToast(data.message || 'Promo berhasil diterapkan.', 'success');
+            })
+            .catch(error => showToast(`Terjadi kesalahan: ${error.message}`, 'error'));
+        }
+
+        function removePromo() {
+            if (!activeTransaction) {
+                return;
+            }
+
+            fetch('/Kasir/RemovePromo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': getRequestVerificationToken()
+                },
+                body: `transactionId=${activeTransaction.id}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Gagal menghapus promo.', 'error');
+                    return;
+                }
+
+                activeTransaction.discount = Number(data.discount || 0);
+                activeTransaction.tax = Number(data.tax || 0);
+                activeTransaction.serviceCharge = Number(data.serviceCharge || 0);
+                activeTransaction.total = Number(data.total || 0);
+                activeTransaction.appliedPromoName = '';
+                activeTransaction.promoId = null;
+
+                document.getElementById('summaryTax').textContent = formatCurrency(activeTransaction.tax);
+                document.getElementById('summaryService').textContent = formatCurrency(activeTransaction.serviceCharge);
+                document.getElementById('summaryDiscount').textContent = `- ${formatCurrency(activeTransaction.discount)}`;
+                document.getElementById('summaryTotal').textContent = formatCurrency(activeTransaction.total);
+
+                renderPromoAction(activeTransaction, false);
+                updateCashSummary();
+                showToast(data.message || 'Promo berhasil dihapus.', 'success');
+            })
+            .catch(error => showToast(`Terjadi kesalahan: ${error.message}`, 'error'));
+        }
+
+        function updateCashSummary() {
+            const input = document.getElementById('amountReceivedInput');
+            const changePreview = document.getElementById('changeAmountPreview');
+            const message = document.getElementById('cashValidationMessage');
+            const confirmButton = document.getElementById('confirmCashButton');
+            if (!input || !changePreview || !message || !confirmButton || !activeTransaction) {
+                return;
+            }
+
+            const amountReceived = Number(input.value || 0);
+            const total = Number(activeTransaction.total || 0);
+            const change = amountReceived - total;
+            changePreview.textContent = formatCurrency(Math.max(change, 0));
+
+            if (!input.value) {
+                message.textContent = 'Masukkan uang diterima terlebih dahulu.';
+                confirmButton.disabled = true;
+                return;
+            }
+
+            if (amountReceived < total) {
+                message.textContent = 'Uang diterima tidak boleh kurang dari total pembayaran.';
+                confirmButton.disabled = true;
+                return;
+            }
+
+            message.textContent = '';
+            confirmButton.disabled = false;
+        }
+
+        function submitCashPayment() {
+            const input = document.getElementById('amountReceivedInput');
+            if (!input || !activeTransaction) {
+                return;
+            }
+
+            const amountReceived = Number(input.value || 0);
             showConfirmDialog({
-                title: 'Konfirmasi Pembayaran',
-                message: 'Apakah Anda yakin pembayaran untuk transaksi ini sudah diterima?',
-                confirmText: 'Ya, konfirmasi',
+                title: 'Konfirmasi Pembayaran Tunai',
+                message: `Konfirmasi pembayaran tunai untuk ${activeTransaction.transactionNumber}?`,
+                confirmText: 'Ya, simpan pembayaran',
                 cancelText: 'Batal',
                 variant: 'success',
                 onConfirm: () => {
                     fetch('/Kasir/ConfirmPayment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': getRequestVerificationToken()
+                        },
+                        body: `transactionId=${activeTransaction.id}&amountReceived=${encodeURIComponent(amountReceived)}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message || 'Pembayaran tunai berhasil.', 'success');
+                            setTimeout(() => location.reload(), 700);
+                            return;
+                        }
+
+                        showToast(data.message || 'Gagal memproses pembayaran tunai.', 'error');
+                    })
+                    .catch(error => showToast(`Terjadi kesalahan: ${error.message}`, 'error'));
+                }
+            });
+        }
+
+        function checkMidtransStatus(transactionId) {
+            showConfirmDialog({
+                title: 'Cek Status Midtrans',
+                message: 'Periksa status pembayaran Midtrans Sandbox untuk transaksi ini?',
+                confirmText: 'Ya, cek sekarang',
+                cancelText: 'Batal',
+                variant: 'primary',
+                onConfirm: () => {
+                    fetch('/Kasir/CheckMidtransStatus', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -92,16 +609,13 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            showToast(data.message || 'Pembayaran berhasil dikonfirmasi.', 'success');
-                            location.reload();
-                            return;
+                            showToast(data.message || 'Status Midtrans berhasil diperbarui.', 'success');
+                        } else {
+                            showToast(data.message || 'Status Midtrans belum berubah.', 'warning');
                         }
-
-                        showToast(data.message || 'Gagal mengonfirmasi pembayaran.', 'error');
+                        setTimeout(() => location.reload(), 700);
                     })
-                    .catch(error => {
-                        showToast(`Terjadi kesalahan: ${error.message}`, 'error');
-                    });
+                    .catch(error => showToast(`Terjadi kesalahan: ${error.message}`, 'error'));
                 }
             });
         }

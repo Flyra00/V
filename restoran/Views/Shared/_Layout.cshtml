@@ -23,6 +23,36 @@
             return false;
         }
 
+        private static string ResolveHomeHref(System.Security.Claims.ClaimsPrincipal principal)
+        {
+            if (HasRole(principal, Restoran.Models.UserRole.Admin, Restoran.Models.UserRole.Owner))
+            {
+                return "/Dashboard";
+            }
+
+            if (HasRole(principal, Restoran.Models.UserRole.Supervisor))
+            {
+                return "/Supervisor/Assets";
+            }
+
+            if (HasRole(principal, Restoran.Models.UserRole.Kasir))
+            {
+                return "/Kasir";
+            }
+
+            if (HasRole(principal, Restoran.Models.UserRole.BagianMasak))
+            {
+                return "/Kitchen/Display";
+            }
+
+            return "/";
+        }
+
+        private static string ResolveHomeLabel(System.Security.Claims.ClaimsPrincipal principal)
+            => HasRole(principal, Restoran.Models.UserRole.Admin, Restoran.Models.UserRole.Owner)
+                ? "Dashboard"
+                : "Beranda";
+
         private static bool IsActivePath(PathString requestPath, params string[] prefixes)
         {
             foreach (var prefix in prefixes)
@@ -39,6 +69,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/internal-ceria-theme.css" asp-append-version="true" />
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -542,7 +573,7 @@
                     <span class="nav-section-title">Utama</span>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @(currentPath == "/" ? "active" : "")" href="/">
+                    <a class="nav-link @(currentPath == "/" || IsActivePath(currentPath, "/Customer") ? "active" : "")" href="/">
                         <i class="fas fa-home"></i>
                         <span class="nav-text">Beranda</span>
                     </a>
@@ -567,12 +598,8 @@
                         <span class="nav-text">Manajemen Pengguna</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link @(IsActivePath(currentPath, "/Admin/Roles", "/Admin/CreateRole", "/Admin/EditRole") ? "active" : "")" href="/Admin/Roles">
-                        <i class="fas fa-user-shield"></i>
-                        <span class="nav-text">Kelola Peran</span>
-                    </a>
-                </li>
+                <!-- Kelola Peran di-hide dari sidebar -->
+                <!-- Route masih tersedia di /Admin/Roles -->
                 <li class="nav-item">
                     <a class="nav-link @(IsActivePath(currentPath, "/Dashboard/ManageProducts", "/Dashboard/CreateProduct", "/Dashboard/EditProduct") ? "active" : "")" href="/Dashboard/ManageProducts">
                         <i class="fas fa-utensils"></i>
@@ -597,12 +624,7 @@
                         <span class="nav-text">Promo</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link @(IsActivePath(currentPath, "/Admin/PaymentMethods", "/Admin/CreatePaymentMethod", "/Admin/EditPaymentMethod") ? "active" : "")" href="/Admin/PaymentMethods">
-                        <i class="fas fa-credit-card"></i>
-                        <span class="nav-text">Metode Pembayaran</span>
-                    </a>
-                </li>
+                <!-- Menu Metode Pembayaran disembunyikan dari sidebar -->
                 <li class="nav-item">
                     <a class="nav-link @(IsActivePath(currentPath, "/Admin/ChargeSettings") ? "active" : "")" href="/Admin/ChargeSettings">
                         <i class="fas fa-percent"></i>

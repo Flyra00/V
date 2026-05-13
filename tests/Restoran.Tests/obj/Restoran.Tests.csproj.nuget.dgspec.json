@@ -59,7 +59,7 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
-            "Microsoft.EntityFrameworkCore.Sqlite": {
+            "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
               "version": "[8.0.0, )"
             },
@@ -132,8 +132,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\Restoran.csproj": {
-                "projectPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\Restoran.csproj"
+              "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\restoran.csproj": {
+                "projectPath": "C:\\Users\\ASUS\\Downloads\\Compressed\\restoran\\restoran\\restoran\\restoran.csproj"
               }
             }
           }
@@ -153,6 +153,12 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

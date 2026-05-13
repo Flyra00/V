@@ -106,7 +106,7 @@ namespace Restoran.Features.Tables.Services
                         Status = effectiveStatus,
                         StatusLabel = GetStatusLabel(effectiveStatus),
                         IsDisabled = table.Status == TableStatus.Disabled,
-                        CanDeactivate = activeSession == null && table.Status != TableStatus.Disabled,
+                        CanDeactivate = table.Status != TableStatus.Disabled,
                         CanReactivate = table.Status == TableStatus.Disabled,
                         HasActiveSession = activeSession != null,
                         SessionStartedAt = activeSession?.StartTime,
@@ -207,19 +207,22 @@ namespace Restoran.Features.Tables.Services
                 return OperationResult.NotFound("Meja tidak ditemukan");
             }
 
-            if (table.TableSessions.Any())
-            {
-                return OperationResult.Failure("Meja yang sedang digunakan tidak dapat dinonaktifkan");
-            }
-
             if (table.Status == TableStatus.Disabled)
             {
                 return OperationResult.Success("Meja sudah nonaktif");
             }
 
+            foreach (var session in table.TableSessions)
+            {
+                session.Status = TableSessionStatus.Cancelled;
+                session.EndTime = _dateTimeProvider.Now;
+            }
+
             table.Status = TableStatus.Disabled;
             await _context.SaveChangesAsync(cancellationToken);
-            return OperationResult.Success("Meja berhasil dinonaktifkan");
+            return table.TableSessions.Any()
+                ? OperationResult.Success("Meja berhasil dinonaktifkan dan sesi aktif dibatalkan")
+                : OperationResult.Success("Meja berhasil dinonaktifkan");
         }
 
         public async Task<OperationResult> ReactivateAsync(int id, CancellationToken cancellationToken = default)

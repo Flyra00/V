@@ -5,37 +5,32 @@
     Layout = "_KitchenLayout";
 }
 
-<div class="kitchen-display">
+<div class="ceria-kitchen-shell">
     @Html.AntiForgeryToken()
-    <!-- Header -->
+
     <div class="kitchen-header">
-        <div class="container-fluid">
-            <div class="row align-items-center py-3">
+        <div class="container-fluid py-4">
+            <div class="row align-items-center g-3">
                 <div class="col">
-                    <h3 class="fw-bold mb-0">
-                        <i class="fas fa-fire text-danger me-2"></i>LAYAR DAPUR
-                    </h3>
-                    <small class="text-white-75">Sistem Manajemen Dapur</small>
+                    <span class="badge rounded-pill px-3 py-2 mb-3" style="background: var(--ceria-secondary-soft); color: var(--ceria-primary);">
+                        <i class="fas fa-fire me-2"></i>Status Masak
+                    </span>
+                    <h3 class="fw-bold mb-1" style="color: var(--ceria-text);">Layar Dapur Ceria Resto</h3>
+                    <small style="color: var(--ceria-text-soft);">Pantau, proses, dan sajikan pesanan dengan tampilan hangat yang tetap jelas dibaca.</small>
                 </div>
                 <div class="col-auto">
-                    <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex flex-wrap justify-content-end gap-3">
                         <div class="text-end">
-                            <div class="badge bg-danger fs-4 px-3 py-2" id="new-orders-badge">
-                                @Model.Count(x => x.OrderStatus == OrderStatus.New)
-                            </div>
-                            <div class="small text-white-75">Pesanan Baru</div>
+                            <div class="ceria-kitchen-badge ceria-kitchen-status--new" id="new-orders-badge">@Model.Count(x => x.OrderStatus == OrderStatus.New)</div>
+                            <div class="small mt-2" style="color: var(--ceria-text-soft);">Pesanan Baru</div>
                         </div>
                         <div class="text-end">
-                            <div class="badge bg-warning fs-4 px-3 py-2">
-                                @Model.Count(x => x.OrderStatus == OrderStatus.Processing)
-                            </div>
-                            <div class="small text-white-75">Diproses</div>
+                            <div class="ceria-kitchen-badge ceria-kitchen-action--processing">@Model.Count(x => x.OrderStatus == OrderStatus.Processing)</div>
+                            <div class="small mt-2" style="color: var(--ceria-text-soft);">Diproses</div>
                         </div>
                         <div class="text-end">
-                            <div class="badge bg-success fs-4 px-3 py-2">
-                                @Model.Count(x => x.OrderStatus == OrderStatus.Ready)
-                            </div>
-                            <div class="small text-white-75">Siap Saji</div>
+                            <div class="ceria-kitchen-badge ceria-kitchen-status--ready">@Model.Count(x => x.OrderStatus == OrderStatus.Ready)</div>
+                            <div class="small mt-2" style="color: var(--ceria-text-soft);">Siap Saji</div>
                         </div>
                     </div>
                 </div>
@@ -43,47 +38,43 @@
         </div>
     </div>
 
-    <!-- Filters -->
     <div class="container-fluid py-3">
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-danger active" onclick="filterOrders('new')">
-                        <i class="fas fa-clock me-2"></i>Baru (@Model.Count(x => x.OrderStatus == OrderStatus.New))
-                    </button>
-                    <button class="btn btn-warning" onclick="filterOrders('processing')">
-                        <i class="fas fa-fire me-2"></i>Diproses (@Model.Count(x => x.OrderStatus == OrderStatus.Processing))
-                    </button>
-                    <button class="btn btn-success" onclick="filterOrders('ready')">
-                        <i class="fas fa-check me-2"></i>Siap (@Model.Count(x => x.OrderStatus == OrderStatus.Ready))
-                    </button>
-                    <button class="btn btn-outline-light" onclick="filterOrders('all')">
-                        <i class="fas fa-list me-2"></i>Semua (@Model.Count)
-                    </button>
-                </div>
+        <div class="kitchen-filter-bar p-3">
+            <div class="d-flex gap-2 flex-wrap" id="kitchenFilterBar">
+                <button class="btn ceria-kitchen-filter ceria-kitchen-filter--new is-active" onclick="filterOrders('new', event)">
+                    <i class="fas fa-clock me-2"></i>Baru (@Model.Count(x => x.OrderStatus == OrderStatus.New))
+                </button>
+                <button class="btn ceria-kitchen-filter ceria-kitchen-filter--processing" onclick="filterOrders('processing', event)">
+                    <i class="fas fa-fire me-2"></i>Diproses (@Model.Count(x => x.OrderStatus == OrderStatus.Processing))
+                </button>
+                <button class="btn ceria-kitchen-filter ceria-kitchen-filter--ready" onclick="filterOrders('ready', event)">
+                    <i class="fas fa-check me-2"></i>Siap (@Model.Count(x => x.OrderStatus == OrderStatus.Ready))
+                </button>
+                <button class="btn ceria-kitchen-filter ceria-kitchen-filter--all" onclick="filterOrders('all', event)">
+                    <i class="fas fa-list me-2"></i>Semua (@Model.Count)
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Orders Grid -->
     <div class="container-fluid pb-4">
         <div class="row g-3" id="orders-container">
             @foreach (var order in Model.OrderBy(o => o.CreatedAt))
             {
-                var cardClass = order.OrderStatus switch
-                {
-                    OrderStatus.New => "border-danger",
-                    OrderStatus.Processing => "border-warning",
-                    OrderStatus.Ready => "border-success",
-                    _ => "border-secondary"
-                };
-                
                 var headerClass = order.OrderStatus switch
                 {
-                    OrderStatus.New => "bg-danger",
-                    OrderStatus.Processing => "bg-warning",
-                    OrderStatus.Ready => "bg-success",
-                    _ => "bg-secondary"
+                    OrderStatus.New => "ceria-kitchen-card__head--new",
+                    OrderStatus.Processing => "ceria-kitchen-card__head--processing",
+                    OrderStatus.Ready => "ceria-kitchen-card__head--ready",
+                    _ => "ceria-kitchen-card__head--served"
+                };
+
+                var statusClass = order.OrderStatus switch
+                {
+                    OrderStatus.New => "ceria-kitchen-status-pill--new",
+                    OrderStatus.Processing => "ceria-kitchen-status-pill--processing",
+                    OrderStatus.Ready => "ceria-kitchen-status-pill--ready",
+                    _ => "ceria-kitchen-status-pill--served"
                 };
 
                 var statusText = order.OrderStatus switch
@@ -92,78 +83,83 @@
                     OrderStatus.Processing => "DIPROSES",
                     OrderStatus.Ready => "SIAP",
                     OrderStatus.Served => "TERSAJI",
-                    _ => order.OrderStatus.ToString().ToUpper()
+                    _ => order.OrderStatus.ToString().ToUpperInvariant()
                 };
 
-                <div class="col-xl-4 col-md-6 order-card" data-status="@order.OrderStatus.ToString().ToLower()" data-order-id="@order.TransactionId">
-                    <div class="card kitchen-card @cardClass h-100">
-                        <div class="card-header @headerClass text-white">
-                            <div class="d-flex justify-content-between align-items-center">
+                <div class="col-xl-4 col-md-6 order-card" data-status="@order.OrderStatus.ToString().ToLowerInvariant()" data-order-id="@order.TransactionId">
+                    <div class="card ceria-kitchen-card border-0 h-100">
+                        <div class="card-header ceria-kitchen-card__head @headerClass px-4 py-3 bg-transparent">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
                                 <div>
-                                    <h5 class="fw-bold mb-0">#@order.TransactionNumber</h5>
-                                    <small><i class="fas fa-table me-1"></i>Meja @order.TableNumber</small>
+                                    <h5 class="fw-bold mb-1" style="color: var(--ceria-text);">#@order.TransactionNumber</h5>
+                                    <small style="color: var(--ceria-text-soft);"><i class="fas fa-table me-1"></i>Meja @order.TableNumber</small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="badge bg-white text-dark fs-6">@statusText</span>
-                                    <div class="small mt-1">
+                                    <span class="ceria-kitchen-status-pill @statusClass">@statusText</span>
+                                    <div class="small mt-2" style="color: var(--ceria-text-soft);">
                                         <i class="fas fa-clock me-1"></i>@order.CreatedAt.ToString("HH:mm")
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="order-items">
+                        <div class="card-body p-4">
+                            <div class="order-items d-flex flex-column gap-2">
                                 @foreach (var item in order.Items)
                                 {
-                                    <div class="order-item d-flex justify-content-between align-items-start py-2 border-bottom">
-                                        <div class="flex-grow-1">
-                                            <div class="d-flex align-items-center">
-                                                <span class="badge bg-primary me-2">@item.Quantity</span>
-                                                <span class="fw-bold">@item.ProductName</span>
-                                            </div>
-                                            @if (!string.IsNullOrEmpty(item.Notes))
-                                            {
-                                                <div class="mt-1 ms-4">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-sticky-note me-1"></i>@item.Notes
-                                                    </small>
+                                    var itemStatusClass = item.Status switch
+                                    {
+                                        DetailStatus.Pending => "ceria-kitchen-detail-status--pending",
+                                        DetailStatus.Preparing => "ceria-kitchen-detail-status--preparing",
+                                        DetailStatus.Ready => "ceria-kitchen-detail-status--ready",
+                                        _ => "ceria-kitchen-detail-status--served"
+                                    };
+
+                                    <div class="ceria-kitchen-item p-3">
+                                        <div class="d-flex justify-content-between align-items-start gap-3">
+                                            <div class="d-flex gap-3 flex-grow-1">
+                                                <div class="ceria-kitchen-qty d-inline-flex align-items-center justify-content-center">@item.Quantity</div>
+                                                <div>
+                                                    <div class="fw-bold" style="color: var(--ceria-text);">@item.ProductName</div>
+                                                    @if (!string.IsNullOrWhiteSpace(item.Notes))
+                                                    {
+                                                        <small style="color: var(--ceria-text-soft);"><i class="fas fa-sticky-note me-1"></i>@item.Notes</small>
+                                                    }
                                                 </div>
-                                            }
+                                            </div>
+                                            <span class="ceria-kitchen-detail-status @itemStatusClass">@item.Status</span>
                                         </div>
-                                        <span class="badge bg-@(item.Status == DetailStatus.Pending ? "secondary" : "info") ms-2">
-                                            @item.Status
-                                        </span>
                                     </div>
                                 }
                             </div>
                         </div>
-                        <div class="card-footer bg-transparent border-top-0">
+                        <div class="card-footer bg-transparent border-top-0 px-4 pb-4 pt-0">
                             <div class="d-flex gap-2">
                                 @if (order.OrderStatus == OrderStatus.New)
                                 {
-                                    <button class="btn btn-gradient-primary flex-fill py-2" onclick="updateStatus(@order.TransactionId, 1)">
+                                    <button class="btn ceria-kitchen-action ceria-kitchen-action--new flex-fill py-2" onclick="updateStatus(@order.TransactionId, 1, event)">
                                         <i class="fas fa-play me-2"></i>PROSES
                                     </button>
                                 }
                                 else if (order.OrderStatus == OrderStatus.Processing)
                                 {
-                                    <button class="btn btn-gradient-success flex-fill py-2" onclick="updateStatus(@order.TransactionId, 2)">
+                                    <button class="btn ceria-kitchen-action ceria-kitchen-action--processing flex-fill py-2" onclick="updateStatus(@order.TransactionId, 2, event)">
                                         <i class="fas fa-check me-2"></i>SIAP
                                     </button>
                                 }
                                 else if (order.OrderStatus == OrderStatus.Ready)
                                 {
-                                    <button class="btn btn-warning flex-fill py-2" onclick="updateStatus(@order.TransactionId, 3)">
+                                    <button class="btn ceria-kitchen-action ceria-kitchen-action--served flex-fill py-2" onclick="updateStatus(@order.TransactionId, 3, event)">
                                         <i class="fas fa-bell-concierge me-2"></i>SAJIKAN
                                     </button>
                                 }
                                 else
                                 {
-                                    <button class="btn btn-outline-secondary flex-fill py-2" disabled>
+                                    <button class="btn ceria-kitchen-action ceria-kitchen-action--done flex-fill py-2" disabled>
                                         <i class="fas fa-check-double me-2"></i>SELESAI
                                     </button>
                                 }
-                                <button class="btn btn-outline-light" onclick="printReceipt(@order.TransactionId)">
+
+                                <button class="btn ceria-kitchen-icon-button" onclick="printReceipt(@order.TransactionId)">
                                     <i class="fas fa-print"></i>
                                 </button>
                             </div>
@@ -175,13 +171,10 @@
 
         @if (!Model.Any())
         {
-            <div class="text-center py-5">
-                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4" 
-                     style="width: 120px; height: 120px; background: rgba(255,255,255,0.1);">
-                    <i class="fas fa-utensils fa-4x text-white-50"></i>
-                </div>
-                <h4 class="text-white-75">Tidak Ada Pesanan Aktif</h4>
-                <p class="text-white-50">Menunggu pesanan baru...</p>
+            <div class="ceria-empty-state text-center py-5 px-4 mt-4">
+                <i class="fas fa-utensils fa-4x mb-4" style="color: var(--ceria-primary-soft);"></i>
+                <h4 class="fw-bold mb-2" style="color: var(--ceria-text);">Tidak Ada Pesanan Aktif</h4>
+                <p class="mb-0">Dapur sedang menunggu pesanan baru masuk.</p>
             </div>
         }
     </div>
@@ -193,8 +186,9 @@
             return document.querySelector('input[name="__RequestVerificationToken"]').value;
         }
 
-        function updateStatus(transactionId, status) {
-            const btn = event.target.closest('button');
+        function updateStatus(transactionId, status, event) {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>MEMPROSES...';
             btn.disabled = true;
 
@@ -209,26 +203,22 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Play notification sound
                     playNotificationSound();
-                    
-                    // Update UI without reload
                     const card = document.querySelector(`[data-order-id="${transactionId}"]`);
                     if (card) {
                         card.style.animation = 'fadeOut 0.3s ease';
-                        setTimeout(() => {
-                            location.reload();
-                        }, 300);
+                        setTimeout(() => location.reload(), 300);
                     }
-                } else {
-                    showToast('Error: ' + data.message, 'error');
-                    btn.innerHTML = '<i class="fas fa-play me-2"></i>PROSES';
-                    btn.disabled = false;
+                    return;
                 }
+
+                showToast(data.message || 'Gagal memperbarui status pesanan.', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             })
             .catch(error => {
                 showToast('Terjadi kesalahan: ' + error.message, 'error');
-                btn.innerHTML = '<i class="fas fa-play me-2"></i>PROSES';
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             });
         }
@@ -237,46 +227,35 @@
             window.open(`/Kitchen/PrintReceipt/${transactionId}`, '_blank', 'width=400,height=600');
         }
 
-        function filterOrders(status) {
-            document.querySelectorAll('.kitchen-header .btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.closest('button').classList.add('active');
+        function filterOrders(status, event) {
+            document.querySelectorAll('.ceria-kitchen-filter').forEach(btn => btn.classList.remove('is-active'));
+            event.currentTarget.classList.add('is-active');
 
             document.querySelectorAll('.order-card').forEach(card => {
-                if (status === 'all' || card.getAttribute('data-status') === status) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
+                card.style.display = status === 'all' || card.getAttribute('data-status') === status ? '' : 'none';
             });
         }
 
         function playNotificationSound() {
-            // Create a simple beep sound
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-            
+
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
             oscillator.frequency.value = 800;
             oscillator.type = 'sine';
-            
             gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-            
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.5);
         }
 
-        // Auto refresh setiap 30 detik
-        let autoRefresh = setInterval(function() {
+        setInterval(function () {
             fetch('/Kitchen/GetNewOrders')
                 .then(response => response.json())
                 .then(data => {
-                    const currentCount = parseInt(document.getElementById('new-orders-badge').textContent);
+                    const currentCount = parseInt(document.getElementById('new-orders-badge').textContent, 10);
                     if (data.newOrdersCount !== currentCount) {
                         playNotificationSound();
                         location.reload();
@@ -284,92 +263,38 @@
                 });
         }, 30000);
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'r' && e.ctrlKey) {
                 e.preventDefault();
                 location.reload();
             }
         });
     </script>
+
+    <style>
+        @@keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.96); }
+        }
+
+        .order-items {
+            max-height: 270px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .order-items::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .order-items::-webkit-scrollbar-track {
+            background: rgba(230, 205, 194, 0.55);
+            border-radius: 999px;
+        }
+
+        .order-items::-webkit-scrollbar-thumb {
+            background: rgba(153, 71, 0, 0.35);
+            border-radius: 999px;
+        }
+    </style>
 }
-
-<style>
-    .kitchen-display {
-        min-height: 100vh;
-        background: #0f172a;
-        color: #e2e8f0;
-    }
-
-    .kitchen-header {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border-bottom: 1px solid #334155;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
-
-    .kitchen-card {
-        background: #1e293b;
-        border-width: 3px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .kitchen-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    }
-
-    .kitchen-card .card-header {
-        border-bottom: none;
-    }
-
-    .kitchen-card .card-body {
-        background: #1e293b;
-    }
-
-    .kitchen-card .card-footer {
-        background: #1e293b !important;
-    }
-
-    .order-items {
-        max-height: 250px;
-        overflow-y: auto;
-    }
-
-    .order-item:last-child {
-        border-bottom: none !important;
-    }
-
-    .text-white-75 {
-        color: rgba(255, 255, 255, 0.75) !important;
-    }
-
-    .text-white-50 {
-        color: rgba(255, 255, 255, 0.5) !important;
-    }
-
-    @@keyframes fadeOut {
-        from { opacity: 1; transform: scale(1); }
-        to { opacity: 0; transform: scale(0.95); }
-    }
-
-    /* Custom scrollbar for dark theme */
-    .order-items::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .order-items::-webkit-scrollbar-track {
-        background: #334155;
-        border-radius: 3px;
-    }
-
-    .order-items::-webkit-scrollbar-thumb {
-        background: #64748b;
-        border-radius: 3px;
-    }
-
-    .order-items::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-</style>

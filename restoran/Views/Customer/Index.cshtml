@@ -308,7 +308,32 @@
         let lastToastAt = 0;
 
         function getRequestVerificationToken() {
-            return document.querySelector('input[name="__RequestVerificationToken"]').value;
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        }
+
+        function parseJsonResponse(response) {
+            if (response.redirected) {
+                window.location.href = response.url;
+                return Promise.resolve(null);
+            }
+
+            return response.text().then(text => {
+                if (!text) {
+                    return {
+                        success: false,
+                        message: `Server mengembalikan respons kosong (HTTP ${response.status}).`
+                    };
+                }
+
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    return {
+                        success: false,
+                        message: `Respons server tidak valid (HTTP ${response.status}).`
+                    };
+                }
+            });
         }
 
         function getSelectedTable() {
@@ -365,8 +390,12 @@
                     },
                     body: `tableId=${selectedTableId}`
                 })
-                .then(response => response.json())
+                .then(parseJsonResponse)
                 .then(data => {
+                    if (!data) {
+                        return;
+                    }
+
                     if (data.success) {
                         window.location.href = `/Order/Menu?tableId=${selectedTableId}`;
                         return;
@@ -409,6 +438,11 @@
                 return true;
             }
 
+            if (data.role === 'Member' && !selectedTableId) {
+                window.location.href = '/Customer/Index?selectTable=1';
+                return true;
+            }
+
             window.location.href = data.redirectUrl || '/Customer/Index';
             return true;
         }
@@ -430,8 +464,12 @@
                 },
                 body: buildMemberLoginBody(email, password)
             })
-            .then(response => response.json())
+            .then(parseJsonResponse)
             .then(data => {
+                if (!data) {
+                    return;
+                }
+
                 if (!data.success) {
                     showToast(data.message || 'Login gagal.', 'error');
                     return;
@@ -465,8 +503,12 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
+            .then(parseJsonResponse)
             .then(result => {
+                if (!result) {
+                    return;
+                }
+
                 if (!result.success) {
                     showToast(result.message || 'Registrasi gagal.', 'error');
                     return;
@@ -497,6 +539,17 @@
         if (landingErrorMessage) {
             showToast(landingErrorMessage, 'warning');
         }
+
+        (function autoShowTablePicker() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('selectTable') === '1') {
+                showToast('Selamat datang, Member! Silakan pilih meja untuk mulai memesan.', 'success');
+                setTimeout(function () {
+                    showOrderTableModal();
+                }, 400);
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        })();
 
     </script>
 }

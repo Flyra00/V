@@ -25,7 +25,6 @@ namespace Restoran.Features.Admin.Services
             return await _context.Users
                 .AsNoTracking()
                 .Include(u => u.RoleEntity)
-                .Where(u => u.Role != UserRole.Member)
                 .OrderBy(u => u.RoleEntity != null ? u.RoleEntity.SortOrder : int.MaxValue)
                 .ThenBy(u => u.Username)
                 .ToListAsync(cancellationToken);

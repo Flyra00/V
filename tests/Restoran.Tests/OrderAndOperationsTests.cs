@@ -19,7 +19,7 @@ public static class OrderAndOperationsTests
         await using (var arrangeContext = database.CreateContext())
         {
             arrangeContext.Categories.Add(new Category { Id = 1, Name = "Makanan" });
-            arrangeContext.Products.Add(new Product { Id = 1, Name = "Nasi Goreng", CategoryId = 1, Price = 20000, IsAvailable = true });
+            arrangeContext.Products.Add(new Product { Id = 1, Name = "Nasi Goreng", CategoryId = 1, Price = 20000, MemberDiscountPercentage = 10m, IsAvailable = true });
             arrangeContext.Tables.Add(new Table { Id = 1, TableNumber = "1", Capacity = 4, Status = TableStatus.Available });
             arrangeContext.Users.Add(new User
             {
@@ -50,7 +50,8 @@ public static class OrderAndOperationsTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(taxRate: 10m, serviceChargeRate: 5m),
             tableService,
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var result = await service.CreateOrderAsync(new CreateOrderRequest
         {
@@ -58,7 +59,7 @@ public static class OrderAndOperationsTests
             CustomerName = "Member Test",
             IsMember = true,
             MemberId = 1,
-            PaymentMethod = PaymentMethod.Transfer,
+            PaymentMethod = PaymentMethod.Tunai,
             Items =
             [
                 new OrderItemRequest
@@ -118,7 +119,7 @@ public static class OrderAndOperationsTests
             await arrangeContext.SaveChangesAsync();
 
             var seededTransaction = await arrangeContext.Transactions.SingleAsync();
-            await TestPaymentData.SeedPaymentAsync(arrangeContext, seededTransaction.Id, PaymentMethod.Transfer, PaymentStatus.Pending, 0m);
+            await TestPaymentData.SeedPaymentAsync(arrangeContext, seededTransaction.Id, PaymentMethod.Tunai, PaymentStatus.Pending, 0m);
         }
 
         await using var context = database.CreateContext();
@@ -129,9 +130,10 @@ public static class OrderAndOperationsTests
             new StubTransactionNumberGenerator("IGNORED"),
             new StubChargeConfigurationProvider(),
             tableService,
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
-        var result = await service.ConfirmPaymentAsync(1);
+        var result = await service.ConfirmPaymentAsync(1, 50000m);
 
         TestAssert.True(result.Succeeded);
         var transaction = await context.Transactions.Include(entity => entity.Payment).SingleAsync();
@@ -318,7 +320,8 @@ public static class OrderAndOperationsTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(),
             new TableService(context, new FixedDateTimeProvider(now)),
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var viewModel = await service.GetMenuAsync(1);
 
@@ -348,7 +351,8 @@ public static class OrderAndOperationsTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(),
             new TableService(context, new FixedDateTimeProvider(now)),
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var viewModel = await service.GetMenuAsync(1);
 
@@ -379,7 +383,8 @@ public static class OrderAndOperationsTests
             new StubPaymentProofStorage(),
             new StubChargeConfigurationProvider(),
             new TableService(context, new FixedDateTimeProvider(now)),
-            TestPaymentData.CreatePaymentService(context));
+            TestPaymentData.CreatePaymentService(context),
+            new StubMidtransService());
 
         var result = await service.CreateOrderAsync(new CreateOrderRequest
         {

@@ -17,6 +17,7 @@ namespace Restoran.Features.Kasir.Services
         private readonly IChargeConfigurationProvider _chargeConfigurationProvider;
         private readonly ITableService _tableService;
         private readonly IPaymentService _paymentService;
+        private readonly IMidtransService _midtransService;
 
         public CashierService(
             ApplicationDbContext context,
@@ -24,7 +25,8 @@ namespace Restoran.Features.Kasir.Services
             ITransactionNumberGenerator transactionNumberGenerator,
             IChargeConfigurationProvider chargeConfigurationProvider,
             ITableService tableService,
-            IPaymentService paymentService)
+            IPaymentService paymentService,
+            IMidtransService midtransService)
         {
             _context = context;
             _dateTimeProvider = dateTimeProvider;
@@ -32,6 +34,7 @@ namespace Restoran.Features.Kasir.Services
             _chargeConfigurationProvider = chargeConfigurationProvider;
             _tableService = tableService;
             _paymentService = paymentService;
+            _midtransService = midtransService;
         }
 
         public async Task<IReadOnlyList<Transaction>> GetTransactionsAsync(CancellationToken cancellationToken = default)
@@ -69,16 +72,154 @@ namespace Restoran.Features.Kasir.Services
             return _paymentService.GetActiveCashierMethodsAsync(cancellationToken);
         }
 
-        public async Task<OperationResult> ConfirmPaymentAsync(int transactionId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Promo>> GetActivePromosAsync(CancellationToken cancellationToken = default)
         {
-            var result = await _paymentService.MarkPaymentPaidAsync(transactionId, _dateTimeProvider.Now, cancellationToken);
+            var now = _dateTimeProvider.Now;
+            var promos = await _context.Promos
+                .AsNoTracking()
+                .Where(promo => promo.IsActive && promo.StartsAt <= now && promo.EndsAt >= now)
+                .ToListAsync(cancellationToken);
+
+            return promos
+                .OrderBy(promo => promo.Name)
+                .ThenBy(promo => promo.EndsAt)
+                .ToList();
+        }
+
+        public async Task<OperationResult> ConfirmPaymentAsync(int transactionId, decimal? amountReceived, CancellationToken cancellationToken = default)
+        {
+            var transaction = await _context.Transactions
+                .Include(entity => entity.Payment!)
+                    .ThenInclude(payment => payment.PaymentMethodOption)
+                .FirstOrDefaultAsync(entity => entity.Id == transactionId, cancellationToken);
+
+            if (transaction == null)
+            {
+                return OperationResult.NotFound("Transaksi tidak ditemukan");
+            }
+
+            if (transaction.Payment == null)
+            {
+                return OperationResult.Failure("Data pembayaran tidak ditemukan");
+            }
+
+            if (transaction.Payment.PaymentMethodOption.LegacyMethod != PaymentMethod.Tunai)
+            {
+                return OperationResult.Failure("Pembayaran online harus dicek melalui Midtrans Sandbox. Gunakan tombol Cek Status Midtrans.");
+            }
+
+            if (!amountReceived.HasValue)
+            {
+                return OperationResult.Failure("Uang diterima wajib diisi untuk pembayaran tunai.");
+            }
+
+            if (amountReceived.Value < transaction.Total)
+            {
+                return OperationResult.Failure("Uang diterima tidak boleh kurang dari total pembayaran.");
+            }
+
+            var changeAmount = amountReceived.Value - transaction.Total;
+            var result = await _paymentService.MarkPaymentPaidAsync(
+                transactionId,
+                _dateTimeProvider.Now,
+                amountReceived.Value,
+                changeAmount,
+                cancellationToken);
             if (!result.Succeeded)
             {
                 return result;
             }
 
             await _tableService.TryCloseSessionForTransactionAsync(transactionId, cancellationToken);
-            return OperationResult.Success("Pembayaran berhasil dikonfirmasi");
+            return OperationResult.Success($"Pembayaran tunai berhasil. Kembalian: Rp {changeAmount:N0}");
+        }
+
+        public async Task<OperationResult> CheckMidtransStatusAsync(int transactionId, CancellationToken cancellationToken = default)
+        {
+            return await Task.FromResult(OperationResult.Failure("Pembayaran Midtrans sedang dinonaktifkan sementara."));
+        }
+
+        public async Task<OperationResult> ApplyPromoAsync(int transactionId, int promoId, CancellationToken cancellationToken = default)
+        {
+            var transaction = await _context.Transactions
+                .Include(entity => entity.Payment!)
+                    .ThenInclude(payment => payment.PaymentMethodOption)
+                .FirstOrDefaultAsync(entity => entity.Id == transactionId, cancellationToken);
+
+            if (transaction == null)
+            {
+                return OperationResult.NotFound("Transaksi tidak ditemukan");
+            }
+
+            if (transaction.Payment?.PaymentStatus == PaymentStatus.Paid)
+            {
+                return OperationResult.Failure("Promo tidak dapat diubah karena transaksi sudah lunas.");
+            }
+
+            var now = _dateTimeProvider.Now;
+            var promo = await _context.Promos
+                .FirstOrDefaultAsync(entity => entity.Id == promoId && entity.IsActive && entity.StartsAt <= now && entity.EndsAt >= now, cancellationToken);
+
+            if (promo == null)
+            {
+                return OperationResult.Failure("Promo tidak aktif atau sudah kedaluwarsa.");
+            }
+
+            var subtotal = transaction.Subtotal;
+            var discount = promo.PromoType switch
+            {
+                PromoType.Percentage => subtotal * (promo.DiscountValue / 100m),
+                _ => 0m
+            };
+
+            discount = Math.Clamp(decimal.Round(discount, 2, MidpointRounding.AwayFromZero), 0m, subtotal);
+
+            transaction.PromoId = promo.Id;
+            transaction.AppliedPromoName = promo.Name;
+            transaction.Discount = discount;
+
+            await RecalculateTransactionTotalsAsync(transaction, cancellationToken);
+
+            return OperationResult.Success("Promo berhasil diterapkan.");
+        }
+
+        public async Task<OperationResult> RemovePromoAsync(int transactionId, CancellationToken cancellationToken = default)
+        {
+            var transaction = await _context.Transactions
+                .Include(entity => entity.Payment)
+                .FirstOrDefaultAsync(entity => entity.Id == transactionId, cancellationToken);
+
+            if (transaction == null)
+            {
+                return OperationResult.NotFound("Transaksi tidak ditemukan");
+            }
+
+            if (transaction.Payment?.PaymentStatus == PaymentStatus.Paid)
+            {
+                return OperationResult.Failure("Promo tidak dapat diubah karena transaksi sudah lunas.");
+            }
+
+            transaction.PromoId = null;
+            transaction.AppliedPromoName = string.Empty;
+            transaction.Discount = 0;
+
+            await RecalculateTransactionTotalsAsync(transaction, cancellationToken);
+
+            return OperationResult.Success("Promo berhasil dihapus.");
+        }
+
+        public async Task<Transaction?> GetTransactionForReceiptAsync(int transactionId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Transactions
+                .AsNoTracking()
+                .Include(entity => entity.Table)
+                .Include(entity => entity.User)
+                .Include(entity => entity.Promo)
+                .Include(entity => entity.Payment!)
+                    .ThenInclude(payment => payment.PaymentMethodOption)
+                .Include(entity => entity.TransactionDetails)
+                    .ThenInclude(detail => detail.Product)
+                .FirstOrDefaultAsync(entity => entity.Id == transactionId, cancellationToken);
         }
 
         public async Task<OperationResult<PosOrderResponse>> CreatePosOrderAsync(
@@ -93,6 +234,11 @@ namespace Restoran.Features.Kasir.Services
 
             var now = _dateTimeProvider.Now;
             var transactionNumber = await _transactionNumberGenerator.GenerateAsync(cancellationToken);
+            if (request.PaymentMethod != PaymentMethod.Tunai)
+            {
+                return OperationResult<PosOrderResponse>.Failure("Pembayaran online sedang dinonaktifkan sementara. Silakan gunakan pembayaran tunai.");
+            }
+
             var availablePaymentMethod = (await _paymentService.GetActiveCashierMethodsAsync(cancellationToken))
                 .Any(method => method.LegacyMethod == request.PaymentMethod);
             if (!availablePaymentMethod)
@@ -197,6 +343,24 @@ namespace Restoran.Features.Kasir.Services
                 await dbTransaction.RollbackAsync(cancellationToken);
                 return OperationResult<PosOrderResponse>.Failure(ex.Message);
             }
+        }
+
+        private async Task RecalculateTransactionTotalsAsync(Transaction transaction, CancellationToken cancellationToken)
+        {
+            var chargeConfiguration = await _chargeConfigurationProvider.GetCurrentAsync(cancellationToken);
+
+            // Konsisten dengan flow existing: pajak dan service dihitung dari subtotal sebelum diskon.
+            transaction.Tax = chargeConfiguration.CalculateTax(transaction.Subtotal);
+            transaction.ServiceCharge = chargeConfiguration.CalculateServiceCharge(transaction.Subtotal);
+            transaction.Total = Math.Max(0, transaction.Subtotal + transaction.Tax + transaction.ServiceCharge - transaction.Discount);
+
+            if (transaction.Payment != null)
+            {
+                transaction.Payment.Amount = transaction.Total;
+                transaction.Payment.UpdatedAt = _dateTimeProvider.Now;
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

@@ -98,7 +98,7 @@
                 @if (Model.ActivePromos.Count > 0)
                 {
                     <p>
-                        Promo terbaik diterapkan otomatis saat konfirmasi pesanan.
+                        Promo dapat diterapkan manual oleh kasir saat proses pembayaran.
                         @foreach (var promo in Model.ActivePromos.Take(2))
                         {
                             <span class="d-inline-block me-3"><strong>@promo.Name</strong> @promo.DiscountPercentage.ToString("N0")% mulai @promo.MinimumPurchase.ToString("C0", new System.Globalization.CultureInfo("id-ID"))</span>
@@ -168,7 +168,8 @@
                                              data-product-description="@product.Description"
                                              data-product-image="@product.ImageUrl"
                                              data-product-price="@product.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                             data-product-available="@product.IsAvailable.ToString().ToLowerInvariant()">
+                                             data-product-available="@product.IsAvailable.ToString().ToLowerInvariant()"
+                                             data-product-member-discount="@product.MemberDiscountPercentage.ToString(System.Globalization.CultureInfo.InvariantCulture)">
                                         <div class="menu-card__media">
                                             @if (!string.IsNullOrWhiteSpace(product.ImageUrl))
                                             {
@@ -186,9 +187,18 @@
                                                     <i class="fas @(product.IsAvailable ? "fa-circle-check" : "fa-circle-xmark")"></i>
                                                     @(product.IsAvailable ? "Tersedia" : "Tidak tersedia")
                                                 </span>
-                                                <span class="small-chip">
-                                                    <i class="fas fa-star"></i> Ceria
-                                                </span>
+                                                @if (Model.IsMember && product.MemberDiscountPercentage > 0)
+                                                {
+                                                    <span class="small-chip" style="background: linear-gradient(135deg, #ff6b35, #f7931e); color: #fff;">
+                                                        <i class="fas fa-tag"></i> Diskon @product.MemberDiscountPercentage.ToString("N0")%
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="small-chip">
+                                                        <i class="fas fa-star"></i> Ceria
+                                                    </span>
+                                                }
                                             </div>
                                         </div>
 
@@ -263,84 +273,7 @@
             </section>
         </div>
 
-        <aside class="summary-card order-summary-card">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="promo-chip mb-2">
-                        <i class="fas fa-cart-shopping"></i>
-                        Ringkasan
-                    </div>
-                    <h2>Pesanan Saya</h2>
-                </div>
-                <span class="small-chip">Meja @Model.TableNumber</span>
-            </div>
-
-            <div id="summary-empty-state" class="summary-empty-state">
-                <i class="fas fa-basket-shopping fa-2x mb-3"></i>
-                <h3 class="customer-section-title fs-4 mb-2">Belum ada pesanan</h3>
-                <p>Pilih menu di katalog kiri, lalu keranjang akan muncul di panel ini.</p>
-                <button id="summary-browse-menu" class="customer-secondary-button mt-3" type="button">Pilih Menu</button>
-            </div>
-
-            <div id="summary-item-list" class="summary-item-list" hidden></div>
-
-            <div class="summary-breakdown">
-                <div class="summary-breakdown__row">
-                    <span>Subtotal</span>
-                    <strong id="summary-subtotal">Rp0</strong>
-                </div>
-                <div class="summary-breakdown__row">
-                    <span>@Model.TaxName (@Model.TaxRate.ToString("N0")%)</span>
-                    <strong id="summary-tax">Rp0</strong>
-                </div>
-                <div class="summary-breakdown__row">
-                    <span>@Model.ServiceChargeName (@Model.ServiceChargeRate.ToString("N0")%)</span>
-                    <strong id="summary-service">Rp0</strong>
-                </div>
-                <div class="summary-breakdown__row">
-                    <span id="summary-discount-label">Diskon</span>
-                    <strong id="summary-discount">Rp0</strong>
-                </div>
-                <div id="summary-discount-note" class="customer-section-subtitle small"></div>
-                <div class="summary-breakdown__row is-total">
-                    <span>Total</span>
-                    <strong id="summary-total">Rp0</strong>
-                </div>
-            </div>
-
-            <div>
-                <h3 class="customer-section-title fs-4 mb-3">Metode Pembayaran</h3>
-                <div class="payment-selector-grid">
-                    @for (var index = 0; index < Model.PaymentMethods.Count; index++)
-                    {
-                        var method = Model.PaymentMethods[index];
-                        var summaryId = $"summary-payment-{index}";
-                        <div class="payment-selector">
-                            <input id="@summaryId"
-                                   type="radio"
-                                   name="summary-payment-method"
-                                   value="@((int)method.LegacyMethod)"
-                                   data-payment-selector="summary"
-                                   @(index == 0 ? "checked" : null) />
-                            <label for="@summaryId">
-                                <span><i class="fas @GetPaymentIconClass(method.LegacyMethod)"></i>@method.DisplayName</span>
-                                <i class="fas fa-circle-check"></i>
-                            </label>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <div class="summary-meta">
-                <i class="fas fa-circle-info"></i>
-                <span>Promo dan diskon member dihitung otomatis sesuai aturan sistem saat ini.</span>
-            </div>
-
-            <div class="summary-cta-group">
-                <button id="summary-confirm-order" class="drawer-primary-button" type="button">Konfirmasi Pesanan</button>
-                <button class="drawer-secondary-button" type="button" data-cart-toggle>Buka Panel Keranjang</button>
-            </div>
-        </aside>
+        
     </section>
 
     <div id="cart-overlay" class="cart-overlay"></div>
@@ -376,6 +309,13 @@
                     <span>Subtotal</span>
                     <strong id="drawer-subtotal">Rp0</strong>
                 </div>
+                @if (Model.IsMember)
+                {
+                    <div class="summary-breakdown__row" id="drawer-discount-row" style="color: #ff6b35;">
+                        <span><i class="fas fa-tag me-1"></i>Diskon Member</span>
+                        <strong id="drawer-discount">-Rp0</strong>
+                    </div>
+                }
                 <div class="summary-breakdown__row">
                     <span>@Model.TaxName (@Model.TaxRate.ToString("N0")%)</span>
                     <strong id="drawer-tax">Rp0</strong>
@@ -384,11 +324,6 @@
                     <span>@Model.ServiceChargeName (@Model.ServiceChargeRate.ToString("N0")%)</span>
                     <strong id="drawer-service">Rp0</strong>
                 </div>
-                <div class="summary-breakdown__row">
-                    <span id="drawer-discount-label">Diskon</span>
-                    <strong id="drawer-discount">Rp0</strong>
-                </div>
-                <div id="drawer-discount-note" class="customer-section-subtitle small"></div>
                 <div class="summary-breakdown__row is-total">
                     <span>Total</span>
                     <strong id="drawer-total">Rp0</strong>
